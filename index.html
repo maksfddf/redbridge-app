@@ -1748,7 +1748,7 @@ function resumeSession(login){
     }).catch(()=>{ try{ logout(); }catch(e){} });
   }catch(e){ try{ logout(); }catch(e){} }
 }
-const APP_VER="v5.5.20";
+const APP_VER="v5.5.21";
 var splashDone=false;
 function hideSplash(){ if(splashDone) return; splashDone=true; try{ document.getElementById("splash").classList.add("hide"); }catch(e){} try{ const v=document.getElementById("splashVid"); if(v) v.pause(); }catch(e){} setTimeout(()=>{ try{ document.getElementById("splash").remove(); }catch(e){} },600); }
 function setVer(){ try{ document.getElementById("jsok").textContent=APP_VER; }catch(e){} try{ var _lv=document.getElementById("loginVer"); if(_lv) _lv.textContent=APP_VER; }catch(e){} }
@@ -2641,6 +2641,7 @@ let walkieTab="t";
 
 function closeWalkie(){ try{ walkieVoiceCancel(); }catch(e){} try{ document.getElementById("walkieOverlay").classList.remove("open"); }catch(e){} }
 function openWalkie(){
+  try{ pullStaffList(); }catch(e){}
   try{
     const me=currentUser(); if(!me) return;
     if(WALKIE_ROLES.indexOf(me.role)<0){ toast(t("deny"),true); return; }
@@ -2954,6 +2955,27 @@ function walkieSenderName(login){
   try{ const u=(users||[]).find(x=>String(x.login||"").toLowerCase()===String(login||"").toLowerCase()); return (u&&(u.name||u.login))||login||""; }catch(e){ return login||""; }
 }
 function walkieTabSw(tab){ try{ walkieVoiceCancel(); }catch(e){} try{ walkieTab=tab; const ws=document.getElementById("walkieSearch"); if(ws) ws.value=""; walkieRender(); }catch(e){} }
+// Список сотрудников для «Рации» и голосовых. Раньше полный список тянул
+// только админ — из-за этого учитель видел в поиске только себя.
+async function pullStaffList(){
+  try{
+    const me=currentUser(); if(!me) return false;
+    const rows=await supaReqSafe("users?select=login,name,role,cls,classes,subjects&order=login&limit=200");
+    if(!Array.isArray(rows)||!rows.length) return false;
+    let changed=false;
+    rows.forEach(u=>{
+      if(!u||!u.login) return;
+      const merged={login:u.login,name:u.name||"",role:u.role||"teacher",cls:u.cls||"1-А",
+        classes:(Array.isArray(u.classes)&&u.classes.length?u.classes.map(String):[String(u.cls||"1-А")]),
+        subjects:(Array.isArray(u.subjects)?u.subjects.map(String):[])};
+      const i=users.findIndex(x=>x.login===merged.login);
+      if(i>=0){ if(JSON.stringify(users[i])!==JSON.stringify(merged)){ users[i]=merged; changed=true; } }
+      else { users.push(merged); changed=true; }
+    });
+    if(changed){ try{ if(typeof walkieRender==="function") walkieRender(); }catch(e){} }
+    return changed;
+  }catch(e){ return false; }
+}
 function walkieTeachers(){ try{ return (users||[]).filter(u=>u.role==="teacher").sort((a,b)=>String(a.name||a.login).localeCompare(String(b.name||b.login),(lang==="en"?"en":lang==="uz"?"uz":"ru"))); }catch(e){ return []; } }function myClub(){ try{ const me=currentUser(); if(!me) return null; const ml=String(me.login||"").toLowerCase();
   const mine=(clubs||[]).filter(t=>String(t.owner||"").toLowerCase()===ml); return mine[0]||null; }catch(e){ return null; } }
 function clubStudents(){ try{ const me=currentUser(); const cl=(me&&me.role==="teacher")?myClasses():CLASSES; const out=[];
@@ -4310,6 +4332,14 @@ function notifText(n){ if(!n) return ""; if(n.key){ const p=Object.assign({},n.p
 // Вибрация при оповещении: работает в APK (permission VIBRATE) и в Android-браузере.
 // iOS вибрацию из веба не отдаёт — там просто без вибрации.
 function rbVibrate(p){ try{ if(navigator.vibrate) navigator.vibrate(p||[180,90,180]); }catch(e){} }
+// Громкий звук оповещения. Нужен на iPhone: Web-вибрации там нет вообще.
+// Звук идёт через тот же AudioContext, что и звонок (раскрывается первым тапом).
+function rbLoudAlert(times){
+  try{
+    const n=Math.max(1, times||2);
+    for(let i=0;i<n;i++) setTimeout(()=>{ try{ playBell(); }catch(e){} }, i*650);
+  }catch(e){}
+}
 function notify(key, p, cls, cid){
   try{ if(cid&&notifs.some(n=>n&&n.cid===cid)) return false; }catch(e){}
   notifs.unshift({t:now(), key:key, p:p||{}, cls:cls||"", cid:cid||""});
@@ -5791,7 +5821,7 @@ function noticeOverlay(r){ try{
   const isW=(r.kind==="walkie-call"||r.kind==="walkie-msg");   if(isW&&!walkieForMe(r)) return;
   const isW5=(r.kind==="warn5");   if(isW5){ const _mc=myClasses(); if(!((r.to_role===me.role&&_mc.indexOf(String(r.cls))>=0)||me.role==="admin"||me.role==="ceo")) return; }
   try{ unlockAudio(); }catch(e){}
-  if(isW||r.kind==="voice-reply"||r.kind==="reply"){ try{ rbVibrate([160,80,160]); }catch(e){} }
+  if(isW||r.kind==="voice-reply"||r.kind==="reply"){ try{ rbVibrate([160,80,160]); }catch(e){} try{ rbLoudAlert(2); }catch(e){} }
   if(isW5){
     if(!notify("warn5",{c:r.cls||""},"",r.cid||"")) return;
     if(me.role!=="teacher"||myClasses().indexOf(String(r.cls||""))<0) return;
@@ -7608,6 +7638,7 @@ document.addEventListener("keydown",function(e){ try{ if(e&&e.key==="Escape"){ c
 
 try{ rbPerfIntervals(); renderPerfBtn(); }catch(e){}
 try{ setInterval(voiceCleanup, 60*1000); setTimeout(voiceCleanup, 8000); }catch(e){}
+try{ setTimeout(()=>{ try{ pullStaffList(); }catch(e){} }, 3000); setInterval(()=>{ try{ if(document.visibilityState==="visible") pullStaffList(); }catch(e){} }, 5*60*1000); }catch(e){}
 try{ renderClassTabs(); renderAll(); }catch(e){ try{console.error(e);}catch(_){} }
 // Проверяем обновление сразу, ещё до входа: старую версию человек
 // должен увидеть на экране логина, а не после авторизации.
