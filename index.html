@@ -3903,16 +3903,6 @@ function classTeacherLogin(c){
   }catch(e){}
   return "";
 }
-// Оповещение учителю о вызове: строка в notices → колокольчик в приложении и push.
-function pushCallNotice(c, studentName, dest){
-  try{
-    const me=currentUser(); if(!me) return;
-    const tg=classTeacherLogin(c); if(!tg) return;
-    const row={kind:"call", to_role:"teacher", to_login:tg, from_login:String(me.login||"").toLowerCase(),
-      student:String(studentName||""), cls:c, subject:"", text:destName(dest||"exit"), status:"new"};
-    supaFetch("notices",{method:"POST",headers:{Prefer:"return=minimal"},body:JSON.stringify(row)}).catch(()=>{});
-  }catch(e){}
-}
 function callStudent(c,id,destOverride){
   { const me=currentUser(); if(!me||!assistCanCall()){ toast(t("deny"),true); return; } }
   const s=db[c].find(x=>x.id===id); if(!s||s.status==="out"){ toast(t("alreadyGone")); return; }
@@ -3923,7 +3913,6 @@ function callStudent(c,id,destOverride){
   s.called=true; s.calledAt=Date.now(); s.calledBy=dest;
   calls.push({t:now(), cls:c, name:s.name, byKey:"exit", kind, np:{dest:dest,sid:id}});
   hubPush("call",{sid:id,name:s.name,cls:c,kindValue:kind,byKey:"exit",dest:dest});
-  try{ pushCallNotice(c, dn(s.name), dest); }catch(e){}
   const cp={name:esc(dn(s.name)),c:c,kind:kind};
   logAdd("logCalled", cp);
   notify("logCalled",cp,c);
@@ -3943,7 +3932,6 @@ function callClass(destOverride, clsOverride){
   list.forEach(s=>{ s.called=true; s.calledAt=Date.now(); s.calledBy=dest; });
   calls.push({t:now(), cls:cls, nkey:"wholeClass", np:{n:list.length,dest:dest}, byKey:"exit", kind:""});
   hubPush("call-class",{cls:cls,dest:dest,n:list.length,byKey:"exit"});
-  try{ pushCallNotice(cls, "", dest); }catch(e){}
   const ap={c:cls,dest:destName(dest)};
   logAdd("logCalledAll", ap);
   notify("logCalledAll",ap,cls);
