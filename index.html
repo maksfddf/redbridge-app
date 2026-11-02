@@ -35,6 +35,16 @@
     var on=(saved==="1")||(saved!=="0"&&!!auto);
     window.__rbPerf=on;
     if(on) document.documentElement.className=(document.documentElement.className+" perf").trim();
+    /* Платформа: сборки разные не только по ширине экрана. */
+    var ua2=String(navigator.userAgent||"");
+    var isElectron=/Electron/i.test(ua2);
+    var isPhone=/Android|iPhone|iPad|iPod/i.test(ua2);
+    var touch=(window.matchMedia&&window.matchMedia("(pointer:coarse)").matches);
+    var h=document.documentElement;
+    if(isElectron){ h.classList.add("is-desktop"); }
+    else if(isPhone){ h.classList.add("is-mobile"); }
+    else { h.classList.add(touch?"is-mobile":"is-desktop"); }
+    window.__rbPlatform = h.classList.contains("is-mobile") ? "mobile" : "desktop";
   }catch(e){}
 })();
 </script>
@@ -981,6 +991,11 @@ html.perf .stat,html.perf .card,html.perf .panel{will-change:auto}
   h3{letter-spacing:-.012em}
 }
 
+/* ===== платформенные различия сборок ===== */
+html.is-mobile .desktop-only{display:none!important}
+html.is-desktop .mobile-only{display:none!important}
+html.is-mobile .desktop-only-inline{display:none!important}
+
 /* ===== iOS / PWA: отступы под «челку» и без автозума при вводе ===== */
 @supports (padding: max(0px)){
   header{padding-top:max(0px, env(safe-area-inset-top))}
@@ -1244,6 +1259,13 @@ html.standalone-ios body{overscroll-behavior-y:none}
         </div>
       </div>
       <div class="card panel">
+        <h3 data-i18n="pushTitle">Уведомления на телефон</h3>
+        <div class="muted" id="pushHint" data-i18n="pushDesc">Системные уведомления приходят, даже когда приложение закрыто.</div>
+        <div class="row-btns" style="justify-content:flex-start;margin-top:10px">
+          <button class="btn btn-back btn-sm" id="pushBtn" onclick="togglePush()">Включить уведомления</button>
+        </div>
+      </div>
+      <div class="card panel">
         <h3 data-i18n="randTitle">Рандомайзер</h3>
         <div class="muted" data-i18n="randDesc">Случайный ученик из текущего класса</div>
         <div class="wheel-wrap"><div class="wheel-pointer"></div><canvas id="randWheel" width="640" height="640"></canvas></div>
@@ -1376,7 +1398,7 @@ html.standalone-ios body{overscroll-behavior-y:none}
     <div class="sched-daynav">
       <button class="icon-btn" onclick="flatMoveDay(-1)" aria-label="prev">&lt;</button>
       <div class="daylabel" id="flatSchedDayLabel"></div>
-      <button class="btn btn-back btn-sm" onclick="openTimetableEditor()" data-i18n="schedEdit" data-requires-sched>Редактировать</button>
+      <button class="btn btn-back btn-sm desktop-only" onclick="openTimetableEditor()" data-i18n="schedEdit" data-requires-sched>Редактировать</button>
       <button class="icon-btn" onclick="flatMoveDay(1)" aria-label="next">&gt;</button>
     </div>
     <div id="flatSchedBody"></div>
@@ -1470,7 +1492,7 @@ html.standalone-ios body{overscroll-behavior-y:none}
     <div class="sched-daynav">
       <button class="icon-btn" onclick="flatMoveDay(-1)" aria-label="prev">&lt;</button>
       <div class="daylabel" id="flatSchedDayLabel"></div>
-      <button class="btn btn-back btn-sm" onclick="openTimetableEditor()" data-i18n="schedEdit" data-requires-sched>Редактировать</button>
+      <button class="btn btn-back btn-sm desktop-only" onclick="openTimetableEditor()" data-i18n="schedEdit" data-requires-sched>Редактировать</button>
       <button class="icon-btn" onclick="flatMoveDay(1)" aria-label="next">&gt;</button>
     </div>
     <div id="flatSchedBody"></div>
@@ -1541,6 +1563,17 @@ try{
     vrepSent:"Голосовое отправлено",
     vrepFail:"Не удалось отправить голосовое",
     vrepSelf:"Это ваше сообщение",
+    iosSoundOff:"Звук заблокирован: выключите режим «Без звука» и поднимите громкость",
+    pushTitle:"Уведомления на телефон",
+    pushDesc:"Системные уведомления приходят, даже когда приложение закрыто.",
+    pushIosHint:"На iPhone: добавьте приложение на экран «Домой» (Safari → Поделиться) и включите здесь.",
+    pushIsOn:"Уведомления: включены",
+    pushIsOff:"Включить уведомления",
+    pushOn:"Уведомления включены",
+    pushOff:"Уведомления выключены",
+    pushDenied:"Разрешите уведомления в настройках браузера",
+    pushFail:"Не удалось включить уведомления",
+    pushNoSupport:"Уведомления недоступны на этом устройстве",
     replyBtn:"Ответить",
     replyTitle:"Ответ сообщением",
     replyPh:"Коротко напишите ответ…",
@@ -1563,6 +1596,17 @@ try{
     vrepSent:"Voice message sent",
     vrepFail:"Could not send the voice message",
     vrepSelf:"That is your own message",
+    iosSoundOff:"Sound is muted: turn off Silent mode and raise the volume",
+    pushTitle:"Phone notifications",
+    pushDesc:"System notifications arrive even when the app is closed.",
+    pushIosHint:"On iPhone: add the app to the Home screen (Safari → Share) and enable it here.",
+    pushIsOn:"Notifications: on",
+    pushIsOff:"Enable notifications",
+    pushOn:"Notifications enabled",
+    pushOff:"Notifications disabled",
+    pushDenied:"Allow notifications in browser settings",
+    pushFail:"Could not enable notifications",
+    pushNoSupport:"Notifications are not available on this device",
     replyBtn:"Reply",
     replyTitle:"Reply with a message",
     replyPh:"Type a short reply…",
@@ -4119,6 +4163,91 @@ function cancelWheelSpin(){
   if(wheelSpin&&wheelSpin.raf){ try{ cancelAnimationFrame(wheelSpin.raf); }catch(e){} }
   wheelSpin=null;
 }
+// ===== Web Push: системные уведомления при закрытом приложении =====
+// iPhone: только для PWA с экрана «Домой», iOS 16.4+. Android/десктоп — везде,
+// где есть Service Worker. Отправляет уведомления серверный скрипт
+// tools/push-sender.mjs (см. документацию в нём).
+const VAPID_PUBLIC="BBCqoFud0jQRg4OQ3ucfbDo77bBAJCv5FrbV9g9iMSH0BCUAYNX_kv_aPLZ9YJNYEw_43z7L0gJ7CYILHp-euBA";
+function pushSupported(){
+  try{ return ('serviceWorker' in navigator) && ('PushManager' in window) && window.isSecureContext; }catch(e){ return false; }
+}
+function pushIsStandalone(){ try{ return window.matchMedia('(display-mode: standalone)').matches || navigator.standalone===true; }catch(e){ return false; } }
+function pushUrlB64ToU8(base64){
+  const pad='='.repeat((4-base64.length%4)%4);
+  const raw=atob((base64+pad).replace(/-/g,'+').replace(/_/g,'/'));
+  const out=new Uint8Array(raw.length);
+  for(let i=0;i<raw.length;i++) out[i]=raw.charCodeAt(i);
+  return out;
+}
+async function pushRegisterSW(){
+  const reg=await navigator.serviceWorker.register('sw.js', {scope:'./'});
+  try{ await navigator.serviceWorker.ready; }catch(e){}
+  return reg;
+}
+async function pushState(){
+  try{
+    if(!pushSupported()) return {ok:false, reason:'unsupported'};
+    const reg=await navigator.serviceWorker.getRegistration('./');
+    if(!reg) return {ok:false, reason:'nosw'};
+    const sub=await reg.pushManager.getSubscription();
+    const perm=(typeof Notification!=='undefined')?Notification.permission:'default';
+    return {ok:!!sub, perm:perm, sub:sub};
+  }catch(e){ return {ok:false, reason:'error'}; }
+}
+async function pushSubscribe(silent){
+  const me=currentUser(); if(!me){ if(!silent) toast(t('login')); return false; }
+  if(!pushSupported()){ if(!silent) toast(t('pushNoSupport'),true); return false; }
+  try{
+    const reg=await pushRegisterSW();
+    let perm=(typeof Notification!=='undefined')?Notification.permission:'default';
+    if(perm==='default'){ perm=await Notification.requestPermission(); }
+    if(perm!=='granted'){ if(!silent) toast(t('pushDenied'),true); return false; }
+    let sub=await reg.pushManager.getSubscription();
+    if(!sub){
+      sub=await reg.pushManager.subscribe({userVisibleOnly:true, applicationServerKey:pushUrlB64ToU8(VAPID_PUBLIC)});
+    }
+    const j=sub.toJSON?sub.toJSON():{endpoint:sub.endpoint, keys:{p256dh:'',auth:''}};
+    const keys=j.keys||{};
+    const row={login:String(me.login||'').toLowerCase().trim(), endpoint:j.endpoint,
+      p256dh:String(keys.p256dh||''), auth:String(keys.auth||''), ua:String(navigator.userAgent||'').slice(0,180)};
+    await supaFetch("push_subs?on_conflict=endpoint",{method:"POST",
+      headers:{Prefer:"resolution=merge-duplicates,return=minimal"},body:JSON.stringify(row)});
+    try{ localStorage.setItem("rb_push","1"); }catch(e){}
+    if(!silent) toast(t('pushOn'),true);
+    renderPushBtn();
+    return true;
+  }catch(e){
+    if(!silent) toast(t('pushFail'),true);
+    return false;
+  }
+}
+async function pushUnsubscribe(silent){
+  try{
+    const reg=await navigator.serviceWorker.getRegistration('./');
+    const sub=reg?await reg.pushManager.getSubscription():null;
+    if(sub){
+      try{ await supaFetch("push_subs?endpoint=eq."+encodeURIComponent(sub.endpoint),{method:"DELETE"}); }catch(e){}
+      await sub.unsubscribe();
+    }
+    try{ localStorage.removeItem("rb_push"); }catch(e){}
+    if(!silent) toast(t('pushOff'));
+    renderPushBtn();
+    return true;
+  }catch(e){ return false; }
+}
+function togglePush(){ pushState().then(st=>{ if(st.ok) pushUnsubscribe(); else pushSubscribe(); }); }
+function renderPushBtn(){
+  try{
+    const b=document.getElementById("pushBtn"); if(!b) return;
+    if(!pushSupported()){ b.textContent=t('pushNoSupport'); b.disabled=true; return; }
+    b.disabled=false;
+    pushState().then(st=>{
+      b.textContent = st.ok ? t('pushIsOn') : t('pushIsOff');
+      const h=document.getElementById("pushHint"); if(h) h.textContent = pushIsStandalone()||!/iPhone|iPad/.test(navigator.userAgent) ? t('pushDesc') : t('pushIosHint');
+    }).catch(()=>{});
+  }catch(e){}
+}
+
 // ===== режим производительности (слабые устройства) =====
 // Класс html.perf ставит ранний скрипт в <head> (до первой отрисовки).
 function rbPerfOn(){ try{ return document.documentElement.classList.contains("perf"); }catch(e){ return false; } }
@@ -4141,6 +4270,7 @@ function setPerf(on, silent){
 function togglePerf(){ setPerf(!rbPerfOn()); }
 function renderUtils(){
   try{ renderPerfBtn(); }catch(e){}
+  try{ renderPushBtn(); }catch(e){}
   const cv=document.getElementById("randWheel");
   if(!cv) return;
   const L=activeLesson();
@@ -4284,20 +4414,33 @@ function setThreshold(v){ bellThreshold=parseInt(v,10)||70; try{localStorage.set
 // Самопроверка динамика: играет ту же цепочку, что вызов (файл → TTS).
 // Тишина здесь = дело в устройстве (громкость/выключатель/браузер), не в вызове.
 function testSound(){ try{ toast(t("soundTest")); }catch(e){} try{ playGuardQ(); }catch(e){} }
-function playBell(){
+// boost>1 — для оповещений: громче обычного, но через компрессор,
+// чтобы не хрипело. На iPhone громче «максимума» сделать нельзя: дальше
+// упирается в системную громкость и переключатель «Без звука».
+function playBell(boost){
   try{
     const ctx=micCtx||new (window.AudioContext||window.webkitAudioContext)();
+    try{ if(ctx.state==="suspended") ctx.resume(); }catch(e){}
+    if(!audioUnlocked&&ctx.state!=="running"){ try{ toast(t("iosSoundOff")); }catch(e){} }
+    const b=Math.max(1,Math.min(2.2,boost||1));
     const t0=ctx.currentTime;
     // Bell ducks while a voice announcement plays, so they don't mash.
     const duck=(voiceActive&&voiceOn)?0.35:1;
-    [[880,0.4,3.5],[1318,0.22,2.8],[1760,0.12,2.0],[660,0.18,3.0]].forEach(([f,g,d])=>{
+    let out=ctx.destination;
+    try{
+      const comp=ctx.createDynamicsCompressor();
+      comp.threshold.value=-8; comp.knee.value=10; comp.ratio.value=12;
+      comp.attack.value=0.003; comp.release.value=0.3;
+      comp.connect(ctx.destination); out=comp;
+    }catch(e){ out=ctx.destination; }
+    [[880,0.55,1.1],[1318,0.32,0.9],[1760,0.20,0.7],[660,0.26,1.0]].forEach(([f,g,d])=>{
       const o=ctx.createOscillator(), gn=ctx.createGain();
       o.type="sine"; o.frequency.value=f;
-      const peak=Math.min(1,g*bellVol*duck);
+      const peak=Math.min(1.7,g*bellVol*duck*b);
       gn.gain.setValueAtTime(0.0001,t0);
-      gn.gain.exponentialRampToValueAtTime(Math.max(0.0002,peak),t0+0.02);
+      gn.gain.exponentialRampToValueAtTime(Math.max(0.0002,peak),t0+0.015);
       gn.gain.exponentialRampToValueAtTime(0.0001,t0+d);
-      o.connect(gn); gn.connect(ctx.destination);
+      o.connect(gn); gn.connect(out);
       o.start(t0); o.stop(t0+d+0.1);
     });
     if(!micCtx) setTimeout(()=>ctx.close().catch(()=>{}),4200);
@@ -4337,7 +4480,8 @@ function rbVibrate(p){ try{ if(navigator.vibrate) navigator.vibrate(p||[180,90,1
 function rbLoudAlert(times){
   try{
     const n=Math.max(1, times||2);
-    for(let i=0;i<n;i++) setTimeout(()=>{ try{ playBell(); }catch(e){} }, i*650);
+    // 3 сигнала подряд и с усилением — на телефоне в шумном коридоре слышно.
+    for(let i=0;i<n;i++) setTimeout(()=>{ try{ playBell(1.8); }catch(e){} }, i*600);
   }catch(e){}
 }
 function notify(key, p, cls, cid){
