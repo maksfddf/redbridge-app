@@ -1812,7 +1812,7 @@ function resumeSession(login){
     }).catch(()=>{ try{ logout(); }catch(e){} });
   }catch(e){ try{ logout(); }catch(e){} }
 }
-const APP_VER="v5.5.23";
+const APP_VER="v5.5.24";
 var splashDone=false;
 function hideSplash(){ if(splashDone) return; splashDone=true; try{ document.getElementById("splash").classList.add("hide"); }catch(e){} try{ const v=document.getElementById("splashVid"); if(v) v.pause(); }catch(e){} setTimeout(()=>{ try{ document.getElementById("splash").remove(); }catch(e){} },600); }
 function setVer(){ try{ document.getElementById("jsok").textContent=APP_VER; }catch(e){} try{ var _lv=document.getElementById("loginVer"); if(_lv) _lv.textContent=APP_VER; }catch(e){} }
@@ -2691,16 +2691,26 @@ function renderJamol(){ const box=document.getElementById("jamolPanel"); if(!box
     +"<button class='btn btn-go btn-sm' onclick='sendJamol(\"call\")'"+(_al?"":" disabled")+">"+t("jamolCall")+"</button>"
     +"<button class='btn btn-back btn-sm' onclick='sendJamol(\"send\")'"+(_al?"":" disabled")+">"+t("jamolSend")+"</button>"
     +"<button class='btn btn-back btn-sm' onclick='sendJamol(\"message\")'"+(_al?"":" disabled")+">"+t("jamolMsg")+"</button></div>"; }
-function sendJamol(kind){ try{ const me=currentUser(); if(!me) return; try{ if(!activeLesson()){ toast(t("stNoLesson")); return; } }catch(e){ return; }
+let jamolBusy=0;
+async function sendJamol(kind){ try{ const me=currentUser(); if(!me) return; try{ if(!activeLesson()){ toast(t("stNoLesson")); return; } }catch(e){ return; }
+  if(Date.now()-jamolBusy<1500) return;   // защита от двойного тапа: одно сообщение
   const sid=((document.getElementById("jamolSid")||{}).value||"");
   const hit=findStudentAny(sid);
   const text=((document.getElementById("jamolText")||{}).value||"").trim();
   if(kind==="message"&&!text){ toast(t("jamolMsgPh")); return; }
+  jamolBusy=Date.now();
   const row={kind:kind,to_role:"exit",from_login:String(me.login||"").toLowerCase().trim(),
-    student:hit?hit.s.name:"",cls:hit?hit.c:"",subject:((lessons[state.cls]&&lessons[state.cls].subject)||""),text:text,status:"new"};
-  try{ supaFetch("notices",{method:"POST",headers:{Prefer:"return=representation"},body:JSON.stringify(row)})
-    .then(()=>{ try{ supaHeat(60000); }catch(e){} try{ supaPullNotices(); }catch(e){} }).catch(()=>{}); }catch(e){}
-  toast(t("jamolSent"),true); }catch(e){} }
+    student:hit?hit.s.name:"",cls:hit?hit.c:"",subject:((lessons[state.cls]&&lessons[state.cls].subject)||""),text:text,status:"new",
+    cid:"jamol-"+Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,7)};
+  try{
+    const r=await supaFetch("notices?on_conflict=cid",{method:"POST",headers:{Prefer:"return=representation,resolution=ignore-duplicates"},body:JSON.stringify(row)});
+    if(!r||!r.ok){ toast(t("saveError"),true); return; }
+    try{ supaHeat(60000); }catch(e){}
+    try{ supaPullNotices(); }catch(e){}
+    toast(t("jamolSent"),true);
+    try{ const el=document.getElementById("jamolText"); if(el) el.value=""; }catch(e){}
+  }catch(e){ toast(t("saveError"),true); }
+}catch(e){} }
 let walkieTab="t";
 
 function closeWalkie(){ try{ walkieVoiceCancel(); }catch(e){} try{ document.getElementById("walkieOverlay").classList.remove("open"); }catch(e){} }
@@ -4545,6 +4555,24 @@ function htmlEscAngles(v){ return String(v==null?"":v).replace(/</g,"&lt;").repl
 function htmlSafeP(o){ const r={}; try{ for(const k in (o||{})){ const v=o[k]; r[k]=(typeof v==="string")?htmlEscAngles(v):v; } }catch(e){} return r; }
 function logText(l){ if(!l) return ""; if(l.key){ const p=Object.assign({subj:"",names:"",dest:""},l.p||{}); if(p.c) p.cls=esc(clsName(p.c)); if(p.mc) p.cls=p.mc.map(c=>esc(clsName(c))).join(", "); if(p.kind) p.kind=kindName(p.kind); let h=t(l.key,htmlSafeP(p)); try{ const _by=(l.p&&(l.p.by||l.p.who))||""; if(_by) h+=' <span class="muted">\u2014 '+esc(_by)+'</span>'; }catch(e){} return h; } return l.text||""; }
 function notifText(n){ if(!n) return ""; if(n.key){ const p=Object.assign({},n.p||{}); if(p.c) p.cls=esc(clsName(p.c)); if(p.mc) p.cls=p.mc.map(c=>esc(clsName(c))).join(", "); if(p.kind) p.kind=kindName(p.kind); let h=t(n.key,htmlSafeP(p)); try{ const _by=(n.p&&(n.p.by||n.p.who))||""; if(_by) h+=' <span class="muted">\u2014 '+esc(_by)+'</span>'; }catch(e){} return h; } return esc(n.text||""); }
+// Системное уведомление ОС через Electron (macOS/Windows), когда окно скрыто.
+// В браузере и APK функции нет — там либо Web Push, либо ничего.
+function osNotify(r){
+  try{
+    const api=window.rbSecure;
+    if(!api||typeof api.notify!=="function") return;
+    if(!document.hidden) return;                 // окно на экране — хватает тоста
+    const kind=String((r&&r.kind)||"");
+    const titles={call:"Вызов",send:"Направление","walkie-call":"Вызов по рации","walkie-msg":"Сообщение по рации",
+      "walkie-voice":"Голосовое сообщение","voice-reply":"Голосовой ответ",reply:"Ответ",warn5:"Скоро урок",message:"Оповещение"};
+    const parts=[];
+    if(r&&r.cls) parts.push(clsName(r.cls));
+    if(r&&r.subject) parts.push(r.subject);
+    if(r&&r.student) parts.push(r.student);
+    if(r&&r.text) parts.push(String(r.text).slice(0,140));
+    api.notify("RedBridge · "+(titles[kind]||"Оповещение"), parts.filter(Boolean).join(" · ")||"Новое оповещение");
+  }catch(e){}
+}
 // Вибрация при оповещении: работает в APK (permission VIBRATE) и в Android-браузере.
 // iOS вибрацию из веба не отдаёт — там просто без вибрации.
 function rbVibrate(p){ try{ if(navigator.vibrate) navigator.vibrate(p||[180,90,180]); }catch(e){} }
@@ -6052,6 +6080,7 @@ function noticeOverlay(r){ try{
   if(!((r.to_role===me.role)||me.role==="admin"||me.role==="ceo")) return;
   const isW=(r.kind==="walkie-call"||r.kind==="walkie-msg");   if(isW&&!walkieForMe(r)) return;
   const isW5=(r.kind==="warn5");   if(isW5){ const _mc=myClasses(); if(!((r.to_role===me.role&&_mc.indexOf(String(r.cls))>=0)||me.role==="admin"||me.role==="ceo")) return; }
+  try{ osNotify(r); }catch(e){}
   try{ unlockAudio(); }catch(e){}
   if(isW||r.kind==="voice-reply"||r.kind==="reply"){ try{ rbVibrate([160,80,160]); }catch(e){} try{ rbLoudAlert(2); }catch(e){} }
   if(isW5){
