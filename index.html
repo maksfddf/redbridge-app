@@ -4542,6 +4542,7 @@ function renderNotifPanel(){
       if(!n||n.status!=="new") return false;
       const _tl=String(n.toLogin||"").toLowerCase().trim();
       if(_tl && _mine && _tl!==_mine) return false;
+      if(n.kind==="warn5" && n.cls){ try{ if(myClasses().indexOf(String(n.cls))<0) return false; }catch(e){} }
       if(n.kind==="warn5"){ try{ if(_now-new Date(n.t).getTime()>15*60*1000) return false; }catch(e){} }
       return true;
     });
