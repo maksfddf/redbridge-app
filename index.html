@@ -1748,7 +1748,7 @@ function resumeSession(login){
     }).catch(()=>{ try{ logout(); }catch(e){} });
   }catch(e){ try{ logout(); }catch(e){} }
 }
-const APP_VER="v5.5.19";
+const APP_VER="v5.5.20";
 var splashDone=false;
 function hideSplash(){ if(splashDone) return; splashDone=true; try{ document.getElementById("splash").classList.add("hide"); }catch(e){} try{ const v=document.getElementById("splashVid"); if(v) v.pause(); }catch(e){} setTimeout(()=>{ try{ document.getElementById("splash").remove(); }catch(e){} },600); }
 function setVer(){ try{ document.getElementById("jsok").textContent=APP_VER; }catch(e){} try{ var _lv=document.getElementById("loginVer"); if(_lv) _lv.textContent=APP_VER; }catch(e){} }
@@ -2808,9 +2808,10 @@ let vmsgBlob=null, vmsgMime="", vmsgMs=0, vmsgBusy=false, vmsgDone=false;
 let vmsgAudio=null, vmsgAudioURL="", vmsgAudioId=0;
 function vmsgFmt(ms){ const s=Math.max(0,Math.round((ms||0)/1000)); return Math.floor(s/60)+":"+("0"+(s%60)).slice(-2); }
 function vmsgRand(){ try{ if(window.crypto&&crypto.randomUUID) return crypto.randomUUID(); }catch(e){} return Date.now().toString(36)+Math.random().toString(36).slice(2,10); }
-// Формат записи: сначала m4a/aac — его играют и Android, и iPhone.
-// webm/opus остаётся запасным: iPhone такое не воспроизводит.
-function vmsgPickMime(){ try{ const list=["audio/mp4;codecs=mp4a.40.2","audio/mp4","audio/webm;codecs=opus","audio/webm","audio/ogg;codecs=opus"]; for(const m of list){ if(MediaRecorder.isTypeSupported(m)) return m; } }catch(e){} return ""; }
+// Формат записи: webm/opus — проверенно работает на Android; iPhone его писать
+// не умеет и получает m4a/aac. Порядок важен: m4a у Android бывает «заявлен»,
+// но пишется битым — поэтому он только запасной.
+function vmsgPickMime(){ try{ const list=["audio/webm;codecs=opus","audio/webm","audio/ogg;codecs=opus","audio/mp4;codecs=mp4a.40.2","audio/mp4"]; for(const m of list){ if(MediaRecorder.isTypeSupported(m)) return m; } }catch(e){} return ""; }
 function vmsgSetUi(state){
   try{
     const bar=document.getElementById("walkieVoiceBar");
@@ -4306,9 +4307,13 @@ function htmlEscAngles(v){ return String(v==null?"":v).replace(/</g,"&lt;").repl
 function htmlSafeP(o){ const r={}; try{ for(const k in (o||{})){ const v=o[k]; r[k]=(typeof v==="string")?htmlEscAngles(v):v; } }catch(e){} return r; }
 function logText(l){ if(!l) return ""; if(l.key){ const p=Object.assign({subj:"",names:"",dest:""},l.p||{}); if(p.c) p.cls=esc(clsName(p.c)); if(p.mc) p.cls=p.mc.map(c=>esc(clsName(c))).join(", "); if(p.kind) p.kind=kindName(p.kind); let h=t(l.key,htmlSafeP(p)); try{ const _by=(l.p&&(l.p.by||l.p.who))||""; if(_by) h+=' <span class="muted">\u2014 '+esc(_by)+'</span>'; }catch(e){} return h; } return l.text||""; }
 function notifText(n){ if(!n) return ""; if(n.key){ const p=Object.assign({},n.p||{}); if(p.c) p.cls=esc(clsName(p.c)); if(p.mc) p.cls=p.mc.map(c=>esc(clsName(c))).join(", "); if(p.kind) p.kind=kindName(p.kind); let h=t(n.key,htmlSafeP(p)); try{ const _by=(n.p&&(n.p.by||n.p.who))||""; if(_by) h+=' <span class="muted">\u2014 '+esc(_by)+'</span>'; }catch(e){} return h; } return esc(n.text||""); }
+// Вибрация при оповещении: работает в APK (permission VIBRATE) и в Android-браузере.
+// iOS вибрацию из веба не отдаёт — там просто без вибрации.
+function rbVibrate(p){ try{ if(navigator.vibrate) navigator.vibrate(p||[180,90,180]); }catch(e){} }
 function notify(key, p, cls, cid){
   try{ if(cid&&notifs.some(n=>n&&n.cid===cid)) return false; }catch(e){}
   notifs.unshift({t:now(), key:key, p:p||{}, cls:cls||"", cid:cid||""});
+  try{ rbVibrate(); }catch(e){}
   if(notifs.length>30) notifs.pop();
   unread++;
   renderBell();
@@ -4573,6 +4578,7 @@ function showCallOverlay(name, dest, kind, by, cls, voiceText, kick){
   document.getElementById("callDestLabel").textContent=dest;
   document.getElementById("callMeta").textContent=[cls,kind,by].filter(Boolean).join(", ");
   document.getElementById("callOverlay").classList.add("open");
+  try{ rbVibrate([300,120,300,120,300]); }catch(e){}
   clearTimeout(callTimer);
   callTimer=setTimeout(hideCallOverlay,30000);
   try{ if(window.rbSecure&&typeof window.rbSecure.focusCall==="function") window.rbSecure.focusCall().catch(()=>{}); }catch(e){}
@@ -5785,6 +5791,7 @@ function noticeOverlay(r){ try{
   const isW=(r.kind==="walkie-call"||r.kind==="walkie-msg");   if(isW&&!walkieForMe(r)) return;
   const isW5=(r.kind==="warn5");   if(isW5){ const _mc=myClasses(); if(!((r.to_role===me.role&&_mc.indexOf(String(r.cls))>=0)||me.role==="admin"||me.role==="ceo")) return; }
   try{ unlockAudio(); }catch(e){}
+  if(isW||r.kind==="voice-reply"||r.kind==="reply"){ try{ rbVibrate([160,80,160]); }catch(e){} }
   if(isW5){
     if(!notify("warn5",{c:r.cls||""},"",r.cid||"")) return;
     if(me.role!=="teacher"||myClasses().indexOf(String(r.cls||""))<0) return;
@@ -7139,7 +7146,10 @@ function assistAskAI(q){
   });
 }
 function assistCanWalkie(){ try{ const me=currentUser(); return !!me&&WALKIE_ROLES.indexOf(me.role)>=0; }catch(e){ return false; } }
-function assistCanCall(){ try{ const me=currentUser(); const tabs=(me&&ROLE_TABS[me.role])||[]; return tabs.indexOf("exit")>=0; }catch(e){ return false; } }
+// Кто может вызывать ученика. Раньше проверялась вкладка «Охрана» — из-за этого
+// медпункт получал отказ, хотя в базе вызовы ему разрешены (RLS calls append).
+const CALL_ROLES=["reception","exit","med","duty","admin","ceo"];
+function assistCanCall(){ try{ const me=currentUser(); return !!me&&CALL_ROLES.indexOf(String(me.role||"admin"))>=0; }catch(e){ return false; } }
 function astMatchStaff(q){
   const res=[];
   try{
