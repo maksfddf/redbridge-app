@@ -905,6 +905,15 @@ html.perf .roster-class,html.perf .log-item,html.perf .side-card,html.perf .lib-
 }
 html.perf .stat,html.perf .card,html.perf .panel{will-change:auto}
 
+/* ===== системная плашка (офлайн, истёкшая сессия) ===== */
+.sys-banner{
+  position:fixed;left:50%;top:calc(10px + env(safe-area-inset-top));transform:translateX(-50%);
+  z-index:280;display:flex;align-items:center;gap:10px;max-width:calc(100vw - 24px);
+  padding:10px 10px 10px 14px;border-radius:14px;background:#1F3864;color:#fff;
+  font:600 13px/1.35 'Inter',system-ui,sans-serif;box-shadow:0 10px 30px rgba(0,0,0,.25)
+}
+.sys-banner .chip-btn{background:rgba(255,255,255,.16);border-color:rgba(255,255,255,.35);color:#fff}
+
 /* ===== голосовой ответ ===== */
 .vrep-modal{max-width:420px}
 /* компактные кнопки действий в оповещениях */
@@ -1498,6 +1507,10 @@ html.standalone-ios body{overscroll-behavior-y:none}
     <div id="flatSchedBody"></div>
   </div>
 </div>
+<div id="sysBanner" class="sys-banner" role="status" style="display:none">
+  <span id="sysBannerText"></span>
+  <button class="chip-btn" id="sysBannerBtn" onclick="sysBannerAct()" style="display:none"></button>
+</div>
 <div id="toasts"></div>
 <button id="assistFab" class="assist-fab" onclick="assistToggle()" aria-label="Assistant" aria-haspopup="dialog" aria-controls="assistPanel" aria-expanded="false">
   <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.2l1.85 5.6a3.2 3.2 0 0 0 2.35 2.35L21.8 12l-5.6 1.85a3.2 3.2 0 0 0-2.35 2.35L12 21.8l-1.85-5.6a3.2 3.2 0 0 0-2.35-2.35L2.2 12l5.6-1.85a3.2 3.2 0 0 0 2.35-2.35L12 2.2z" fill="currentColor"/></svg>
@@ -1564,6 +1577,9 @@ try{
     vrepFail:"Не удалось отправить голосовое",
     vrepSelf:"Это ваше сообщение",
     iosSoundOff:"Звук заблокирован: выключите режим «Без звука» и поднимите громкость",
+    sessLost:"Сессия истекла — войдите снова",
+    noNet:"Нет интернета — данные обновятся, когда связь вернётся",
+    netBack:"Связь восстановлена",
     pushTitle:"Уведомления на телефон",
     pushDesc:"Системные уведомления приходят, даже когда приложение закрыто.",
     pushIosHint:"На iPhone: добавьте приложение на экран «Домой» (Safari → Поделиться) и включите здесь.",
@@ -1597,6 +1613,9 @@ try{
     vrepFail:"Could not send the voice message",
     vrepSelf:"That is your own message",
     iosSoundOff:"Sound is muted: turn off Silent mode and raise the volume",
+    sessLost:"Session expired — please sign in again",
+    noNet:"No internet — data will refresh when you are back online",
+    netBack:"Back online",
     pushTitle:"Phone notifications",
     pushDesc:"System notifications arrive even when the app is closed.",
     pushIosHint:"On iPhone: add the app to the Home screen (Safari → Share) and enable it here.",
@@ -1748,6 +1767,7 @@ function laterRenderExit(){ const g=uiGen; setTimeout(()=>{ try{ if(g===uiGen) r
 var logoutBusy=false;
 async function logout(){
   if(logoutBusy) return; logoutBusy=true;
+  try{ await pushUnsubscribe(true); }catch(e){}   // устройство не должно получать пуши после выхода
   try{
   try{ uiGen++; }catch(e){}
   try{ if(typeof lockFiles==="function") lockFiles(); }catch(e){}
@@ -1792,7 +1812,7 @@ function resumeSession(login){
     }).catch(()=>{ try{ logout(); }catch(e){} });
   }catch(e){ try{ logout(); }catch(e){} }
 }
-const APP_VER="v5.5.21";
+const APP_VER="v5.5.23";
 var splashDone=false;
 function hideSplash(){ if(splashDone) return; splashDone=true; try{ document.getElementById("splash").classList.add("hide"); }catch(e){} try{ const v=document.getElementById("splashVid"); if(v) v.pause(); }catch(e){} setTimeout(()=>{ try{ document.getElementById("splash").remove(); }catch(e){} },600); }
 function setVer(){ try{ document.getElementById("jsok").textContent=APP_VER; }catch(e){} try{ var _lv=document.getElementById("loginVer"); if(_lv) _lv.textContent=APP_VER; }catch(e){} }
@@ -2999,6 +3019,41 @@ function walkieSenderName(login){
   try{ const u=(users||[]).find(x=>String(x.login||"").toLowerCase()===String(login||"").toLowerCase()); return (u&&(u.name||u.login))||login||""; }catch(e){ return login||""; }
 }
 function walkieTabSw(tab){ try{ walkieVoiceCancel(); }catch(e){} try{ walkieTab=tab; const ws=document.getElementById("walkieSearch"); if(ws) ws.value=""; walkieRender(); }catch(e){} }
+// ===== системная плашка и мелочи надёжности =====
+function sysBanner(text, actionText, action){
+  try{
+    const b=document.getElementById("sysBanner"); if(!b) return;
+    let t=document.getElementById("sysBannerText"); if(t) t.textContent=text;
+    let btn=document.getElementById("sysBannerBtn");
+    window.__sysAct=action||null;
+    if(btn){ if(actionText){ btn.style.display=""; btn.textContent=actionText; } else btn.style.display="none"; }
+    b.style.display="flex";
+  }catch(e){}
+}
+function sysBannerHide(){ try{ const b=document.getElementById("sysBanner"); if(b) b.style.display="none"; }catch(e){} }
+function sysBannerAct(){ try{ const f=window.__sysAct; if(typeof f==="function") f(); }catch(e){} }
+let authLostAt=0;
+function rbAuthLost(){
+  try{
+    const now=Date.now(); if(now-authLostAt<30000) return; authLostAt=now;
+    sysBanner(t("sessLost"), t("signIn"), ()=>{ sysBannerHide(); try{ logout(); }catch(e){} });
+  }catch(e){}
+}
+try{
+  window.addEventListener("offline", ()=>{ try{ sysBanner(t("noNet")); }catch(e){} });
+  window.addEventListener("online", ()=>{ try{ sysBannerHide(); toast(t("netBack")); }catch(e){} });
+  document.addEventListener("keydown", (e)=>{
+    try{
+      if(e.key!=="Escape") return;
+      const closers={overlay:"closeModal",schedOverlay:"closeSchedule",schedFlatOverlay:"closeFlatSchedule",walkieOverlay:"closeWalkie",vrepOverlay:"vrepClose",pvOverlay:"closePreview"};
+      for(const id in closers){
+        const el=document.getElementById(id);
+        if(el&&el.classList.contains("open")){ const fn=window[closers[id]]; if(typeof fn==="function") fn(); else el.classList.remove("open"); return; }
+      }
+    }catch(_){}
+  }, {passive:true});
+}catch(e){}
+
 // Список сотрудников для «Рации» и голосовых. Раньше полный список тянул
 // только админ — из-за этого учитель видел в поиске только себя.
 async function pullStaffList(){
@@ -4226,7 +4281,8 @@ async function pushSubscribe(silent){
     const j=sub.toJSON?sub.toJSON():{endpoint:sub.endpoint, keys:{p256dh:'',auth:''}};
     const keys=j.keys||{};
     const row={login:String(me.login||'').toLowerCase().trim(), endpoint:j.endpoint,
-      p256dh:String(keys.p256dh||''), auth:String(keys.auth||''), ua:String(navigator.userAgent||'').slice(0,180)};
+      p256dh:String(keys.p256dh||''), auth:String(keys.auth||''), ua:String(navigator.userAgent||'').slice(0,180),
+      lang:(typeof lang==="string"?lang:"ru")};
     await supaFetch("push_subs?on_conflict=endpoint",{method:"POST",
       headers:{Prefer:"resolution=merge-duplicates,return=minimal"},body:JSON.stringify(row)});
     try{ localStorage.setItem("rb_push","1"); }catch(e){}
@@ -4512,6 +4568,14 @@ function notify(key, p, cls, cid){
   return true;
 }
 function renderBell(){ const b=document.getElementById("notifCount"); if(!b) return; b.textContent=unread; b.style.display=unread?"":"none"; const bell=document.getElementById("bellBtn"); if(bell) bell.classList.toggle("ring",unread>0); if(unread){ try{ b.classList.remove("pop"); void b.offsetWidth; b.classList.add("pop"); }catch(e){} } }
+// Пуш открывает приложение с #notices — сразу показываем оповещения.
+function handleDeepLink(){
+  try{
+    const h=String(location.hash||"").replace(/^#/,"");
+    if(h==="notices"){ if(!notifOpen) toggleNotifs(); setTimeout(()=>{ try{ renderNotifPanel(); }catch(e){} }, 400); }
+    if(h){ try{ history.replaceState(null,"",location.pathname+location.search); }catch(e){} }
+  }catch(e){}
+}
 function toggleNotifs(){
   notifOpen=!notifOpen;
   document.getElementById("notifPanel").classList.toggle("open",notifOpen);
@@ -5370,6 +5434,7 @@ async function supaFetch(path, opts){
       const s2=supaSessionGet();
       r=await doFetch(s2?s2.t:"");
     }
+    if(r&&r.status===401){ try{ rbAuthLost(); }catch(e){} }
   }
   return r;
 }
@@ -7804,6 +7869,7 @@ function assistClose(){ try{ const p=document.getElementById("assistPanel"); if(
 document.addEventListener("keydown",function(e){ try{ if(e&&e.key==="Escape"){ const p=document.getElementById("assistPanel"); if(p&&p.classList.contains("open")) assistClose(); } }catch(_){}});
 
 try{ rbPerfIntervals(); renderPerfBtn(); }catch(e){}
+try{ setTimeout(handleDeepLink, 1200); }catch(e){}
 try{ setInterval(voiceCleanup, 60*1000); setTimeout(voiceCleanup, 8000); }catch(e){}
 try{ setTimeout(()=>{ try{ pullStaffList(); }catch(e){} }, 3000); setInterval(()=>{ try{ if(document.visibilityState==="visible") pullStaffList(); }catch(e){} }, 5*60*1000); }catch(e){}
 try{ renderClassTabs(); renderAll(); }catch(e){ try{console.error(e);}catch(_){} }
