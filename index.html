@@ -12,7 +12,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default" />
 <meta name="apple-mobile-web-app-title" content="RedBridge" />
 <meta name="theme-color" content="#C1272D" />
-<meta name="app-version" content="v5.5.30" />
+<meta name="app-version" content="v5.5.31" />
 <!-- Приложение — один инлайновый скрипт, поэтому script-src вынужденно
      допускает 'unsafe-inline'. Зато default-src/connect-src закрывают
      подгрузку чужих скриптов и утечку данных на сторонние хосты:
@@ -1627,6 +1627,7 @@ html.standalone-ios body{overscroll-behavior-y:none}
     </div>
     <button class="btn btn-go radio-btn" id="radioTalkBtn" onclick="radioTalkToggle()">Говорить</button>
     <div class="radio-state" id="radioTalkState"></div>
+    <div class="muted" id="radioDiag" style="text-align:center;font-size:11.5px;margin-top:6px"></div>
   </div>
 </div>
 <div class="radio-live" id="radioLive">
@@ -2017,7 +2018,7 @@ function resumeSession(login){
     }).catch(()=>{ try{ logout(); }catch(e){} });
   }catch(e){ try{ logout(); }catch(e){} }
 }
-const APP_VER="v5.5.30";
+const APP_VER="v5.5.31";
 var splashDone=false;
 function hideSplash(){ if(splashDone) return; splashDone=true; try{ document.getElementById("splash").classList.add("hide"); }catch(e){} try{ const v=document.getElementById("splashVid"); if(v) v.pause(); }catch(e){} setTimeout(()=>{ try{ document.getElementById("splash").remove(); }catch(e){} },600); }
 function setVer(){ try{ document.getElementById("jsok").textContent=APP_VER; }catch(e){} try{ var _lv=document.getElementById("loginVer"); if(_lv) _lv.textContent=APP_VER; }catch(e){} }
@@ -4497,7 +4498,20 @@ const VAPID_PUBLIC="BBCqoFud0jQRg4OQ3ucfbDo77bBAJCv5FrbV9g9iMSH0BCUAYNX_kv_aPLZ9
 const RADIO_TOPIC="realtime:live-radio";
 const RADIO_RATE=8000, RADIO_CHUNK=1280;   // 160 мс при 8 кГц
 let radioJoined=false, radioSending=false, radioSelTarget="all", radioT0=0;
-let radioCtx=null, radioStream=null, radioNode=null, radioBuf=[], radioFlushT=null, radioRun=false;
+let radioJoinT=null;
+function radioJoin(force){
+  try{
+    if(!force && radioJoined) return;
+    const t=(function(){ try{ return supaTokenSync()||""; }catch(e){ return ""; } })();
+    if(!t) return;
+    rtSend({topic:RADIO_TOPIC,event:"phx_join",ref:String(rtRef++),payload:{config:{broadcast:{ack:false,self:false}},access_token:t}});
+  }catch(e){}
+}
+function radioJoinLoop(){
+  try{ if(radioJoinT) clearInterval(radioJoinT); }catch(e){}
+  radioJoinT=setInterval(()=>{ try{ if(!radioJoined) radioJoin(true); }catch(e){} }, 5000);
+}
+let radioCtx=null, radioStream=null, radioNode=null, radioBuf=[], radioFlushT=null, radioBeatT=null, radioRun=false;
 let radioPlayAt=0, radioRxFrom="", radioRxTarget="", radioListening=false, radioLastChunk=0;
 let radioStats={sent:0,got:0,lastAt:0};
 
@@ -4565,6 +4579,8 @@ async function radioStart(){
     try{ if(radioTalkT) clearInterval(radioTalkT); radioTalkT=setInterval(radioTalkPaint,1000); }catch(e){}
     radioSend("start",{from:radioMe(),fromName:radioName(),target:radioTargetValue(),ts:Date.now()});
     if(radioFlushT) clearInterval(radioFlushT);
+    try{ if(radioBeatT) clearInterval(radioBeatT); }catch(e){}
+    radioBeatT=setInterval(()=>{ try{ if(radioSending) radioSend("start",{from:radioMe(),fromName:radioName(),target:radioTargetValue(),ts:Date.now()}); }catch(e){} },3000);
     radioFlushT=setInterval(()=>{
       try{
         if(!radioSending||!radioBuf.length) return;
@@ -4582,6 +4598,7 @@ function radioStop(silent){
   const was=radioSending;
   radioSending=false; radioRun=false;
   try{ if(radioFlushT){ clearInterval(radioFlushT); radioFlushT=null; } }catch(e){}
+  try{ if(radioBeatT){ clearInterval(radioBeatT); radioBeatT=null; } }catch(e){}
   try{ if(radioNode){ radioNode.disconnect(); radioNode.onaudioprocess=null; radioNode=null; } }catch(e){}
   try{ if(radioStream){ radioStream.getTracks().forEach(x=>{ try{x.stop();}catch(e){} }); radioStream=null; } }catch(e){}
   radioBuf=[];
@@ -4621,6 +4638,8 @@ function radioTalkPaint(){
       } else st.textContent="";
     }
     const sel=document.getElementById("radioTalkTarget"); if(sel) sel.disabled=radioSending;
+    const dg=document.getElementById("radioDiag");
+    if(dg) dg.textContent=(radioJoined?"канал: подключён":"канал: подключаюсь…")+" · отправлено "+radioStats.sent+" · принято "+radioStats.got;
   }catch(e){}
 }
 function radioTalkToggle(){
@@ -4663,7 +4682,15 @@ function radioOnEvent(p){
       try{ rbVibrate([220,80,220]); rbLoudAlert(1); }catch(e){}
       try{ toast(t("radioLive",{who:radioRxFrom})); }catch(e){}
     }else if(ev==="chunk"){
-      if(!radioListening) return;
+      if(!radioListening){                      // опоздали к началу — считаем это стартом
+        radioRxFrom=String(d.fromName||d.from||"");
+        radioRxTarget=String(d.target||"all");
+        radioListening=true; radioPlayAt=0;
+        try{ radioCtxGet(); }catch(e){}
+        radioShowLive(radioRxFrom, radioRxTarget);
+        try{ rbVibrate([220,80,220]); rbLoudAlert(1); }catch(e){}
+        radioRender();
+      }
       radioLastChunk=Date.now(); radioStats.got++;
       try{ radioPlay(radioUnB64(d.data)); }catch(e){}
       if(document.hidden) return;
@@ -5798,6 +5825,7 @@ function rtOnMsg(m){
   try{
     if(String(m.topic||"").indexOf("live-radio")>=0){
       if(m.event==="broadcast"){ radioOnEvent(m.payload); }
+      else if(m.event==="phx_reply"){ radioJoined=!!(m.payload&&m.payload.status==="ok"); radioRender(); }
       return;
     }
   }catch(e){}
@@ -8449,7 +8477,8 @@ document.addEventListener("keydown",function(e){ try{ if(e&&e.key==="Escape"){ c
 try{ rbPerfIntervals(); renderPerfBtn(); }catch(e){}
 try{ setTimeout(handleDeepLink, 1200); }catch(e){}
 try{ setInterval(voiceCleanup, 60*1000); setTimeout(voiceCleanup, 8000); }catch(e){}
-try{ setTimeout(()=>{ try{ if(fcmPlugin()) fcmInit(true); }catch(e){} }, 2500); }catch(e){}
+try{ setTimeout(()=>{ try{ if(fcmPlugin()) fcmInit(true); }catch(e){}
+    try{ radioJoin(true); radioJoinLoop(); }catch(e){} }, 2500); }catch(e){}
 try{ setTimeout(()=>{ try{ pullStaffList(); }catch(e){} }, 3000); setInterval(()=>{ try{ if(document.visibilityState==="visible") pullStaffList(); }catch(e){} }, 5*60*1000); }catch(e){}
 try{ renderClassTabs(); renderAll(); }catch(e){ try{console.error(e);}catch(_){} }
 // Проверяем обновление сразу, ещё до входа: старую версию человек
