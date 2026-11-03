@@ -959,6 +959,21 @@ html.theme-dark .sheet,html.theme-dark .vrep-mic{background:#232834;border-color
 html.theme-dark .upd-banner{background:#1A1E27;color:var(--ink)}
 html.theme-dark .notif-panel h4,html.theme-dark .panel h3,html.theme-dark h3{color:var(--ink)}
 
+/* ===== табы в колокольчике ===== */
+.notif-tabs{display:flex;gap:6px;margin:2px 0 10px}
+
+/* ===== скелетоны загрузки ===== */
+.skel{display:flex;align-items:center;gap:12px;padding:14px 16px}
+.skel-av{width:34px;height:34px;border-radius:50%;background:rgba(31,38,135,.09);flex:0 0 auto}
+.skel-lines{flex:1;display:flex;flex-direction:column;gap:7px}
+.skel-line{height:10px;border-radius:6px;background:rgba(31,38,135,.09)}
+.skel-line.w60{width:60%}
+.skel-line.w35{width:35%;opacity:.7}
+.skel-av,.skel-line{animation:skelPulse 1.15s ease-in-out infinite}
+@keyframes skelPulse{0%,100%{opacity:.5}50%{opacity:.95}}
+html.theme-dark .skel-av,html.theme-dark .skel-line{background:rgba(255,255,255,.09)}
+html.perf .skel-av,html.perf .skel-line{animation:none;opacity:.7}
+
 /* ===== системная плашка (офлайн, истёкшая сессия) ===== */
 .sys-banner{
   position:fixed;left:50%;top:calc(10px + env(safe-area-inset-top));transform:translateX(-50%);
@@ -1643,6 +1658,10 @@ try{
     sessLost:"Сессия истекла — войдите снова",
     noNet:"Нет интернета — данные обновятся, когда связь вернётся",
     netBack:"Связь восстановлена",
+    notifNewTab:"Новые",
+    notifHistoryTab:"История",
+    noticeNew:"новое",
+    noticeAccepted:"принято",
     themeTitle:"Тема",
     themeDesc:"Авто — как в системе. Тёмная тема бережёт глаза вечером.",
     themeAuto:"Авто",
@@ -1685,6 +1704,10 @@ try{
     sessLost:"Session expired — please sign in again",
     noNet:"No internet — data will refresh when you are back online",
     netBack:"Back online",
+    notifNewTab:"New",
+    notifHistoryTab:"History",
+    noticeNew:"new",
+    noticeAccepted:"accepted",
     themeTitle:"Theme",
     themeDesc:"Auto follows the system. Dark theme is easier at night.",
     themeAuto:"Auto",
@@ -1887,7 +1910,7 @@ function resumeSession(login){
     }).catch(()=>{ try{ logout(); }catch(e){} });
   }catch(e){ try{ logout(); }catch(e){} }
 }
-const APP_VER="v5.5.25";
+const APP_VER="v5.5.26";
 var splashDone=false;
 function hideSplash(){ if(splashDone) return; splashDone=true; try{ document.getElementById("splash").classList.add("hide"); }catch(e){} try{ const v=document.getElementById("splashVid"); if(v) v.pause(); }catch(e){} setTimeout(()=>{ try{ document.getElementById("splash").remove(); }catch(e){} },600); }
 function setVer(){ try{ document.getElementById("jsok").textContent=APP_VER; }catch(e){} try{ var _lv=document.getElementById("loginVer"); if(_lv) _lv.textContent=APP_VER; }catch(e){} }
@@ -3125,6 +3148,10 @@ function rbAuthLost(){
   }catch(e){}
 }
 try{
+  document.querySelectorAll(".overlay").forEach(el=>{ el.setAttribute("role","dialog"); el.setAttribute("aria-modal","true"); });
+  const toastsEl=document.getElementById("toasts"); if(toastsEl){ toastsEl.setAttribute("aria-live","polite"); toastsEl.setAttribute("role","log"); }
+}catch(e){}
+try{
   window.addEventListener("offline", ()=>{ try{ sysBanner(t("noNet")); }catch(e){} });
   window.addEventListener("online", ()=>{ try{ sysBannerHide(); toast(t("netBack")); }catch(e){} });
   document.addEventListener("keydown", (e)=>{
@@ -3304,6 +3331,13 @@ const list=(state.seventh?(function(){ const o=[]; try{ const _m7=currentUser();
   }catch(e){}
   if(state.seventh){ try{ renderClubInto(); }catch(e){} return; }
   const tb=document.getElementById("tbodyT"); tb.innerHTML="";
+  // Первая загрузка: показываем скелетон вместо «пусто».
+  try{
+    if(!list.length && !dbLength()){
+      tb.innerHTML=Array.from({length:5},()=>"<tr><td colspan='4'><div class='skel'><span class='skel-av'></span><span class='skel-lines'><span class='skel-line w60'></span><span class='skel-line w35'></span></span></div></td></tr>").join("");
+      return;
+    }
+  }catch(e){}
   let nP=0,nOut=0,nLate=0;
   list.forEach(s=>{
     if(L&&L.present[s.id])nP++;
@@ -4746,6 +4780,8 @@ function toggleNotifs(){
   if(notifOpen){ unread=0; renderBell(); renderNotifPanel(); }
 }
 function noticeFrom(n){ try{ const _l=String((n&&n.from)||"").toLowerCase(); const _u=(users||[]).find(u=>String(u.login||"").toLowerCase()===_l); return (_u&&(_u.name||_u.login))||(n&&n.from)||""; }catch(e){ return ""; } }
+let notifShowHistory=false;
+function notifTab(v){ try{ notifShowHistory=!!v; renderNotifPanel(); }catch(e){} }
 function renderNotifPanel(){
   const p=document.getElementById("notifList"); if(!p) return;
   let nh="", locals=[];
@@ -4754,6 +4790,17 @@ function renderNotifPanel(){
     const canDone=me&&(me.role==="admin"||me.role==="ceo"||me.role==="reception"||me.role==="exit"||me.role==="med");
     const _now=Date.now();
     const _mine=String((me&&me.login)||"").toLowerCase().trim();
+    if(notifShowHistory){
+      const hist=noticesArr.slice().reverse().filter(n=>n && n.id).slice(0,20);
+      const rows=hist.map(n=>{
+        const st=n.status==="accepted"?t("noticeAccepted"):t("noticeNew");
+        return "<div class='log-item notif-item'><div class='ni-head'><span class='ni-time'>"+esc(fmtTash(n.t||""))+"</span><b>"+esc(noticeKindName(n.kind))+"</b>"+
+          (n.student?"<span class='ni-meta'>"+esc(n.student)+"</span>":"")+"</div>"+
+          "<div class='ni-from'>"+esc(noticeFrom(n))+" · "+st+"</div></div>";
+      }).join("");
+      p.innerHTML="<div class='notif-tabs'><button class='chip-btn' onclick='notifTab(0)'>"+t("notifNewTab")+"</button><button class='chip-btn primary' onclick='notifTab(1)'>"+t("notifHistoryTab")+"</button></div>"+(rows||"<span class='muted'>"+t("emptyLog")+"</span>");
+      return;
+    }
     const all=noticesArr.slice().reverse().filter(n=>{
       if(!n||n.status!=="new") return false;
       const _tl=String(n.toLogin||"").toLowerCase().trim();
@@ -4777,7 +4824,8 @@ function renderNotifPanel(){
     const lseen={};
     locals=notifs.filter(n=>{ if(n.cid&&cloudCids[n.cid]) return false; const cid=n.cid||("k:"+n.key+"|"+n.t); if(lseen[cid]) return false; lseen[cid]=1; return true; });
   }catch(e){}
-  p.innerHTML=(nh||"")+(locals||[]).map(n=>"<div class='log-item'><span class='muted'>"+esc(n.t)+"</span><span>"+notifText(n)+"</span></div>").join("")||'<span class="muted">'+t("noAlerts")+'</span>';
+  const tabs="<div class='notif-tabs'><button class='chip-btn primary' onclick='notifTab(0)'>"+t("notifNewTab")+"</button><button class='chip-btn' onclick='notifTab(1)'>"+t("notifHistoryTab")+"</button></div>";
+  p.innerHTML=tabs+((nh||"")+(locals||[]).map(n=>"<div class='log-item'><span class='muted'>"+esc(n.t)+"</span><span>"+notifText(n)+"</span></div>").join("")||'<span class="muted">'+t("noAlerts")+'</span>');
 }
 function pickVoice(tag){
   try{
