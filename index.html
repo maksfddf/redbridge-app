@@ -12,7 +12,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default" />
 <meta name="apple-mobile-web-app-title" content="RedBridge" />
 <meta name="theme-color" content="#C1272D" />
-<meta name="app-version" content="v5.5.31" />
+<meta name="app-version" content="v5.5.32" />
 <!-- Приложение — один инлайновый скрипт, поэтому script-src вынужденно
      допускает 'unsafe-inline'. Зато default-src/connect-src закрывают
      подгрузку чужих скриптов и утечку данных на сторонние хосты:
@@ -1627,6 +1627,7 @@ html.standalone-ios body{overscroll-behavior-y:none}
     </div>
     <button class="btn btn-go radio-btn" id="radioTalkBtn" onclick="radioTalkToggle()">Говорить</button>
     <div class="radio-state" id="radioTalkState"></div>
+    <button class="btn btn-back btn-sm" style="width:100%;margin-top:8px" onclick="radioTestTone()" data-i18n="radioTest">Проверить эфир (сигнал)</button>
     <div class="muted" id="radioDiag" style="text-align:center;font-size:11.5px;margin-top:6px"></div>
   </div>
 </div>
@@ -1754,6 +1755,9 @@ try{
     radioListening:"Слушаем эфир…",
     radioEnableSound:"Включить звук",
     radioNoMic:"Микрофон недоступен",
+    radioTest:"Проверить эфир (сигнал)",
+    radioTestSent:"Сигнал отправлен — проверьте второе устройство",
+    radioPackets:"принято",
     radioTalkTitle:"Эфир",
     radioTalkSub:"Скажите — вас услышат все выбранные, без звонков и меню.",
     radioLiveKicker:"В эфире",
@@ -1815,6 +1819,9 @@ try{
     radioListening:"Listening…",
     radioEnableSound:"Enable sound",
     radioNoMic:"Microphone is not available",
+    radioTest:"Test channel (beep)",
+    radioTestSent:"Beep sent — check the second device",
+    radioPackets:"received",
     radioTalkTitle:"Live channel",
     radioTalkSub:"Just talk — everyone selected hears you, no calls or menus.",
     radioLiveKicker:"On air",
@@ -2018,7 +2025,7 @@ function resumeSession(login){
     }).catch(()=>{ try{ logout(); }catch(e){} });
   }catch(e){ try{ logout(); }catch(e){} }
 }
-const APP_VER="v5.5.31";
+const APP_VER="v5.5.32";
 var splashDone=false;
 function hideSplash(){ if(splashDone) return; splashDone=true; try{ document.getElementById("splash").classList.add("hide"); }catch(e){} try{ const v=document.getElementById("splashVid"); if(v) v.pause(); }catch(e){} setTimeout(()=>{ try{ document.getElementById("splash").remove(); }catch(e){} },600); }
 function setVer(){ try{ document.getElementById("jsok").textContent=APP_VER; }catch(e){} try{ var _lv=document.getElementById("loginVer"); if(_lv) _lv.textContent=APP_VER; }catch(e){} }
@@ -4574,7 +4581,8 @@ async function radioStart(){
         if(cnt>=ratio){ radioBuf.push(radioUlawEnc(Math.max(-1,Math.min(1,sum/cnt))*32767)); sum=0; cnt=0; }
       }
     };
-    src.connect(radioNode); radioNode.connect(radioCtx.destination);
+    const sink=radioCtx.createGain(); sink.gain.value=0;   // чтобы свой голос не звучал в колонках
+    src.connect(radioNode); radioNode.connect(sink); sink.connect(radioCtx.destination);
     radioSending=true; radioRun=true; radioT0=Date.now();
     try{ if(radioTalkT) clearInterval(radioTalkT); radioTalkT=setInterval(radioTalkPaint,1000); }catch(e){}
     radioSend("start",{from:radioMe(),fromName:radioName(),target:radioTargetValue(),ts:Date.now()});
@@ -4642,6 +4650,28 @@ function radioTalkPaint(){
     if(dg) dg.textContent=(radioJoined?"канал: подключён":"канал: подключаюсь…")+" · отправлено "+radioStats.sent+" · принято "+radioStats.got;
   }catch(e){}
 }
+async function radioTestTone(){
+  try{
+    const me=radioMe(); if(!me){ toast(t("login")); return; }
+    const ctx=radioCtxGet();
+    const tgt=radioTargetValue();
+    radioSend("start",{from:me,fromName:radioName(),target:tgt,ts:Date.now()});
+    const sr=8000, ms=1200, n=Math.floor(sr*ms/1000);
+    const CH=1280;
+    for(let off=0; off<n; off+=CH){
+      const part=new Uint8Array(Math.min(CH,n-off));
+      for(let i=0;i<part.length;i++){
+        const idx=off+i;
+        const v=Math.sin(2*Math.PI*880*idx/sr)*9000*(1-idx/n);
+        part[i]=radioUlawEnc(Math.round(v));
+      }
+      radioSend("chunk",{from:me,target:tgt,seq:Date.now(),data:radioB64(part)});
+      await new Promise(r=>setTimeout(r,160));
+    }
+    radioSend("stop",{from:me,target:tgt});
+    toast(t("radioTestSent"),true);
+  }catch(e){ toast(t("radioNoMic"),true); }
+}
 function radioTalkToggle(){
   if(radioSending){ radioStop(); }
   else { const sel=document.getElementById("radioTalkTarget"); if(sel) radioSetTarget(sel.value); radioStart(); }
@@ -4654,7 +4684,7 @@ function radioShowLive(name,target){
     const box=document.getElementById("radioLive"); if(!box) return;
     document.getElementById("radioLiveName").textContent=name||t("radioSomeone");
     const tg=String(target||"all");
-    document.getElementById("radioLiveMeta").textContent=tg==="all"?t("radioAll"):(tg.indexOf("class:")===0?clsName(tg.slice(6)):"");
+    document.getElementById("radioLiveMeta").textContent=(tg==="all"?t("radioAll"):(tg.indexOf("class:")===0?clsName(tg.slice(6)):""))+" · "+t("radioPackets")+" "+radioStats.got;
     box.classList.add("open");
     const snd=document.getElementById("radioLiveSound"); if(snd) snd.style.display=(radioCtx&&radioCtx.state==="running")?"none":"";
     if(radioLiveTimer) clearInterval(radioLiveTimer);
@@ -4692,6 +4722,11 @@ function radioOnEvent(p){
         radioRender();
       }
       radioLastChunk=Date.now(); radioStats.got++;
+      try{
+        const mEl=document.getElementById("radioLiveMeta");
+        if(mEl){ const tg=String(d.target||"all");
+          mEl.textContent=(tg==="all"?t("radioAll"):(tg.indexOf("class:")===0?clsName(tg.slice(6)):""))+" · "+t("radioPackets")+" "+radioStats.got; }
+      }catch(e){}
       try{ radioPlay(radioUnB64(d.data)); }catch(e){}
       if(document.hidden) return;
     }else if(ev==="stop"){
