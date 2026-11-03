@@ -12,7 +12,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default" />
 <meta name="apple-mobile-web-app-title" content="RedBridge" />
 <meta name="theme-color" content="#C1272D" />
-<meta name="app-version" content="v5.5.29" />
+<meta name="app-version" content="v5.5.30" />
 <!-- Приложение — один инлайновый скрипт, поэтому script-src вынужденно
      допускает 'unsafe-inline'. Зато default-src/connect-src закрывают
      подгрузку чужих скриптов и утечку данных на сторонние хосты:
@@ -1529,7 +1529,6 @@ html.standalone-ios body{overscroll-behavior-y:none}
     <div class="walkie-tabs">
       <button class="ctab active" id="walkieTabT" onclick="walkieTabSw('t')">Учителя</button>
       <button class="ctab" id="walkieTabC" onclick="walkieTabSw('c')">Классы</button>
-      <button class="ctab" id="walkieTabL" onclick="walkieTabSw('l')">Эфир</button>
       <span class="spacer"></span>
       <button class="btn btn-back btn-sm" id="walkieAllBtn" onclick="walkieAll()">Все</button>
     </div>
@@ -1537,7 +1536,6 @@ html.standalone-ios body{overscroll-behavior-y:none}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>
       <input id="walkieSearch" type="search" autocomplete="off" enterkeyhint="search" placeholder="Поиск учителя..." data-i18n-ph="walkieSearchPh" oninput="walkieFilter()" />
     </div>
-    <div id="radioPanel" style="display:none;margin-bottom:12px"></div>
     <div id="walkieList" class="club-pick walkie-list"></div>
     <textarea id="walkieText" class="walkie-text" rows="2" placeholder="Сообщение..."></textarea>
     <div id="walkieVoiceBar" class="walkie-voice" style="display:none">
@@ -1616,7 +1614,7 @@ html.standalone-ios body{overscroll-behavior-y:none}
     <div id="flatSchedBody"></div>
   </div>
 </div>
-<button id="radioFab" class="radio-fab" onclick="radioOpenTalk()" aria-label="Эфир" title="Эфир">
+<button id="radioFab" class="radio-fab" style="display:none" onclick="radioOpenTalk()" aria-label="Эфир" title="Эфир">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/></svg>
 </button>
 <div class="overlay" id="radioTalkOverlay">
@@ -1972,6 +1970,8 @@ var logoutBusy=false;
 async function logout(){
   if(logoutBusy) return; logoutBusy=true;
   try{ radioStop(true); }catch(e){}
+  try{ const _rf=document.getElementById("radioFab"); if(_rf) _rf.style.display="none"; }catch(e){}
+  try{ radioHideLive(); }catch(e){}
   try{ if(fcmPlugin()) await fcmOff(true); else await pushUnsubscribe(true); }catch(e){}   // устройство не должно получать пуши после выхода
   try{
   try{ uiGen++; }catch(e){}
@@ -2017,7 +2017,7 @@ function resumeSession(login){
     }).catch(()=>{ try{ logout(); }catch(e){} });
   }catch(e){ try{ logout(); }catch(e){} }
 }
-const APP_VER="v5.5.29";
+const APP_VER="v5.5.30";
 var splashDone=false;
 function hideSplash(){ if(splashDone) return; splashDone=true; try{ document.getElementById("splash").classList.add("hide"); }catch(e){} try{ const v=document.getElementById("splashVid"); if(v) v.pause(); }catch(e){} setTimeout(()=>{ try{ document.getElementById("splash").remove(); }catch(e){} },600); }
 function setVer(){ try{ document.getElementById("jsok").textContent=APP_VER; }catch(e){} try{ var _lv=document.getElementById("loginVer"); if(_lv) _lv.textContent=APP_VER; }catch(e){} }
@@ -2158,6 +2158,7 @@ function syncClassBar(){
   document.getElementById("classBar").style.display=show?"":"none";
 }
 function applyRole(me){
+  try{ const _rf=document.getElementById("radioFab"); if(_rf) _rf.style.display=me?"":"none"; }catch(e){}
   try{
     if(window.Sentry){
       Sentry.setTag("role", String((me&&me.role)||""));
@@ -4638,7 +4639,8 @@ function radioShowLive(name,target){
     box.classList.add("open");
     const snd=document.getElementById("radioLiveSound"); if(snd) snd.style.display=(radioCtx&&radioCtx.state==="running")?"none":"";
     if(radioLiveTimer) clearInterval(radioLiveTimer);
-    radioLiveTimer=setInterval(()=>{ try{ if(!radioListening||Date.now()-radioLastChunk>4000){ radioHideLive(); } }catch(e){} },1000);
+    if(radioLiveTimer) clearInterval(radioLiveTimer);
+    radioLiveTimer=setTimeout(()=>{ try{ radioHideLive(); }catch(e){} }, 15000);   // всплывает на 15 секунд
   }catch(e){}
 }
 function radioHideLive(){
