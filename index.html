@@ -45,6 +45,10 @@
     else if(isPhone){ h.classList.add("is-mobile"); }
     else { h.classList.add(touch?"is-mobile":"is-desktop"); }
     window.__rbPlatform = h.classList.contains("is-mobile") ? "mobile" : "desktop";
+    /* Тема: авто (по системе), светлая, тёмная. */
+    var th=""; try{ th=localStorage.getItem("rb_theme")||"auto"; }catch(e){}
+    var dark=(th==="dark")||(th!=="light"&&window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches);
+    if(dark) h.classList.add("theme-dark"); else h.classList.add("theme-light");
   }catch(e){}
 })();
 </script>
@@ -905,6 +909,56 @@ html.perf .roster-class,html.perf .log-item,html.perf .side-card,html.perf .lib-
 }
 html.perf .stat,html.perf .card,html.perf .panel{will-change:auto}
 
+/* ==========================================================================
+   Тёмная тема. Значения поверхностей подобраны под акцент RedBridge:
+   фон #12151C, карточки #1A1E27, линии rgba(255,255,255,.08–.12).
+   ========================================================================== */
+html.theme-dark{
+  --ink:#E7EAF0;--muted:#98A2B3;--bg:#12151C;--card:#1A1E27;
+  --line:rgba(255,255,255,.07);--line-solid:rgba(255,255,255,.12);
+  --red-light:#3A1A1C;--red-border:#5A2528;--red-text:#F3A7AA;
+  --green-bg:#14301F;--orange-bg:#33220F;
+  color-scheme:dark
+}
+html.theme-dark body{background:#12151C;color:var(--ink)}
+html.theme-dark body::before{opacity:.45}
+html.theme-dark header,html.theme-dark .classes{background:rgba(20,23,31,.94);border-color:rgba(255,255,255,.08)}
+html.theme-dark .card,html.theme-dark .stat,html.theme-dark .panel,html.theme-dark .modal,
+html.theme-dark .login-card,html.theme-dark .roles,html.theme-dark .ctab,html.theme-dark .lib-item,
+html.theme-dark .notif-panel,html.theme-dark .assist-panel,html.theme-dark .side-card{
+  background:#1A1E27;border-color:rgba(255,255,255,.08)
+}
+html.theme-dark .toolbar input,html.theme-dark .toolbar select,html.theme-dark .modal input,
+html.theme-dark .modal select,html.theme-dark .modal textarea,html.theme-dark .board-area,
+html.theme-dark .login-form input,html.theme-dark .pw-wrap,html.theme-dark .walkie-text,
+html.theme-dark .walkie-search{background:#151922;color:var(--ink);border-color:rgba(255,255,255,.12)}
+html.theme-dark .btn-back{background:#232834;color:#EDEFF4;border-color:rgba(255,255,255,.12)}
+html.theme-dark .chip-btn{background:#232834;border-color:rgba(255,255,255,.14);color:#F3A7AA}
+html.theme-dark th{background:#1F2430;color:#98A2B3;border-color:rgba(255,255,255,.08)}
+html.theme-dark td,html.theme-dark .roster-row,html.theme-dark #tbodyT tr,html.theme-dark .roster-head{
+  border-color:rgba(255,255,255,.08);background:transparent
+}
+html.theme-dark .roster-head{background:rgba(193,39,45,.16)}
+html.theme-dark .log-item{background:#1F2430;border-color:rgba(255,255,255,.08)}
+html.theme-dark .schm-row{background:#1F2430;border-color:rgba(255,255,255,.08)}
+html.theme-dark .schm-row.empty{background:#181C24;color:#8A93A3}
+html.theme-dark .schm-chip{background:#232834;border-color:rgba(255,255,255,.14)}
+html.theme-dark .schm-break{background:#1B2029;color:#8A93A3}
+html.theme-dark .schm-slot,html.theme-dark .sched-table th.sch-time,html.theme-dark .sched-table td.sch-time{color:#C9D2E0}
+html.theme-dark .st-in{background:#14301F;color:#7EE2A8}
+html.theme-dark .st-out{background:#3A1A1C;color:#F3A7AA}
+html.theme-dark .st-wait{background:#33220F;color:#F5B97A}
+html.theme-dark .st-late{background:#33280F;color:#F0C87A}
+html.theme-dark .st-med{background:#14283F;color:#8FC2FF}
+html.theme-dark .st-away{background:#291640;color:#C9A6F5}
+html.theme-dark .avatar{background:#3A1A1C;color:#F3A7AA}
+html.theme-dark .rule{background:rgba(243,167,170,.08);border-color:rgba(243,167,170,.18)}
+html.theme-dark .overlay{background:rgba(0,0,0,.55)}
+html.theme-dark .login-screen{background:#101319}
+html.theme-dark .sheet,html.theme-dark .vrep-mic{background:#232834;border-color:rgba(255,255,255,.14)}
+html.theme-dark .upd-banner{background:#1A1E27;color:var(--ink)}
+html.theme-dark .notif-panel h4,html.theme-dark .panel h3,html.theme-dark h3{color:var(--ink)}
+
 /* ===== системная плашка (офлайн, истёкшая сессия) ===== */
 .sys-banner{
   position:fixed;left:50%;top:calc(10px + env(safe-area-inset-top));transform:translateX(-50%);
@@ -1261,6 +1315,15 @@ html.standalone-ios body{overscroll-behavior-y:none}
   <section class="view" id="view-utils">
     <div class="layout">
       <div class="card panel">
+        <h3 data-i18n="themeTitle">Тема</h3>
+        <div class="muted" data-i18n="themeDesc">Авто — как в системе. Тёмная тема бережёт глаза вечером.</div>
+        <div class="row-btns" style="justify-content:flex-start;margin-top:10px">
+          <button class="btn btn-back btn-sm" id="themeAuto" onclick="setTheme('auto')" data-i18n="themeAuto">Авто</button>
+          <button class="btn btn-back btn-sm" id="themeLight" onclick="setTheme('light')" data-i18n="themeLight">Светлая</button>
+          <button class="btn btn-back btn-sm" id="themeDark" onclick="setTheme('dark')" data-i18n="themeDark">Тёмная</button>
+        </div>
+      </div>
+      <div class="card panel">
         <h3 data-i18n="perfTitle">Производительность</h3>
         <div class="muted" data-i18n="perfDesc">Упрощённый интерфейс для слабых телефонов: без размытия и анимаций, обновления реже.</div>
         <div class="row-btns" style="justify-content:flex-start;margin-top:10px">
@@ -1580,6 +1643,12 @@ try{
     sessLost:"Сессия истекла — войдите снова",
     noNet:"Нет интернета — данные обновятся, когда связь вернётся",
     netBack:"Связь восстановлена",
+    themeTitle:"Тема",
+    themeDesc:"Авто — как в системе. Тёмная тема бережёт глаза вечером.",
+    themeAuto:"Авто",
+    themeLight:"Светлая",
+    themeDark:"Тёмная",
+    themeChanged:"Тема изменена",
     pushTitle:"Уведомления на телефон",
     pushDesc:"Системные уведомления приходят, даже когда приложение закрыто.",
     pushIosHint:"На iPhone: добавьте приложение на экран «Домой» (Safari → Поделиться) и включите здесь.",
@@ -1616,6 +1685,12 @@ try{
     sessLost:"Session expired — please sign in again",
     noNet:"No internet — data will refresh when you are back online",
     netBack:"Back online",
+    themeTitle:"Theme",
+    themeDesc:"Auto follows the system. Dark theme is easier at night.",
+    themeAuto:"Auto",
+    themeLight:"Light",
+    themeDark:"Dark",
+    themeChanged:"Theme changed",
     pushTitle:"Phone notifications",
     pushDesc:"System notifications arrive even when the app is closed.",
     pushIosHint:"On iPhone: add the app to the Home screen (Safari → Share) and enable it here.",
@@ -1767,7 +1842,7 @@ function laterRenderExit(){ const g=uiGen; setTimeout(()=>{ try{ if(g===uiGen) r
 var logoutBusy=false;
 async function logout(){
   if(logoutBusy) return; logoutBusy=true;
-  try{ await pushUnsubscribe(true); }catch(e){}   // устройство не должно получать пуши после выхода
+  try{ if(fcmPlugin()) await fcmOff(true); else await pushUnsubscribe(true); }catch(e){}   // устройство не должно получать пуши после выхода
   try{
   try{ uiGen++; }catch(e){}
   try{ if(typeof lockFiles==="function") lockFiles(); }catch(e){}
@@ -1812,7 +1887,7 @@ function resumeSession(login){
     }).catch(()=>{ try{ logout(); }catch(e){} });
   }catch(e){ try{ logout(); }catch(e){} }
 }
-const APP_VER="v5.5.24";
+const APP_VER="v5.5.25";
 var splashDone=false;
 function hideSplash(){ if(splashDone) return; splashDone=true; try{ document.getElementById("splash").classList.add("hide"); }catch(e){} try{ const v=document.getElementById("splashVid"); if(v) v.pause(); }catch(e){} setTimeout(()=>{ try{ document.getElementById("splash").remove(); }catch(e){} },600); }
 function setVer(){ try{ document.getElementById("jsok").textContent=APP_VER; }catch(e){} try{ var _lv=document.getElementById("loginVer"); if(_lv) _lv.textContent=APP_VER; }catch(e){} }
@@ -4250,6 +4325,43 @@ function cancelWheelSpin(){
 // где есть Service Worker. Отправляет уведомления серверный скрипт
 // tools/push-sender.mjs (см. документацию в нём).
 const VAPID_PUBLIC="BBCqoFud0jQRg4OQ3ucfbDo77bBAJCv5FrbV9g9iMSH0BCUAYNX_kv_aPLZ9YJNYEw_43z7L0gJ7CYILHp-euBA";
+// ===== Android APK: push через FCM (Capacitor) =====
+function fcmPlugin(){ try{ return (window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.PushNotifications)||null; }catch(e){ return null; } }
+function fcmTokenLocal(){ try{ return localStorage.getItem("rb_fcm_token")||""; }catch(e){ return ""; } }
+async function fcmInit(silent){
+  const P=fcmPlugin(); if(!P) return false;
+  const me=currentUser(); if(!me) return false;
+  try{
+    try{ await P.createChannel({ id:"redbridge_alerts", name:"RedBridge", description:"Вызовы и оповещения", importance:5, visibility:1, sound:"default", vibration:true }); }catch(e){}
+    let perm=await P.checkPermissions();
+    if(perm.receive!=="granted") perm=await P.requestPermissions();
+    if(perm.receive!=="granted"){ if(!silent) toast(t("pushDenied"),true); return false; }
+    P.addListener("registration", async (tok)=>{
+      try{
+        const row={login:String(me.login||"").toLowerCase().trim(), token:String(tok.value||""),
+          platform:"android", ua:String(navigator.userAgent||"").slice(0,180), lang:(typeof lang==="string"?lang:"ru")};
+        const r=await supaFetch("push_tokens?on_conflict=token",{method:"POST",headers:{Prefer:"resolution=merge-duplicates,return=minimal"},body:JSON.stringify(row)});
+        if(r&&r.ok){ try{ localStorage.setItem("rb_fcm_token",row.token); localStorage.setItem("rb_fcm","1"); }catch(e){} try{ renderPushBtn(); }catch(e){} }
+      }catch(e){}
+    });
+    P.addListener("registrationError", (e)=>{ try{ if(!silent) toast(t("pushFail"),true); }catch(_){} });
+    P.addListener("pushNotificationReceived", (n)=>{
+      try{ rbVibrate(); playBell(1.8); }catch(e){}
+      try{ toast(((n&&n.title)?n.title+": ":"")+((n&&n.body)||"")); }catch(e){}
+    });
+    P.addListener("pushNotificationActionPerformed", ()=>{ try{ handleDeepLink(); }catch(e){} });
+    await P.register();
+    return true;
+  }catch(e){ if(!silent) toast(t("pushFail"),true); return false; }
+}
+async function fcmOff(silent){
+  const P=fcmPlugin(); const tok=fcmTokenLocal();
+  try{ if(tok) await supaFetch("push_tokens?token=eq."+encodeURIComponent(tok),{method:"DELETE"}); }catch(e){}
+  try{ if(P&&P.removeAllListeners) await P.removeAllListeners(); }catch(e){}
+  try{ localStorage.removeItem("rb_fcm_token"); localStorage.removeItem("rb_fcm"); }catch(e){}
+  if(!silent) toast(t("pushOff"));
+  try{ renderPushBtn(); }catch(e){}
+}
 function pushSupported(){
   try{ return ('serviceWorker' in navigator) && ('PushManager' in window) && window.isSecureContext; }catch(e){ return false; }
 }
@@ -4268,6 +4380,7 @@ async function pushRegisterSW(){
 }
 async function pushState(){
   try{
+    if(fcmPlugin()) return {ok:!!fcmTokenLocal(), perm:"granted", fcm:true};
     if(!pushSupported()) return {ok:false, reason:'unsupported'};
     const reg=await navigator.serviceWorker.getRegistration('./');
     if(!reg) return {ok:false, reason:'nosw'};
@@ -4318,7 +4431,12 @@ async function pushUnsubscribe(silent){
     return true;
   }catch(e){ return false; }
 }
-function togglePush(){ pushState().then(st=>{ if(st.ok) pushUnsubscribe(); else pushSubscribe(); }); }
+function togglePush(){
+  pushState().then(st=>{
+    if(st.ok){ if(st.fcm) fcmOff(); else pushUnsubscribe(); }
+    else { if(fcmPlugin()) fcmInit(); else pushSubscribe(); }
+  });
+}
 function renderPushBtn(){
   try{
     const b=document.getElementById("pushBtn"); if(!b) return;
@@ -4326,13 +4444,30 @@ function renderPushBtn(){
     b.disabled=false;
     pushState().then(st=>{
       b.textContent = st.ok ? t('pushIsOn') : t('pushIsOff');
-      const h=document.getElementById("pushHint"); if(h) h.textContent = pushIsStandalone()||!/iPhone|iPad/.test(navigator.userAgent) ? t('pushDesc') : t('pushIosHint');
+      const h=document.getElementById("pushHint"); if(h) h.textContent = fcmPlugin() ? t('pushDesc') : (pushIsStandalone()||!/iPhone|iPad/.test(navigator.userAgent) ? t('pushDesc') : t('pushIosHint'));
     }).catch(()=>{});
   }catch(e){}
 }
 
 // ===== режим производительности (слабые устройства) =====
 // Класс html.perf ставит ранний скрипт в <head> (до первой отрисовки).
+function currentTheme(){ try{ return localStorage.getItem("rb_theme")||"auto"; }catch(e){ return "auto"; } }
+function applyTheme(v){
+  try{
+    const h=document.documentElement;
+    const autoDark=!!(window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches);
+    const dark=(v==="dark")||(v!=="light"&&autoDark);
+    h.classList.toggle("theme-dark", dark);
+    h.classList.toggle("theme-light", !dark);
+    ["auto","light","dark"].forEach(k=>{ const b=document.getElementById("theme"+k[0].toUpperCase()+k.slice(1)); if(b) b.classList.toggle("btn-go", k===v&&k!=="auto"); });
+  }catch(e){}
+}
+function setTheme(v){
+  try{ localStorage.setItem("rb_theme", v); }catch(e){}
+  applyTheme(v);
+  try{ toast(t("themeChanged")); }catch(e){}
+}
+function renderThemeBtns(){ try{ applyTheme(currentTheme()); }catch(e){} }
 function rbPerfOn(){ try{ return document.documentElement.classList.contains("perf"); }catch(e){ return false; } }
 function rbPerfIntervals(){
   try{
@@ -4352,6 +4487,7 @@ function setPerf(on, silent){
 }
 function togglePerf(){ setPerf(!rbPerfOn()); }
 function renderUtils(){
+  try{ renderThemeBtns(); }catch(e){}
   try{ renderPerfBtn(); }catch(e){}
   try{ renderPushBtn(); }catch(e){}
   const cv=document.getElementById("randWheel");
@@ -7900,6 +8036,7 @@ document.addEventListener("keydown",function(e){ try{ if(e&&e.key==="Escape"){ c
 try{ rbPerfIntervals(); renderPerfBtn(); }catch(e){}
 try{ setTimeout(handleDeepLink, 1200); }catch(e){}
 try{ setInterval(voiceCleanup, 60*1000); setTimeout(voiceCleanup, 8000); }catch(e){}
+try{ setTimeout(()=>{ try{ if(fcmPlugin()) fcmInit(true); }catch(e){} }, 2500); }catch(e){}
 try{ setTimeout(()=>{ try{ pullStaffList(); }catch(e){} }, 3000); setInterval(()=>{ try{ if(document.visibilityState==="visible") pullStaffList(); }catch(e){} }, 5*60*1000); }catch(e){}
 try{ renderClassTabs(); renderAll(); }catch(e){ try{console.error(e);}catch(_){} }
 // Проверяем обновление сразу, ещё до входа: старую версию человек
