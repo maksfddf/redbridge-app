@@ -12,12 +12,13 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default" />
 <meta name="apple-mobile-web-app-title" content="RedBridge" />
 <meta name="theme-color" content="#C1272D" />
+<meta name="app-version" content="v5.5.27" />
 <!-- Приложение — один инлайновый скрипт, поэтому script-src вынужденно
      допускает 'unsafe-inline'. Зато default-src/connect-src закрывают
      подгрузку чужих скриптов и утечку данных на сторонние хосты:
      наружу разрешены только облако Supabase и его websocket.
      file: нужен Electron (страница грузится с file://). -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self' file:; script-src 'self' 'unsafe-inline' file:; style-src 'self' 'unsafe-inline' file:; img-src 'self' data: blob: file:; media-src 'self' data: blob: file:; font-src 'self' data: file:; connect-src 'self' file: https://yklswxbzkpyjjlvknumk.supabase.co wss://yklswxbzkpyjjlvknumk.supabase.co; object-src 'none'; base-uri 'self'; form-action 'self'" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' file:; script-src 'self' 'unsafe-inline' file:; style-src 'self' 'unsafe-inline' file:; img-src 'self' data: blob: file:; media-src 'self' data: blob: file:; font-src 'self' data: file:; connect-src 'self' file: https://yklswxbzkpyjjlvknumk.supabase.co wss://yklswxbzkpyjjlvknumk.supabase.co https://o4512366335950848.ingest.de.sentry.io; object-src 'none'; base-uri 'self'; form-action 'self'" />
 <link rel="stylesheet" href="fonts/inter.css" />
 <script>
 /* Режим производительности включаем ДО первой отрисовки: иначе слабый
@@ -1611,6 +1612,26 @@ html.standalone-ios body{overscroll-behavior-y:none}
   </div>
 </div>
 
+<script src="sentry.min.js"></script>
+<script>
+/* Sentry: только ошибки, без трейсинга и без персональных данных.
+   DSN публичный по своей природе; отправка разрешена в CSP (connect-src). */
+(function(){
+  try{
+    if(!window.Sentry) return;
+    window.Sentry.init({
+      dsn:"https://8b1608f47167c9c99b90073e12fb831b@o4512366335950848.ingest.de.sentry.io/4512366351286352",
+      release:((document.querySelector('meta[name="app-version"]')||{}).content||window.APP_VER||"redbridge"),
+      environment:/Electron/i.test(navigator.userAgent)?"desktop":/Android|iPhone|iPad/i.test(navigator.userAgent)?"mobile":"web",
+      tracesSampleRate:0,
+      sendDefaultPii:false,
+      maxBreadcrumbs:30,
+      ignoreErrors:[/ResizeObserver loop/i,/Non-Error promise rejection/i,/NetworkError/i,/Load failed/i,/AbortError/i]
+    });
+    window.__rbSentry=true;
+  }catch(e){}
+})();
+</script>
 <script src="users-db.js"></script>
 <script>
 const DEFAULT_CLASSES = ["1-А","1-В","1-С","2-А","2-В","2-С","3-А","3-В","3-С","4-А","4-В","4-С","5-А","5-В","5-С","6-А","6-В","7-А","7-В","7-С","8-А","8-В","8-С","9-А","9-В","10-11"];
@@ -1910,7 +1931,7 @@ function resumeSession(login){
     }).catch(()=>{ try{ logout(); }catch(e){} });
   }catch(e){ try{ logout(); }catch(e){} }
 }
-const APP_VER="v5.5.26";
+const APP_VER="v5.5.27";
 var splashDone=false;
 function hideSplash(){ if(splashDone) return; splashDone=true; try{ document.getElementById("splash").classList.add("hide"); }catch(e){} try{ const v=document.getElementById("splashVid"); if(v) v.pause(); }catch(e){} setTimeout(()=>{ try{ document.getElementById("splash").remove(); }catch(e){} },600); }
 function setVer(){ try{ document.getElementById("jsok").textContent=APP_VER; }catch(e){} try{ var _lv=document.getElementById("loginVer"); if(_lv) _lv.textContent=APP_VER; }catch(e){} }
@@ -2051,6 +2072,14 @@ function syncClassBar(){
   document.getElementById("classBar").style.display=show?"":"none";
 }
 function applyRole(me){
+  try{
+    if(window.Sentry){
+      Sentry.setTag("role", String((me&&me.role)||""));
+      Sentry.setTag("platform", String(window.__rbPlatform||""));
+      Sentry.setTag("app_version", String(typeof APP_VER!=="undefined"?APP_VER:""));
+      Sentry.setUser(me&&me.login?{id:String(me.login)}:null);
+    }
+  }catch(e){}
   const allowed=(me&&ROLE_TABS[me.role])||[];
   if(!me||!allowed.length){ logout(); return; }
   // guest — это подменяющий учитель: ему нужен тот же экран класса,
@@ -5648,6 +5677,11 @@ async function supaFetch(path, opts){
     }
     if(r&&r.status===401){ try{ rbAuthLost(); }catch(e){} }
   }
+  try{
+    if(window.Sentry&&r&&!r.ok){
+      Sentry.addBreadcrumb({category:"supabase",level:"warning",message:"HTTP "+r.status+" "+String(path).split("?")[0].slice(0,80)});
+    }
+  }catch(e){}
   return r;
 }
 async function supaReq(path, opts){
