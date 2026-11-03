@@ -12,7 +12,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default" />
 <meta name="apple-mobile-web-app-title" content="RedBridge" />
 <meta name="theme-color" content="#C1272D" />
-<meta name="app-version" content="v5.5.27" />
+<meta name="app-version" content="v5.5.28" />
 <!-- Приложение — один инлайновый скрипт, поэтому script-src вынужденно
      допускает 'unsafe-inline'. Зато default-src/connect-src закрывают
      подгрузку чужих скриптов и утечку данных на сторонние хосты:
@@ -449,6 +449,16 @@ tbody tr{transition:background .2s var(--ease),transform .2s var(--ease)}
 .walkie-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .walkie-head h3{margin:0}
 .walkie-list{max-height:260px;margin-bottom:12px}
+.radio-box{padding:14px;border:1px solid var(--line-solid);border-radius:14px;background:rgba(255,255,255,.6)}
+html.theme-dark .radio-box{background:#1F2430;border-color:rgba(255,255,255,.1)}
+.radio-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;font-size:14px}
+.radio-row b{font-weight:650}
+.radio-target select{flex:1;min-width:0;padding:10px 12px;border-radius:10px;border:1px solid var(--line-solid);background:#fff;font-size:14px}
+html.theme-dark .radio-target select{background:#151922;color:var(--ink);border-color:rgba(255,255,255,.12)}
+.radio-dot{width:10px;height:10px;border-radius:50%;background:#9AA3B2;flex:0 0 auto}
+.radio-dot.on{background:#C1272D;box-shadow:0 0 0 4px rgba(193,39,45,.15);animation:radioPulse 1.2s ease-in-out infinite}
+@keyframes radioPulse{0%,100%{opacity:1}50%{opacity:.45}}
+.radio-btn{width:100%;min-height:52px;font-size:15px;font-weight:700}
 .walkie-modal{max-width:560px}
 .walkie-pick-item{align-items:center}
 .walkie-pick-item b{font-weight:700}
@@ -1501,6 +1511,7 @@ html.standalone-ios body{overscroll-behavior-y:none}
     <div class="walkie-tabs">
       <button class="ctab active" id="walkieTabT" onclick="walkieTabSw('t')">Учителя</button>
       <button class="ctab" id="walkieTabC" onclick="walkieTabSw('c')">Классы</button>
+      <button class="ctab" id="walkieTabL" onclick="walkieTabSw('l')">Эфир</button>
       <span class="spacer"></span>
       <button class="btn btn-back btn-sm" id="walkieAllBtn" onclick="walkieAll()">Все</button>
     </div>
@@ -1508,6 +1519,7 @@ html.standalone-ios body{overscroll-behavior-y:none}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>
       <input id="walkieSearch" type="search" autocomplete="off" enterkeyhint="search" placeholder="Поиск учителя..." data-i18n-ph="walkieSearchPh" oninput="walkieFilter()" />
     </div>
+    <div id="radioPanel" style="display:none;margin-bottom:12px"></div>
     <div id="walkieList" class="club-pick walkie-list"></div>
     <textarea id="walkieText" class="walkie-text" rows="2" placeholder="Сообщение..."></textarea>
     <div id="walkieVoiceBar" class="walkie-voice" style="display:none">
@@ -1689,6 +1701,17 @@ try{
     themeLight:"Светлая",
     themeDark:"Тёмная",
     themeChanged:"Тема изменена",
+    radioTab:"Эфир",
+    radioAll:"Всем",
+    radioSendTo:"Кому:",
+    radioTalk:"Говорить",
+    radioStop:"Стоп",
+    radioIdle:"Эфир свободен",
+    radioYouLive:"Вы в эфире",
+    radioLive:"Говорит {who}",
+    radioListening:"Слушаем эфир…",
+    radioEnableSound:"Включить звук",
+    radioNoMic:"Микрофон недоступен",
     pushTitle:"Уведомления на телефон",
     pushDesc:"Системные уведомления приходят, даже когда приложение закрыто.",
     pushIosHint:"На iPhone: добавьте приложение на экран «Домой» (Safari → Поделиться) и включите здесь.",
@@ -1735,6 +1758,17 @@ try{
     themeLight:"Light",
     themeDark:"Dark",
     themeChanged:"Theme changed",
+    radioTab:"Live",
+    radioAll:"Everyone",
+    radioSendTo:"Send to:",
+    radioTalk:"Talk",
+    radioStop:"Stop",
+    radioIdle:"Channel is free",
+    radioYouLive:"You are live",
+    radioLive:"{who} is talking",
+    radioListening:"Listening…",
+    radioEnableSound:"Enable sound",
+    radioNoMic:"Microphone is not available",
     pushTitle:"Phone notifications",
     pushDesc:"System notifications arrive even when the app is closed.",
     pushIosHint:"On iPhone: add the app to the Home screen (Safari → Share) and enable it here.",
@@ -1886,6 +1920,7 @@ function laterRenderExit(){ const g=uiGen; setTimeout(()=>{ try{ if(g===uiGen) r
 var logoutBusy=false;
 async function logout(){
   if(logoutBusy) return; logoutBusy=true;
+  try{ radioStop(true); }catch(e){}
   try{ if(fcmPlugin()) await fcmOff(true); else await pushUnsubscribe(true); }catch(e){}   // устройство не должно получать пуши после выхода
   try{
   try{ uiGen++; }catch(e){}
@@ -1931,7 +1966,7 @@ function resumeSession(login){
     }).catch(()=>{ try{ logout(); }catch(e){} });
   }catch(e){ try{ logout(); }catch(e){} }
 }
-const APP_VER="v5.5.27";
+const APP_VER="v5.5.28";
 var splashDone=false;
 function hideSplash(){ if(splashDone) return; splashDone=true; try{ document.getElementById("splash").classList.add("hide"); }catch(e){} try{ const v=document.getElementById("splashVid"); if(v) v.pause(); }catch(e){} setTimeout(()=>{ try{ document.getElementById("splash").remove(); }catch(e){} },600); }
 function setVer(){ try{ document.getElementById("jsok").textContent=APP_VER; }catch(e){} try{ var _lv=document.getElementById("loginVer"); if(_lv) _lv.textContent=APP_VER; }catch(e){} }
@@ -2840,7 +2875,7 @@ async function sendJamol(kind){ try{ const me=currentUser(); if(!me) return; try
 }catch(e){} }
 let walkieTab="t";
 
-function closeWalkie(){ try{ walkieVoiceCancel(); }catch(e){} try{ document.getElementById("walkieOverlay").classList.remove("open"); }catch(e){} }
+function closeWalkie(){ try{ radioStop(true); }catch(e){} try{ walkieVoiceCancel(); }catch(e){} try{ document.getElementById("walkieOverlay").classList.remove("open"); }catch(e){} }
 function openWalkie(){
   try{ pullStaffList(); }catch(e){}
   try{
@@ -2924,6 +2959,16 @@ function walkieRender(){
     document.getElementById("walkieTabC").textContent=t("walkieClasses");
     document.getElementById("walkieTabT").classList.toggle("active",walkieTab==="t");
     document.getElementById("walkieTabC").classList.toggle("active",walkieTab==="c");
+    try{ const tl=document.getElementById("walkieTabL"); if(tl){ tl.textContent=t("radioTab"); tl.classList.toggle("active",walkieTab==="l"); } }catch(e){}
+    try{
+      const rp=document.getElementById("radioPanel"), wl=document.getElementById("walkieList"), ws=document.getElementById("walkieSearchWrap"), txt=document.getElementById("walkieText"), foot=document.querySelector(".walkie-foot");
+      const on=walkieTab==="l";
+      if(rp){ rp.style.display=on?"":"none"; if(on) radioRender(); }
+      if(wl) wl.style.display=on?"none":"";
+      if(ws) ws.style.display=on?"none":"";
+      if(txt) txt.style.display=on?"none":"";
+      if(foot) foot.style.display=on?"none":"";
+    }catch(e){}
     document.getElementById("walkieAllBtn").textContent=t("walkieAll");
     document.getElementById("walkieText").placeholder=t("walkieMsgPh");
     document.getElementById("walkieMsgBtn").innerHTML="<span class='btn-ic'>"+rbIcon("send")+"</span>"+esc(t("walkieMsg"));
@@ -3155,7 +3200,10 @@ async function walkieVoicePlay(id){
 function walkieSenderName(login){
   try{ const u=(users||[]).find(x=>String(x.login||"").toLowerCase()===String(login||"").toLowerCase()); return (u&&(u.name||u.login))||login||""; }catch(e){ return login||""; }
 }
-function walkieTabSw(tab){ try{ walkieVoiceCancel(); }catch(e){} try{ walkieTab=tab; const ws=document.getElementById("walkieSearch"); if(ws) ws.value=""; walkieRender(); }catch(e){} }
+function walkieTabSw(tab){
+  try{ walkieVoiceCancel(); }catch(e){}
+  try{ if(radioSending && tab!=="l") radioStop(); }catch(e){}
+  try{ walkieTab=tab; const ws=document.getElementById("walkieSearch"); if(ws) ws.value=""; walkieRender(); }catch(e){} }
 // ===== системная плашка и мелочи надёжности =====
 function sysBanner(text, actionText, action){
   try{
@@ -4388,6 +4436,169 @@ function cancelWheelSpin(){
 // где есть Service Worker. Отправляет уведомления серверный скрипт
 // tools/push-sender.mjs (см. документацию в нём).
 const VAPID_PUBLIC="BBCqoFud0jQRg4OQ3ucfbDo77bBAJCv5FrbV9g9iMSH0BCUAYNX_kv_aPLZ9YJNYEw_43z7L0gJ7CYILHp-euBA";
+
+// ==========================================================================
+// Живая рация: голос в реальном времени через Supabase Realtime broadcast.
+// Без WebRTC/TURN (школьный Wi-Fi часто режет UDP): оцифровка 8 кГц,
+// компрессия µ-law, куски по 160 мс — задержка ~0.4 с, ~2 КБ на пакет.
+// ==========================================================================
+const RADIO_TOPIC="realtime:live-radio";
+const RADIO_RATE=8000, RADIO_CHUNK=1280;   // 160 мс при 8 кГц
+let radioJoined=false, radioSending=false, radioSelTarget="all";
+let radioCtx=null, radioStream=null, radioNode=null, radioBuf=[], radioFlushT=null, radioRun=false;
+let radioPlayAt=0, radioRxFrom="", radioRxTarget="", radioListening=false, radioLastChunk=0;
+let radioStats={sent:0,got:0,lastAt:0};
+
+function radioSend(ev, data){ try{ rtSend({topic:RADIO_TOPIC,event:"broadcast",ref:String(rtRef++),payload:{type:"broadcast",event:ev,payload:data||{}}}); }catch(e){} }
+function radioMe(){ try{ const me=currentUser(); return me?String(me.login||"").toLowerCase().trim():""; }catch(e){ return ""; } }
+function radioName(){ try{ const me=currentUser(); return (me&&(me.name||me.login))||""; }catch(e){ return ""; } }
+function radioTargetValue(){ try{ const el=document.getElementById("radioTargetSel"); if(el) radioSelTarget=el.value||"all"; }catch(e){} return radioSelTarget||"all"; }
+function radioSetTarget(v){ radioSelTarget=v||"all"; }
+function radioForMe(msg){
+  try{
+    const me=radioMe(); if(!me) return false;
+    if(String(msg.from||"")===me) return false;
+    const tg=String(msg.target||"all");
+    if(tg==="all") return true;
+    if(tg.indexOf("class:")===0){ const c=tg.slice(6); return myClasses().indexOf(c)>=0; }
+  }catch(e){}
+  return false;
+}
+
+// µ-law (G.711): 16 бит → 8 бит, речевое качество при вдвое меньшем размере
+function radioUlawEnc(sample){
+  const BIAS=0x84, CLIP=32635;
+  let s=Math.max(-CLIP,Math.min(CLIP,sample|0));
+  let sign=s<0?0x80:0; if(sign) s=-s;
+  s=s+BIAS;
+  let exp=7; for(let m=0x4000;(s&m)===0&&exp>0;m>>=1) exp--;
+  const mant=(s>>(exp+3))&0x0F;
+  return (~(sign|(exp<<4)|mant))&0xFF;
+}
+function radioUlawDec(u){
+  u=(~u)&0xFF; const sign=u&0x80, exp=(u>>4)&0x07, mant=u&0x0F;
+  let s=(((mant<<3)+0x84)<<exp)-0x84;
+  return sign? -s : s;
+}
+function radioB64(u8){ let s=""; for(let i=0;i<u8.length;i++) s+=String.fromCharCode(u8[i]); return btoa(s); }
+function radioUnB64(b64){ const raw=atob(b64); const u8=new Uint8Array(raw.length); for(let i=0;i<raw.length;i++) u8[i]=raw.charCodeAt(i); return u8; }
+
+function radioCtxGet(){
+  if(!radioCtx){ radioCtx=new (window.AudioContext||window.webkitAudioContext)(); }
+  try{ if(radioCtx.state==="suspended") radioCtx.resume(); }catch(e){}
+  return radioCtx;
+}
+
+async function radioStart(){
+  if(radioSending) return;
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){ toast(t("radioNoMic"),true); return; }
+  try{
+    radioCtxGet();
+    radioStream=await navigator.mediaDevices.getUserMedia({audio:{channelCount:1,echoCancellation:true,noiseSuppression:true,autoGainControl:true}});
+    const src=radioCtx.createMediaStreamSource(radioStream);
+    radioNode=radioCtx.createScriptProcessor(2048,1,1);
+    const ratio=radioCtx.sampleRate/RADIO_RATE;
+    let acc=0, sum=0, cnt=0;
+    radioBuf=[];
+    radioNode.onaudioprocess=(ev)=>{
+      if(!radioSending) return;
+      const inp=ev.inputBuffer.getChannelData(0);
+      for(let i=0;i<inp.length;i++){
+        sum+=inp[i]; cnt++;
+        if(cnt>=ratio){ radioBuf.push(radioUlawEnc(Math.max(-1,Math.min(1,sum/cnt))*32767)); sum=0; cnt=0; }
+      }
+    };
+    src.connect(radioNode); radioNode.connect(radioCtx.destination);
+    radioSending=true; radioRun=true;
+    radioSend("start",{from:radioMe(),fromName:radioName(),target:radioTargetValue(),ts:Date.now()});
+    if(radioFlushT) clearInterval(radioFlushT);
+    radioFlushT=setInterval(()=>{
+      try{
+        if(!radioSending||!radioBuf.length) return;
+        while(radioBuf.length>=RADIO_CHUNK){
+          const part=radioBuf.splice(0,RADIO_CHUNK);
+          radioSend("chunk",{from:radioMe(),target:radioTargetValue(),seq:Date.now(),data:radioB64(new Uint8Array(part))});
+          radioStats.sent++;
+        }
+      }catch(e){}
+    },160);
+    radioRender();
+  }catch(e){ radioStop(true); toast(t("micError"),true); }
+}
+function radioStop(silent){
+  const was=radioSending;
+  radioSending=false; radioRun=false;
+  try{ if(radioFlushT){ clearInterval(radioFlushT); radioFlushT=null; } }catch(e){}
+  try{ if(radioNode){ radioNode.disconnect(); radioNode.onaudioprocess=null; radioNode=null; } }catch(e){}
+  try{ if(radioStream){ radioStream.getTracks().forEach(x=>{ try{x.stop();}catch(e){} }); radioStream=null; } }catch(e){}
+  radioBuf=[];
+  if(was) radioSend("stop",{from:radioMe(),target:radioTargetValue()});
+  if(!silent) radioRender();
+}
+function radioToggle(){ if(radioSending) radioStop(); else radioStart(); }
+function radioEnableSound(){ try{ radioCtxGet(); }catch(e){} try{ radioRender(); }catch(e){} }
+
+function radioOnEvent(p){
+  try{
+    const body=(p&&p.payload)||p||{};
+    const ev=(p&&p.event)||"";
+    const d=body.payload||body;
+    if(!d||!radioForMe(d)) return;
+    if(ev==="start"){
+      radioRxFrom=String(d.fromName||d.from||""); radioRxTarget=String(d.target||"all");
+      radioListening=true; radioLastChunk=Date.now(); radioPlayAt=0;
+      try{ radioCtxGet(); }catch(e){}
+      radioRender(); try{ toast(t("radioLive",{who:radioRxFrom})); }catch(e){}
+    }else if(ev==="chunk"){
+      if(!radioListening) return;
+      radioLastChunk=Date.now(); radioStats.got++;
+      try{ radioPlay(radioUnB64(d.data)); }catch(e){}
+      if(document.hidden) return;
+    }else if(ev==="stop"){
+      radioListening=false; radioRender();
+    }
+  }catch(e){}
+}
+function radioPlay(u8){
+  try{
+    const ctx=radioCtxGet();
+    if(ctx.state!=="running") return;           // нужен тап пользователя — покажем кнопку
+    const n=u8.length;
+    const buf=ctx.createBuffer(1,n,RADIO_RATE);
+    const ch=buf.getChannelData(0);
+    for(let i=0;i<n;i++) ch[i]=radioUlawDec(u8[i])/32768;
+    const src=ctx.createBufferSource(); src.buffer=buf; src.connect(ctx.destination);
+    const now=ctx.currentTime;
+    if(radioPlayAt<now+0.05) radioPlayAt=now+0.08;
+    src.start(radioPlayAt);
+    radioPlayAt+=buf.duration;
+  }catch(e){}
+}
+
+function radioRender(){
+  const box=document.getElementById("radioPanel"); if(!box) return;
+  const clsList=(function(){ try{ return myClasses(); }catch(e){ return []; } })();
+  const opts=["<option value='all'>"+esc(t("radioAll"))+"</option>"].concat(clsList.map(c=>"<option value='class:"+esc(c)+"'>"+esc(clsName(c))+"</option>")).join("");
+  const live=radioListening&&(Date.now()-radioLastChunk<4000);
+  box.innerHTML=
+    "<div class='radio-box'>"+
+      "<div class='radio-row'>"+
+        "<span class='radio-dot"+(radioSending?" on":"")+"'></span>"+
+        "<b>"+(radioSending?esc(t("radioYouLive")):live?esc(t("radioLive",{who:radioRxFrom})):esc(t("radioIdle")))+"</b>"+
+      "</div>"+
+      "<div class='radio-row radio-target'><span>"+esc(t("radioSendTo"))+"</span><select id='radioTargetSel' onchange='radioSetTarget(this.value)'"+(radioSending?" disabled":"")+">"+opts+"</select></div>"+
+      "<button class='btn "+(radioSending?"btn-back":"btn-go")+" radio-btn' onclick='radioToggle()'>"+esc(radioSending?t("radioStop"):t("radioTalk"))+"</button>"+
+      (radioListening&&!radioSending?
+        (function(){ let need=false; try{ need=!radioCtx||radioCtx.state!=="running"; }catch(e){ need=true; }
+          return need
+            ? "<button class='btn btn-back radio-btn' style='margin-top:8px' onclick='radioEnableSound()'>"+esc(t("radioEnableSound"))+"</button>"
+            : "<div class='muted' style='margin-top:8px'>"+esc(t("radioListening"))+"</div>";
+        })():"" )+
+    "</div>";
+  try{ const sel=document.getElementById("radioTargetSel"); if(sel) sel.value=radioSelTarget||"all"; }catch(e){}
+}
+setInterval(()=>{ try{ if(!document.hidden && (radioListening||radioSending)) radioRender(); }catch(e){} },2000);
+
 // ===== Android APK: push через FCM (Capacitor) =====
 function fcmPlugin(){ try{ return (window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.PushNotifications)||null; }catch(e){ return null; } }
 function fcmTokenLocal(){ try{ return localStorage.getItem("rb_fcm_token")||""; }catch(e){ return ""; } }
@@ -5425,6 +5636,7 @@ function rtJoinAll(){
   if(!t){ RT_TABLES.forEach(tb=>{ rtJoinState[tb]="err"; }); return; }
   RT_TABLES.forEach(tb=>{ const ref=String(rtRef++); rtJoinState[tb]="wait";
     rtSend({topic:"realtime:public:"+tb,event:"phx_join",ref:ref,payload:{config:{postgres_changes:[{event:"*",schema:"public",table:tb}]},access_token:t}}); });
+  try{ rtSend({topic:RADIO_TOPIC,event:"phx_join",ref:String(rtRef++),payload:{config:{broadcast:{ack:false,self:false}},access_token:t}}); radioJoined=true; }catch(e){}
 }
 function rtBoot(){
   rtStop(true);
@@ -5470,6 +5682,12 @@ function rtCovered(){
 }
 function rtOnMsg(m){
   if(!m) return;
+  try{
+    if(String(m.topic||"").indexOf("live-radio")>=0){
+      if(m.event==="broadcast"){ radioOnEvent(m.payload); }
+      return;
+    }
+  }catch(e){}
   if(m.event==="phx_reply"){
     const tb=String(m.topic||"").split(":").pop();
     if(RT_TABLES.indexOf(tb)>=0){
