@@ -12,7 +12,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default" />
 <meta name="apple-mobile-web-app-title" content="RedBridge" />
 <meta name="theme-color" content="#C1272D" />
-<meta name="app-version" content="v5.5.28" />
+<meta name="app-version" content="v5.5.29" />
 <!-- Приложение — один инлайновый скрипт, поэтому script-src вынужденно
      допускает 'unsafe-inline'. Зато default-src/connect-src закрывают
      подгрузку чужих скриптов и утечку данных на сторонние хосты:
@@ -459,6 +459,24 @@ html.theme-dark .radio-target select{background:#151922;color:var(--ink);border-
 .radio-dot.on{background:#C1272D;box-shadow:0 0 0 4px rgba(193,39,45,.15);animation:radioPulse 1.2s ease-in-out infinite}
 @keyframes radioPulse{0%,100%{opacity:1}50%{opacity:.45}}
 .radio-btn{width:100%;min-height:52px;font-size:15px;font-weight:700}
+.radio-fab{position:fixed;left:16px;bottom:calc(16px + env(safe-area-inset-bottom));z-index:140;width:54px;height:54px;border-radius:18px;border:0;display:grid;place-items:center;color:#fff;cursor:pointer;
+  background:linear-gradient(135deg,#C1272D,#7A1620);box-shadow:0 10px 26px rgba(193,39,45,.4),inset 0 1px 0 rgba(255,255,255,.3)}
+.radio-fab svg{width:24px;height:24px}
+.radio-fab:active{transform:scale(.96)}
+.radio-talk-modal{max-width:420px}
+.radio-state{margin-top:10px;text-align:center;font-size:13px;font-weight:650;color:var(--muted);min-height:18px}
+/* полноэкранный «в эфире» */
+.radio-live{position:fixed;inset:0;z-index:300;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:28px;
+  background:linear-gradient(130deg,#1A1A2E 0%,#7A1620 45%,#C1272D 100%);color:#fff;text-align:center}
+.radio-live.open{display:flex}
+.rl-kicker{display:inline-block;padding:8px 22px;border-radius:999px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.4);
+  font-weight:800;letter-spacing:.08em;font-size:13px;text-transform:uppercase}
+.rl-name{font-size:clamp(30px,8vw,64px);font-weight:800;letter-spacing:-.02em;line-height:1.1}
+.rl-meta{font-size:15px;color:rgba(255,255,255,.8)}
+.rl-ring{width:74px;height:74px;border-radius:50%;border:3px solid rgba(255,255,255,.55);animation:rlPulse 1.2s ease-in-out infinite}
+@keyframes rlPulse{0%,100%{transform:scale(1);opacity:.9}50%{transform:scale(1.12);opacity:.45}}
+.rl-actions{display:flex;gap:10px;margin-top:8px;flex-wrap:wrap;justify-content:center}
+.radio-live .btn{min-height:46px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.4);color:#fff}
 .walkie-modal{max-width:560px}
 .walkie-pick-item{align-items:center}
 .walkie-pick-item b{font-weight:700}
@@ -1598,6 +1616,31 @@ html.standalone-ios body{overscroll-behavior-y:none}
     <div id="flatSchedBody"></div>
   </div>
 </div>
+<button id="radioFab" class="radio-fab" onclick="radioOpenTalk()" aria-label="Эфир" title="Эфир">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/></svg>
+</button>
+<div class="overlay" id="radioTalkOverlay">
+  <div class="modal radio-talk-modal">
+    <button class="icon-btn topx" onclick="radioTalkClose()" aria-label="close">×</button>
+    <h3 data-i18n="radioTalkTitle">Эфир</h3>
+    <p class="muted" data-i18n="radioTalkSub">Скажите — вас услышат все выбранные, без звонков и меню.</p>
+    <div class="radio-row radio-target" style="margin:4px 0 12px"><span data-i18n="radioSendTo">Кому:</span>
+      <select id="radioTalkTarget"></select>
+    </div>
+    <button class="btn btn-go radio-btn" id="radioTalkBtn" onclick="radioTalkToggle()">Говорить</button>
+    <div class="radio-state" id="radioTalkState"></div>
+  </div>
+</div>
+<div class="radio-live" id="radioLive">
+  <div class="rl-kicker" data-i18n="radioLiveKicker">В эфире</div>
+  <div class="rl-name" id="radioLiveName"></div>
+  <div class="rl-meta" id="radioLiveMeta"></div>
+  <div class="rl-ring"></div>
+  <div class="rl-actions">
+    <button class="btn btn-back" id="radioLiveSound" onclick="radioEnableSound()">Включить звук</button>
+    <button class="btn btn-back" onclick="radioHideLive()" data-i18n="close">Закрыть</button>
+  </div>
+</div>
 <div id="sysBanner" class="sys-banner" role="status" style="display:none">
   <span id="sysBannerText"></span>
   <button class="chip-btn" id="sysBannerBtn" onclick="sysBannerAct()" style="display:none"></button>
@@ -1712,6 +1755,10 @@ try{
     radioListening:"Слушаем эфир…",
     radioEnableSound:"Включить звук",
     radioNoMic:"Микрофон недоступен",
+    radioTalkTitle:"Эфир",
+    radioTalkSub:"Скажите — вас услышат все выбранные, без звонков и меню.",
+    radioLiveKicker:"В эфире",
+    radioSomeone:"Кто-то говорит",
     pushTitle:"Уведомления на телефон",
     pushDesc:"Системные уведомления приходят, даже когда приложение закрыто.",
     pushIosHint:"На iPhone: добавьте приложение на экран «Домой» (Safari → Поделиться) и включите здесь.",
@@ -1769,6 +1816,10 @@ try{
     radioListening:"Listening…",
     radioEnableSound:"Enable sound",
     radioNoMic:"Microphone is not available",
+    radioTalkTitle:"Live channel",
+    radioTalkSub:"Just talk — everyone selected hears you, no calls or menus.",
+    radioLiveKicker:"On air",
+    radioSomeone:"Someone is talking",
     pushTitle:"Phone notifications",
     pushDesc:"System notifications arrive even when the app is closed.",
     pushIosHint:"On iPhone: add the app to the Home screen (Safari → Share) and enable it here.",
@@ -1966,7 +2017,7 @@ function resumeSession(login){
     }).catch(()=>{ try{ logout(); }catch(e){} });
   }catch(e){ try{ logout(); }catch(e){} }
 }
-const APP_VER="v5.5.28";
+const APP_VER="v5.5.29";
 var splashDone=false;
 function hideSplash(){ if(splashDone) return; splashDone=true; try{ document.getElementById("splash").classList.add("hide"); }catch(e){} try{ const v=document.getElementById("splashVid"); if(v) v.pause(); }catch(e){} setTimeout(()=>{ try{ document.getElementById("splash").remove(); }catch(e){} },600); }
 function setVer(){ try{ document.getElementById("jsok").textContent=APP_VER; }catch(e){} try{ var _lv=document.getElementById("loginVer"); if(_lv) _lv.textContent=APP_VER; }catch(e){} }
@@ -4444,7 +4495,7 @@ const VAPID_PUBLIC="BBCqoFud0jQRg4OQ3ucfbDo77bBAJCv5FrbV9g9iMSH0BCUAYNX_kv_aPLZ9
 // ==========================================================================
 const RADIO_TOPIC="realtime:live-radio";
 const RADIO_RATE=8000, RADIO_CHUNK=1280;   // 160 мс при 8 кГц
-let radioJoined=false, radioSending=false, radioSelTarget="all";
+let radioJoined=false, radioSending=false, radioSelTarget="all", radioT0=0;
 let radioCtx=null, radioStream=null, radioNode=null, radioBuf=[], radioFlushT=null, radioRun=false;
 let radioPlayAt=0, radioRxFrom="", radioRxTarget="", radioListening=false, radioLastChunk=0;
 let radioStats={sent:0,got:0,lastAt:0};
@@ -4509,7 +4560,8 @@ async function radioStart(){
       }
     };
     src.connect(radioNode); radioNode.connect(radioCtx.destination);
-    radioSending=true; radioRun=true;
+    radioSending=true; radioRun=true; radioT0=Date.now();
+    try{ if(radioTalkT) clearInterval(radioTalkT); radioTalkT=setInterval(radioTalkPaint,1000); }catch(e){}
     radioSend("start",{from:radioMe(),fromName:radioName(),target:radioTargetValue(),ts:Date.now()});
     if(radioFlushT) clearInterval(radioFlushT);
     radioFlushT=setInterval(()=>{
@@ -4533,9 +4585,66 @@ function radioStop(silent){
   try{ if(radioStream){ radioStream.getTracks().forEach(x=>{ try{x.stop();}catch(e){} }); radioStream=null; } }catch(e){}
   radioBuf=[];
   if(was) radioSend("stop",{from:radioMe(),target:radioTargetValue()});
+  try{ if(radioTalkT){ clearInterval(radioTalkT); radioTalkT=null; } }catch(e){}
+  try{ radioTalkPaint(); }catch(e){}
   if(!silent) radioRender();
 }
 function radioToggle(){ if(radioSending) radioStop(); else radioStart(); }
+
+// ---- быстрый вход: нажал — говоришь ----
+let radioTalkT=null, radioLiveTimer=null;
+function radioOpenTalk(){
+  try{ radioCtxGet(); }catch(e){}
+  const sel=document.getElementById("radioTalkTarget");
+  if(sel){
+    const cls=(function(){ try{ return myClasses(); }catch(e){ return []; } })();
+    sel.innerHTML="<option value='all'>"+esc(t("radioAll"))+"</option>"+cls.map(c=>"<option value='class:"+esc(c)+"'>"+esc(clsName(c))+"</option>").join("");
+    sel.value=radioSelTarget||"all";
+    sel.onchange=()=>{ radioSetTarget(sel.value); };
+  }
+  document.getElementById("radioTalkOverlay").classList.add("open");
+  radioTalkPaint();
+}
+function radioTalkClose(){
+  try{ if(radioSending) radioStop(); }catch(e){}
+  try{ document.getElementById("radioTalkOverlay").classList.remove("open"); }catch(e){}
+}
+function radioTalkPaint(){
+  try{
+    const b=document.getElementById("radioTalkBtn"), st=document.getElementById("radioTalkState");
+    if(b){ b.textContent=radioSending?t("radioStop"):t("radioTalk"); b.className="btn radio-btn "+(radioSending?"btn-back":"btn-go"); }
+    if(st){
+      if(radioSending){
+        const sec=Math.max(0,Math.floor((Date.now()-(radioT0||Date.now()))/1000));
+        st.textContent=t("radioYouLive")+" · "+Math.floor(sec/60)+":"+("0"+(sec%60)).slice(-2);
+      } else st.textContent="";
+    }
+    const sel=document.getElementById("radioTalkTarget"); if(sel) sel.disabled=radioSending;
+  }catch(e){}
+}
+function radioTalkToggle(){
+  if(radioSending){ radioStop(); }
+  else { const sel=document.getElementById("radioTalkTarget"); if(sel) radioSetTarget(sel.value); radioStart(); }
+  radioTalkPaint();
+}
+
+// ---- слушатель: полноэкранное «говорит X» ----
+function radioShowLive(name,target){
+  try{
+    const box=document.getElementById("radioLive"); if(!box) return;
+    document.getElementById("radioLiveName").textContent=name||t("radioSomeone");
+    const tg=String(target||"all");
+    document.getElementById("radioLiveMeta").textContent=tg==="all"?t("radioAll"):(tg.indexOf("class:")===0?clsName(tg.slice(6)):"");
+    box.classList.add("open");
+    const snd=document.getElementById("radioLiveSound"); if(snd) snd.style.display=(radioCtx&&radioCtx.state==="running")?"none":"";
+    if(radioLiveTimer) clearInterval(radioLiveTimer);
+    radioLiveTimer=setInterval(()=>{ try{ if(!radioListening||Date.now()-radioLastChunk>4000){ radioHideLive(); } }catch(e){} },1000);
+  }catch(e){}
+}
+function radioHideLive(){
+  try{ if(radioLiveTimer){ clearInterval(radioLiveTimer); radioLiveTimer=null; } }catch(e){}
+  try{ document.getElementById("radioLive").classList.remove("open"); }catch(e){}
+}
 function radioEnableSound(){ try{ radioCtxGet(); }catch(e){} try{ radioRender(); }catch(e){} }
 
 function radioOnEvent(p){
@@ -4548,14 +4657,16 @@ function radioOnEvent(p){
       radioRxFrom=String(d.fromName||d.from||""); radioRxTarget=String(d.target||"all");
       radioListening=true; radioLastChunk=Date.now(); radioPlayAt=0;
       try{ radioCtxGet(); }catch(e){}
-      radioRender(); try{ toast(t("radioLive",{who:radioRxFrom})); }catch(e){}
+      radioRender(); radioShowLive(radioRxFrom, radioRxTarget);
+      try{ rbVibrate([220,80,220]); rbLoudAlert(1); }catch(e){}
+      try{ toast(t("radioLive",{who:radioRxFrom})); }catch(e){}
     }else if(ev==="chunk"){
       if(!radioListening) return;
       radioLastChunk=Date.now(); radioStats.got++;
       try{ radioPlay(radioUnB64(d.data)); }catch(e){}
       if(document.hidden) return;
     }else if(ev==="stop"){
-      radioListening=false; radioRender();
+      radioListening=false; radioHideLive(); radioRender();
     }
   }catch(e){}
 }
@@ -5115,7 +5226,7 @@ function toggleVoice(){
 function syncVoiceBtn(){ const b=document.getElementById("voiceBtn"); if(b) b.textContent=voiceOn?t("voiceOnB"):t("voiceOffB"); }
 try{ if("speechSynthesis" in window){ speechSynthesis.getVoices(); speechSynthesis.onvoiceschanged=()=>{ try{speechSynthesis.getVoices();}catch(e){} }; } }catch(e){}
 let audioUnlocked=false;
-function unlockAudio(){ if(audioUnlocked) return; audioUnlocked=true; try{ const a=new Audio("voices/guard-en.m4a"); a.volume=0; const pr=a.play(); if(pr&&pr.catch) pr.catch(()=>{}); setTimeout(()=>{ try{ a.pause(); }catch(e){} },800); }catch(e){} try{ if("speechSynthesis" in window) speechSynthesis.getVoices(); }catch(e){} }
+function unlockAudio(){ if(audioUnlocked) return; audioUnlocked=true; try{ radioCtxGet(); }catch(e){} try{ const a=new Audio("voices/guard-en.m4a"); a.volume=0; const pr=a.play(); if(pr&&pr.catch) pr.catch(()=>{}); setTimeout(()=>{ try{ a.pause(); }catch(e){} },800); }catch(e){} try{ if("speechSynthesis" in window) speechSynthesis.getVoices(); }catch(e){} }
 try{ ["pointerdown","keydown","touchend"].forEach(ev=>document.addEventListener(ev,unlockAudio,{passive:true})); }catch(e){}
 let voiceNorm=null;
 // Озвучка имён живёт ВНЕ кода: voices/bank.json + аудио в voices/.
