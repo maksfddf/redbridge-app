@@ -12,7 +12,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default" />
 <meta name="apple-mobile-web-app-title" content="RedBridge" />
 <meta name="theme-color" content="#C1272D" />
-<meta name="app-version" content="v5.5.35" />
+<meta name="app-version" content="v5.5.36" />
 <!-- Приложение — один инлайновый скрипт, поэтому script-src вынужденно
      допускает 'unsafe-inline'. Зато default-src/connect-src закрывают
      подгрузку чужих скриптов и утечку данных на сторонние хосты:
@@ -54,10 +54,17 @@
 })();
 </script>
 <style>
-.splash{position:fixed;inset:0;z-index:500;display:grid;place-items:center;background:#000;transition:opacity .5s ease}
+.splash{position:fixed;inset:0;z-index:500;display:grid;place-items:center;background:#F9F5EF;overflow:hidden;transition:opacity .5s ease}
 .splash.hide{opacity:0;pointer-events:none}
-.splash{background:#0B0B10;padding:0}
-.splash video{width:100%;height:100%;max-width:none;max-height:none;object-fit:cover;margin:0;border-radius:0}
+.splash{background:#F9F5EF;padding:0}
+.splash video{width:100%;height:100%;max-width:none;max-height:none;object-fit:contain;margin:0;border-radius:0}
+/* Ролик снят 16:9, а телефон вертикальный: без этого логотип либо
+   растягивался на весь экран (cover), либо становился точкой (contain).
+   Здесь видео масштабируется по высоте, логотип получается как в
+   системной заставке, а лишние поля по бокам обрезаются. */
+@media (orientation:portrait){
+  .splash video{width:max(100%,100vh);height:auto}
+}
 *{box-sizing:border-box;margin:0;padding:0}
 :root{--red:#C1272D;--red-dark:#A01E24;--red-light:#FEE2E2;--red-border:#FECACA;--red-text:#991B1B;--ink:#1A1A2E;--muted:#6B7280;--bg:#F2F3F5;--card:rgba(255,255,255,.72);--line:rgba(255,255,255,.6);--line-solid:#E5E7EB;--green:#16A34A;--green-bg:#DCFCE7;--orange:#EA580C;--orange-bg:#FFEDD5;--radius:14px;--ease:cubic-bezier(.32,.72,0,1)}
 html{scroll-behavior:smooth}
@@ -1006,11 +1013,19 @@ html.perf .skel-av,html.perf .skel-line{animation:none;opacity:.7}
 /* ===== системная плашка (офлайн, истёкшая сессия) ===== */
 .sys-banner{
   position:fixed;left:50%;top:calc(10px + env(safe-area-inset-top));transform:translateX(-50%);
-  z-index:280;display:flex;align-items:center;gap:10px;max-width:calc(100vw - 24px);
+  z-index:280;display:flex;align-items:center;gap:10px;width:max-content;max-width:calc(100vw - 24px);
   padding:10px 10px 10px 14px;border-radius:14px;background:#1F3864;color:#fff;
   font:600 13px/1.35 'Inter',system-ui,sans-serif;box-shadow:0 10px 30px rgba(0,0,0,.25)
 }
 .sys-banner .chip-btn{background:rgba(255,255,255,.16);border-color:rgba(255,255,255,.35);color:#fff}
+.sys-banner .sys-x{
+  margin-left:auto;flex:0 0 auto;width:28px;height:28px;padding:0;border-radius:50%;
+  border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.16);color:#fff;
+  display:grid;place-items:center;font:700 16px/1 'Inter',system-ui,sans-serif;cursor:pointer;
+  -webkit-appearance:none;appearance:none
+}
+.sys-banner .sys-x:hover{background:rgba(255,255,255,.3)}
+.sys-banner .sys-x:active{transform:scale(.94)}
 
 /* ===== голосовой ответ ===== */
 .vrep-modal{max-width:420px}
@@ -1681,6 +1696,7 @@ html.standalone-ios body{overscroll-behavior-y:none}
 <div id="sysBanner" class="sys-banner" role="status" style="display:none">
   <span id="sysBannerText"></span>
   <button class="chip-btn" id="sysBannerBtn" onclick="sysBannerAct()" style="display:none"></button>
+  <button class="sys-x" id="sysBannerX" onclick="sysBannerClose()" aria-label="Закрыть" title="Закрыть">✕</button>
 </div>
 <div id="toasts"></div>
 <button id="assistFab" class="assist-fab" onclick="assistToggle()" aria-label="Assistant" aria-haspopup="dialog" aria-controls="assistPanel" aria-expanded="false">
@@ -2064,7 +2080,7 @@ function resumeSession(login){
     }).catch(()=>{ try{ logout(); }catch(e){} });
   }catch(e){ try{ logout(); }catch(e){} }
 }
-const APP_VER="v5.5.35";
+const APP_VER="v5.5.36";
 var splashDone=false;
 function hideSplash(){ if(splashDone) return; splashDone=true; try{ document.getElementById("splash").classList.add("hide"); }catch(e){} try{ const v=document.getElementById("splashVid"); if(v) v.pause(); }catch(e){} setTimeout(()=>{ try{ document.getElementById("splash").remove(); }catch(e){} },600); }
 function setVer(){ try{ document.getElementById("jsok").textContent=APP_VER; }catch(e){} try{ var _lv=document.getElementById("loginVer"); if(_lv) _lv.textContent=APP_VER; }catch(e){} }
@@ -2513,12 +2529,25 @@ function finishLesson(){
   toast(t("lessonDone",{n:n}));
   }catch(err){ toast("finish: "+((err&&err.message)||err)); }
 }
-function togglePresent(id){
+function togglePresent(id, el){
   const L=activeLesson(); if(!L) return;
   try{ const me=currentUser(); if(me&&me.role==="teacher"&&L.by&&me.login&&String(L.by).toLowerCase()!==String(me.login).toLowerCase()){ toast(t("notYourLesson")); return; } }catch(e){ return; }
   try{ assistSetFocus(id); }catch(e){}
   L.present[id]=!L.present[id];
-  saveData(false); renderTeacher();try{ pushNow(); }catch(e){} try{ renderUtils(); }catch(e){}
+  // Обновляем только эту строку и счётчики. Раньше здесь шла полная
+  // перерисовка: список мигал, терял позицию прокрутки, а при сбое
+  // оставлял пустую таблицу без кнопок.
+  try{
+    const list=db[state.cls]||[];
+    const s=list.find(x=>x.id===id);
+    const tr=el&&el.closest?el.closest("tr"):null;
+    if(s&&tr){
+      const cx=teacherLessonCtx();
+      tr.innerHTML=teacherRowHtml(s,cx.L,cx.mine,cx.owner);
+    }
+    teacherCountsPaint(list,L);
+  }catch(e){ try{ console.error(e); }catch(_){} }
+  saveData(false); try{ pushNow(); }catch(e){} try{ renderUtils(); }catch(e){}
 }
 function calledBadge(v){ return '<span class="st st-call">'+t("stCalled")+': '+(v==="med"?t("med"):v==="reception"?t("reception"):v==="cafeteria"?t("cafeteria"):t("exitShort"))+'</span>'; }
 function findStudentAny(id){ for(const c of CLASSES){ const s=(db[c]||[]).find(x=>x.id===id); if(s) return {c:c,s:s}; } return null; }
@@ -3315,15 +3344,21 @@ function sysBanner(text, actionText, action){
     let btn=document.getElementById("sysBannerBtn");
     window.__sysAct=action||null;
     if(btn){ if(actionText){ btn.style.display=""; btn.textContent=actionText; } else btn.style.display="none"; }
+    const x=document.getElementById("sysBannerX");
+    // Внимание: локальная t выше — это элемент плашки, а не функция перевода.
+    if(x){ let lb="Close"; try{ lb=window.t("close")||lb; }catch(e){} x.setAttribute("aria-label",lb); x.title=lb; }
     b.style.display="flex";
   }catch(e){}
 }
 function sysBannerHide(){ try{ const b=document.getElementById("sysBanner"); if(b) b.style.display="none"; }catch(e){} }
+function sysBannerClose(){ try{ window.__sysAct=null; window.__sysBannerClosedAt=Date.now(); }catch(e){} sysBannerHide(); }
 function sysBannerAct(){ try{ const f=window.__sysAct; if(typeof f==="function") f(); }catch(e){} }
 let authLostAt=0;
 function rbAuthLost(){
   try{
     const now=Date.now(); if(now-authLostAt<30000) return; authLostAt=now;
+    // Пользователь закрыл плашку — пять минут не возвращаем её снова.
+    if(now-(window.__sysBannerClosedAt||0)<300000) return;
     sysBanner(t("sessLost"), t("signIn"), ()=>{ sysBannerHide(); try{ logout(); }catch(e){} });
   }catch(e){}
 }
@@ -3691,6 +3726,47 @@ function setNum(id,v){
     setTimeout(()=>{ try{ el.classList.remove("num-pop"); }catch(e){} }, 520);
   }catch(e){}
 }
+// Один источник разметки строки ученика: её используют и полная отрисовка
+// списка, и точечное обновление после галочки. Иначе логика расходилась, а
+// перерисовка всего <tbody> заставляла экран мигать и прыгать наверх.
+function teacherLessonCtx(){
+  const L=activeLesson();
+  let mine=true, owner="";
+  try{
+    const me=currentUser();
+    if(me&&me.role==="teacher"&&L&&L.by&&me.login&&String(L.by).toLowerCase()!==String(me.login).toLowerCase()){
+      mine=false; owner=dn(lessonOwnerName(L)||L.by||"");
+    }
+  }catch(e){}
+  return {L:L,mine:mine,owner:owner};
+}
+function teacherRowHtml(s,L,mineLesson,lessonOwner){
+  const cls=(s&&s._c)||state.cls;
+  const init=esc(dn(s.name).split(" ").map(w=>w[0]).join("").slice(0,2));
+  let badge=studBadge(s,"t");
+  if(L&&!L.present[s.id]&&s.status!=="out"&&s.status!=="med"&&s.status!=="away"&&s.status!=="wait") badge='<span class="st st-out">'+t("absent")+'</span>';
+  if(!L){
+    if(s.status==="out"||s.status==="med"||s.status==="away"||s.status==="wait") badge=studBadge(s,"x");
+    else if(s.called&&s.status!=="out") badge=calledBadge(s.calledBy);
+    else badge='';
+  }
+  const check=state.seventh?"<span class='muted'>"+esc(clsName(cls))+"</span>":!L?'<span class="muted">'+t("stNoLesson")+'</span>'
+    :!mineLesson?'<span class="muted">'+esc(t("stForeign",{t:lessonOwner}))+'</span>'
+    :(s.status==="out"
+    ? '<span class="muted">—</span>'
+    : "<input type='checkbox' class='present-check' "+(L.present[s.id]?"checked":"")+" onchange=\"togglePresent('"+jsq(s.id)+"',this)\" />");
+  return "<td><span class='avatar'>"+init+"</span><b>"+esc(dn(s.name))+"</b><div class='muted'>"+esc(subName(s,cls))+"</div></td>"
+    +"<td>"+check+"</td><td>"+badge+acceptCallHtml(s,cls)+"</td>"
+    +"<td><div class='btn-row'>"+(state.seventh?"":(mineLesson?(s.status!=="out"?"<button class='btn btn-back btn-sm' onclick=\"sendMedModal('"+jsq(state.cls)+"','"+jsq(s.id)+"')\">"+t("medBtn")+"</button>":"")+"<button class='btn btn-back btn-sm' onclick=\"backToSchool('"+jsq(state.cls)+"','"+jsq(s.id)+"')\">"+t("back")+"</button>":"")+((L&&L.active&&acceptedNotice(s,cls))?"<button class='btn btn-back btn-sm' onclick=\"closeCall(\'"+jsq(cls)+"\',\'"+jsq(s.id)+"\')\">"+t("closeCall")+"</button>":""))+"</div></td>";
+}
+function teacherCountsPaint(list,L){
+  let nP=0,nOut=0,nLate=0;
+  (list||[]).forEach(s=>{ if(L&&L.present[s.id])nP++; if(s.status==="out")nOut++; if(s.late&&s.status!=="out")nLate++; });
+  setNum("tTotal",(list||[]).length);
+  setNum("tPresent",L?nP:(list||[]).filter(s=>s.status!=="out").length);
+  setNum("tOut",nOut);
+  try{ setNum("tLate",nLate); }catch(e){}
+}
 function renderTeacher(){
   const teacherView=document.getElementById("view-teacher");
   if(teacherView) teacherView.classList.toggle("seventh-active",!!(state.seventh&&seventhCanUse()));
@@ -3717,7 +3793,7 @@ const list=(state.seventh?(function(){ const o=[]; try{ const _m7=currentUser();
       mineLesson=false; lessonOwner=dn(lessonOwnerName(L)||L.by||"");
     }
   }catch(e){}
-  const tb=document.getElementById("tbodyT"); tb.innerHTML="";
+  const tb=document.getElementById("tbodyT");
   // Первая загрузка: показываем скелетон вместо «пусто».
   try{
     if(!list.length && !dbLength()){
@@ -3725,17 +3801,9 @@ const list=(state.seventh?(function(){ const o=[]; try{ const _m7=currentUser();
       return;
     }
   }catch(e){}
-  let nP=0,nOut=0,nLate=0;
-  list.forEach(s=>{
-    if(L&&L.present[s.id])nP++;
-    if(s.status==="out")nOut++;
-    if(s.late&&s.status!=="out")nLate++;
-  });
-  setNum("tTotal",list.length);
-  setNum("tPresent",L?nP:list.filter(s=>s.status!=="out").length);
-  setNum("tOut",nOut);
-  try{ setNum("tLate",nLate); }catch(e){}
+  teacherCountsPaint(list,L);
   const thSt=document.getElementById("thStatusT"); if(thSt) thSt.style.display='';
+  const rows=document.createDocumentFragment();
   list.filter(s=>{
     if(f==="present"&&!(L&&L.present[s.id]))return false;
     if(f==="absent"&&(!L||L.present[s.id]))return false;
@@ -3743,25 +3811,16 @@ const list=(state.seventh?(function(){ const o=[]; try{ const _m7=currentUser();
     if(q&&!s.name.toLowerCase().includes(q))return false;
     return true;
   }).sort(bySurname).forEach(s=>{
-    const tr=document.createElement("tr");
-    const init=esc(dn(s.name).split(" ").map(w=>w[0]).join("").slice(0,2));
-    let badge=studBadge(s,"t");
-    if(L&&!L.present[s.id]&&s.status!=="out"&&s.status!=="med"&&s.status!=="away"&&s.status!=="wait") badge='<span class="st st-out">'+t("absent")+'</span>';
-    if(!L){
-      if(s.status==="out"||s.status==="med"||s.status==="away"||s.status==="wait") badge=studBadge(s,"x");
-      else if(s.called&&s.status!=="out") badge=calledBadge(s.calledBy);
-      else badge='';
-    }
-    const check=state.seventh?"<span class='muted'>"+esc(clsName(s._c||state.cls))+"</span>":!L?'<span class="muted">'+t("stNoLesson")+'</span>'
-      :!mineLesson?'<span class="muted">'+esc(t("stForeign",{t:lessonOwner}))+'</span>'
-      :(s.status==="out"
-      ? '<span class="muted">—</span>'
-      : "<input type='checkbox' class='present-check' "+(L.present[s.id]?"checked":"")+" onchange=\"togglePresent('"+jsq(s.id)+"')\" />");
-    tr.innerHTML="<td><span class='avatar'>"+init+"</span><b>"+esc(dn(s.name))+"</b><div class='muted'>"+esc(subName(s,s._c||state.cls))+"</div></td>"
-      +"<td>"+check+"</td><td>"+badge+acceptCallHtml(s,(s._c||state.cls))+"</td>"
-      +"<td><div class='btn-row'>"+(state.seventh?"":(mineLesson?(s.status!=="out"?"<button class='btn btn-back btn-sm' onclick=\"sendMedModal('"+jsq(state.cls)+"','"+jsq(s.id)+"')\">"+t("medBtn")+"</button>":"")+"<button class='btn btn-back btn-sm' onclick=\"backToSchool('"+jsq(state.cls)+"','"+jsq(s.id)+"')\">"+t("back")+"</button>":"")+((L&&L.active&&acceptedNotice(s,(s._c||state.cls)))?"<button class='btn btn-back btn-sm' onclick=\"closeCall(\'"+jsq((s._c||state.cls))+"\',\'"+jsq(s.id)+"\')\">"+t("closeCall")+"</button>":""))+"</div></td>";
-    tb.appendChild(tr);
+    // Строка собирается в фрагмент и подменяет список одним движением:
+    // раньше таблица на миг оставалась пустой, а любая ошибка в одной
+    // строке обрывала отрисовку — и кнопки «пропадали» до перезагрузки.
+    try{
+      const tr=document.createElement("tr");
+      tr.innerHTML=teacherRowHtml(s,L,mineLesson,lessonOwner);
+      rows.appendChild(tr);
+    }catch(e){ try{ console.error(e); }catch(_){} }
   });
+  try{ tb.replaceChildren(rows); }catch(e){ tb.innerHTML=""; }
   renderLibrary();
   try{ renderJamol(); }catch(e){}
 }
