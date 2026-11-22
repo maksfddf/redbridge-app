@@ -12,7 +12,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default" />
 <meta name="apple-mobile-web-app-title" content="RedBridge" />
 <meta name="theme-color" content="#C1272D" />
-<meta name="app-version" content="v5.5.33" />
+<meta name="app-version" content="v5.5.35" />
 <!-- Приложение — один инлайновый скрипт, поэтому script-src вынужденно
      допускает 'unsafe-inline'. Зато default-src/connect-src закрывают
      подгрузку чужих скриптов и утечку данных на сторонние хосты:
@@ -56,8 +56,8 @@
 <style>
 .splash{position:fixed;inset:0;z-index:500;display:grid;place-items:center;background:#000;transition:opacity .5s ease}
 .splash.hide{opacity:0;pointer-events:none}
-.splash{background:#0B0B10;padding:24px}
-.splash video{width:auto;height:auto;max-width:min(100%,540px);max-height:min(100%,680px);object-fit:contain;margin:0 auto;border-radius:16px}
+.splash{background:#0B0B10;padding:0}
+.splash video{width:100%;height:100%;max-width:none;max-height:none;object-fit:cover;margin:0;border-radius:0}
 *{box-sizing:border-box;margin:0;padding:0}
 :root{--red:#C1272D;--red-dark:#A01E24;--red-light:#FEE2E2;--red-border:#FECACA;--red-text:#991B1B;--ink:#1A1A2E;--muted:#6B7280;--bg:#F2F3F5;--card:rgba(255,255,255,.72);--line:rgba(255,255,255,.6);--line-solid:#E5E7EB;--green:#16A34A;--green-bg:#DCFCE7;--orange:#EA580C;--orange-bg:#FFEDD5;--radius:14px;--ease:cubic-bezier(.32,.72,0,1)}
 html{scroll-behavior:smooth}
@@ -2064,7 +2064,7 @@ function resumeSession(login){
     }).catch(()=>{ try{ logout(); }catch(e){} });
   }catch(e){ try{ logout(); }catch(e){} }
 }
-const APP_VER="v5.5.33";
+const APP_VER="v5.5.35";
 var splashDone=false;
 function hideSplash(){ if(splashDone) return; splashDone=true; try{ document.getElementById("splash").classList.add("hide"); }catch(e){} try{ const v=document.getElementById("splashVid"); if(v) v.pause(); }catch(e){} setTimeout(()=>{ try{ document.getElementById("splash").remove(); }catch(e){} },600); }
 function setVer(){ try{ document.getElementById("jsok").textContent=APP_VER; }catch(e){} try{ var _lv=document.getElementById("loginVer"); if(_lv) _lv.textContent=APP_VER; }catch(e){} }
@@ -2281,7 +2281,8 @@ function scrollToClasses(){ document.getElementById("classBar").scrollIntoView({
 function renderClassTabs(){
   const el=document.getElementById("classTabs"); el.innerHTML="";
   const me=currentUser();
-  const tabs=(me&&me.role==="teacher")?myClasses():CLASSES;
+  const tabs0=(me&&me.role==="teacher")?myClasses():CLASSES;
+  const tabs=(me&&me.role==="teacher"&&state.cls&&tabs0.indexOf(state.cls)<0)?tabs0.concat([state.cls]):tabs0;
   tabs.forEach(c=>{
     const b=document.createElement("button");
     b.className="ctab"+(c===state.cls&&!state.seventh?" active":"");
@@ -3373,8 +3374,8 @@ function walkieTeachers(){ try{ return (users||[]).filter(u=>u.role==="teacher")
 // would silently edit group A's club because myClub() always returns the first.
 let clubEditId="";
 function clubEdit(){ try{ if(clubEditId){ const hit=(clubs||[]).find(c=>c.id===clubEditId); if(hit) return hit; } return myClub(); }catch(e){ return null; } }
-function clubStudents(){ try{ const me=currentUser(); const cl=(me&&me.role==="teacher")?myClasses():CLASSES; const out=[];
-  cl.forEach(c=>{ (db[c]||[]).forEach(s=>{ if(s.status!=="out") out.push({c:c,id:s.id,name:s.name}); }); });
+function clubStudents(){ try{ const out=[];
+  CLASSES.forEach(c=>{ (db[c]||[]).forEach(s=>{ if(s.status!=="out") out.push({c:c,id:s.id,name:s.name}); }); });
   return out.sort((a,b)=>String(a.name).localeCompare(String(b.name),"ru")); }catch(e){ return []; } }
 function clubSave(){ try{ saveData(false); }catch(e){} try{ pushNow(); }catch(e){} try{ renderTeacher(); }catch(e){} }
 function clubOwnerName(tm){ try{ const u=(users||[]).find(x=>String(x.login||"").toLowerCase()===String(tm.owner||"").toLowerCase());
@@ -3573,11 +3574,6 @@ function seventhStartClub(key){
 }
 function seventhOpenClubEditor(){ clubEditId=""; seventhGo("club"); }
 function seventhFridayClass(value){
-  const me=currentUser();
-  if(me&&me.role==="teacher"){
-    const selectable=myClasses().map(String);
-    if(selectable.indexOf(value)<0){ seventhError="seventhErrNoClass"; renderSeventhLesson(); return; }
-  }
   state.cls=value; state.seventh=false; seventhRoute="home"; seventhError="";
   renderClassTabs(); renderTeacher();
 }
@@ -6499,7 +6495,7 @@ async function supaPushAll(){
     // Уроки: шлём только изменённые (раньше каждые 30 с уходили все классы
     // с updated_at=now(), и остальные устройства зря перечитывали таблицу).
     const ls=[];
-    Object.keys(lessons||{}).filter(c=>role==="admin"||role==="ceo"||role==="guest"||(role==="teacher"&&myClsList.indexOf(c)>=0)).forEach(c=>{
+    Object.keys(lessons||{}).filter(c=>role==="admin"||role==="ceo"||role==="guest"||(role==="teacher"&&(myClsList.indexOf(c)>=0||c===state.cls))).forEach(c=>{
       const L=lessons[c]||{};
       const row={cls:c,active:!!L.active,started_at:L.startedAt||"",present:L.present||{},subject:L.subject||"",by_login:String(L.by||"").toLowerCase().trim(),sub_by:String(L.subBy||""),cover_for:String(L.coverFor||"")};
       const h=hashStr(JSON.stringify(row));
