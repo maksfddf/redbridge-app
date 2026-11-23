@@ -12,7 +12,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default" />
 <meta name="apple-mobile-web-app-title" content="RedBridge" />
 <meta name="theme-color" content="#C1272D" />
-<meta name="app-version" content="v5.5.40" />
+<meta name="app-version" content="v5.5.41" />
 <!-- Приложение — один инлайновый скрипт, поэтому script-src вынужденно
      допускает 'unsafe-inline'. Зато default-src/connect-src закрывают
      подгрузку чужих скриптов и утечку данных на сторонние хосты:
@@ -1230,7 +1230,7 @@ html.standalone-ios body{overscroll-behavior-y:none}
       <div class="login-error" id="loginError" data-i18n="loginError">Неверный логин или пароль</div>
       <button type="submit" data-i18n="signIn">Войти</button>
     </form>
-    <div class="muted" id="loginVer" style="text-align:center;margin-top:14px">v5.5.40</div>
+    <div class="muted" id="loginVer" style="text-align:center;margin-top:14px">v5.5.41</div>
   </div>
 </div>
 
@@ -1279,7 +1279,7 @@ html.standalone-ios body{overscroll-behavior-y:none}
 </div>
 
 <div class="classes" id="classBar"><div class="wrap" id="classTabs"></div></div>
-<div class="notif-panel card" id="notifPanel"><h4 data-i18n="noticeT">Оповещения</h4><div id="notifList"></div></div>
+          <div class="notif-panel card" id="notifPanel" ontouchstart="notifTouchStart(event)" ontouchend="notifTouchEnd(event)" ontouchcancel="notifTouchEnd(null)"><h4 data-i18n="noticeT">Оповещения</h4><div id="notifList"></div></div>
 
 <div class="wrap main">
 
@@ -1800,13 +1800,15 @@ let boards = {};         // доска по классам: teacher пишет �
 let boardDirty = {};     // классы с несохранённой доской
 let teams = [], teamSel = {}, userFiles = [];
 let noticesArr = [], supaNBusy = false, supaNLast = 0, ttDirty = false, dispatchDirty = false, subsDirty = false, tablesDirty = false, ttdayDirty = false;
+const notifLocallyDismissed=new Set();
 let dispatchCache = {date:"",active:false,by:""}, subsCache = {date:"",list:[]};
 let tablesCache = {};
 let ttDayCache = {date:"",entries:[]};
 let clubs = [];
+const clubTombstones={};
 let lang="ru"; try{ lang=localStorage.getItem("rb_lang")||"ru"; }catch(e){}
 let bellThreshold = 70, lastBell = 0;
-let notifs = [], unread = 0, notifOpen = false, voiceOn = true;
+let notifs = [], unread = 0, notifOpen = false, voiceOn = true, localNotifSeq = 0;
 try{ bellThreshold=parseInt(localStorage.getItem("rb_thresh")||"70",10)||70; voiceOn=localStorage.getItem("rb_voice")!=="0"; }catch(e){}
 const I18N = {
 ru:{teacher:"Учитель",reception:"Ресепшен",exit:"Охрана(выход)",log:"Журнал",logout:"Выйти",login:"Логин",password:"Пароль",lockout:"Слишком много попыток, подожди минуту",remember:"Запомнить меня",loginError:"Неверный логин или пароль",signIn:"Войти",total:"Всего в классе",present:"На уроке",out:"Ушли",late:"Опоздали",searchStudent:"Поиск ученика...",fAll:"Все",fPresent:"На уроке",fAbsent:"Отсутствуют",fOut:"Ушли",addStudent:"Добавить ученика",classes:"Классы",screen:"Экран",schedBtn:"Расписание",schedTitle:"Расписание уроков",schedFull:"Общее расписание",schedMine:"Моё расписание",schedDay:"День",schedTeacher:"Учитель",schedNoMine:"Нет уроков у этого учителя",schedEmpty:"Нет уроков",thLesson:"Урок",thTime:"Время",thClass:"Класс",thSubject:"Предмет",thTeacher:"Учитель",thRoom:"Кабинет",schUp:"Скоро",schNow:"Сейчас идёт",schDone:"Прошёл",thStudent:"Ученик",thPresent:"На уроке",thStatus:"Статус",thWho:"Кто забрал / время",library:"Библиотека",board:"Online-доска",boardPh:"Заметки урока...",save:"Сохранить",del:"Удалить",open:"Открыть",inSchoolNow:"В школе сейчас",totalStudents:"Всего учеников",gone:"Ушли",waiting:"Ожидают",searchAll:"Поиск по всем классам...",invite:"Пригласить",teamTitle:"По пути — команда на выход",teamDesc:"Отметь детей галочками, создай команду, потом вызывай всех или только выбранных.",teamPh:"Название команды (напр. Автобус 1)...",createTeam:"Создать команду",callSelected:"Вызвать выбранных",kind1:"Вызов: разовый",kind2:"Вызов: в группу",kind3:"Вызов: на день",eTotal:"Всего в классе",eIn:"В школе",eOut:"Ушли",eCalled:"Вызваны",searchPh:"Поиск...",fIn:"В школе",fCalled:"Вызванные",callClass:"Вызвать весь класс",courses:"Про курсы",calls:"Вызовы",callsEmpty:"Пока никого не вызывали",searchLog:"Поиск по журналу...",clearLog:"Очистить журнал",logToday:"Журнал",cancel:"Отмена",skip:"Пропустить",ok:"Подтвердить",close:"Закрыть",stIn:"В школе",stOut:"Ушёл",stWait:"Ожидает",stLate:"Опоздал",lateDeny:"Отмечать опоздания могут только ресепшен и охрана",stCalled:"Вызван",stCalledBy:"Вызван: Охрана",exitShort:"Охрана",stInClass:"В классе",stNoLesson:"нет урока",stForeign:"на уроке у {t}",stLeftAt:"ушёл в {t}",call:"Вызвать",markLate:"Опоздал",release:"Отпустить",back:"Вернуть",callAllBtn:"Вызвать всех",delStudent:"Удалить ученика",delStudentSub:"Ученик исчезнет из всех списков сразу",studentDeleted:"Удалён из школы: {name}",logStudentDel:"Удалён из школы: <b>{name}</b> ({cls})",delBtn:"Удалить",noStudents:"Нет учеников",noOne:"В классе никого нет",emptyLog:"Пока пусто",studentsN:"{n} уч.",teacherIs:"Учитель: {t}",lessonGo:"Урок идёт, {c}{subj}",noLesson:"Уроков в этом классе нет",createLesson:"Создать урок, {c}",startLesson:"Принять / начать урок",finishLesson:"Завершить урок",lessonBusy:"Сначала заверши текущий урок ({c})",startedAt:"Начало в {t}",inLessonN:"На уроке: <b>{n}</b>",ongoingIn:"Сейчас идёт урок в: <b>{c}</b>. Сначала завершите его — новый начать нельзя.",goTo:"Перейти: {c}",newStudent:"Новый ученик",addBase:"Добавление в базу",fullName:"Имя и фамилия",fullNamePh:"Например: Алия Нурланова",classLabel:"Класс",whoCame:"Кто пришёл за ребёнком? (ФИО)",whoPh:"Например: мама Айгерим",relation:"Кем приходится",comment:"Комментарий (необязательно)",relMama:"Мама",relPapa:"Папа",relGrand:"Бабушка / Дедушка",relDriver:"Водитель",relNanny:"Няня",relSelf:"Сам уходит",relOther:"Другое",releaseT:"Отпустить ребёнка",coursesT:"Кружки и курсы",coursesSub:"Запись через ресепшен",finishFirst:"Сначала завершите урок в: {c}",lessonStarted:"Урок начат",lessonLogStart:"Урок начат: <b>{c}</b>{subj}",lessonLogEnd:"Урок завершён: <b>{c}</b> — присутствовало: {n}{subj}",lessonDone:"Урок завершён. Было: {n}",notYourLesson:"Это урок другого учителя",boardSaved:"Доска сохранена",boardCleared:"Заметка удалена",screenOn:"Режим экрана включён",screenOff:"Режим экрана выключен",inviteSent:"Приглашение для {name} отправлено",alreadyGone:"Ученик уже ушёл",logCalled:"Вызван: <b>{name}</b> ({cls})",calledToast:"Вызван: {name} ({kind})",noOneInClass:"В классе никого нет",logCalledAll:"Вызван весь класс <b>{cls}</b> — {dest}",calledAllToast:"Вызван весь класс ({n})",logLate:"<b>{name}</b> ({cls}) — опоздал (после 8:40)",lateToast:"Отмечен опоздавшим: {name}",logLeft:"<b>{name}</b> ({cls}) — ушёл с: {who}",releasedToast:"Отпущен: {name}",logBack:"<b>{name}</b> — снова в классе ({cls})",enterName:"Введите имя",logNewStudent:"Новый ученик: <b>{name}</b> ({cls})",studentAdded:"Добавлен: {name}",saved:"Сохранено",saveError:"Ошибка сохранения",pickChildren:"Выбери детей галочками",logTeam:"Создана команда <b>{name}</b> ({cls}): {n} уч.",teamMade:"Команда создана: {name}",noneSelected:"Никого не выбрано",logCalledSel:"Вызваны выбранные (<b>{n}</b>, {cls}): {names}",calledSelToast:"Вызвано: {n}",logCalledTeam:"Вызвана команда <b>{name}</b> ({n}): {names}",calledTeamToast:"Команда вызвана: {name} ({n})",teamDel:"Команда удалена: {name}",teamDefault:"Команда {n}",wholeClass:"Весь класс ({n} уч.)",selectedName:"Выбранные ({n} уч.)",teamCallName:"Команда {name} ({n} уч.)",libSchedule:"Расписание звонков",libTextbooks:"Учебники",libBooks:"Книги",alertsTitle:"Оповещения",noAlerts:"Нет новых оповещений",callLabel:"Вызов",callExitLabel:"Вызов охраны",gotIt:"Понятно",laterBtn:"Позже",laterTitle:"Заберут позже",logLater:"Позже заберут: <b>{name}</b> ({cls}) — {who}",laterToast:"Позже заберут: {name}",attn:"Внимание",goPhrase:"Пройдите: {dest}",guardPhrase:"Пройдите на выход вместе с вещами",willPick:"заберёт",exitWord:"выход",voiceOnB:"Озвучка: вкл",voiceOffB:"Озвучка: выкл",voiceEnabled:"Озвучка включена",threshLabel:"Порог звонка",logInvited:"Приглашён: <b>{name}</b> ({cls})",utils:"Утилиты",randTitle:"Рандомайзер",randDesc:"Случайный ученик из текущего класса",randBtn:"Выбрать",randWin:"Выбран: {name}",randNeedLesson:"Сначала начать урок — выбор работает только во время урока",randEmpty:"В классе никого нет для выбора",randCount:"В барабане: {n}",randSpinning:"Выбираю...",randKeep:"Оставить",randRemove:"Убрать из барабана",randSkipped:"Убраны из барабана",randRestoreAll:"Вернуть всех",randRemoved:"Убран из барабана: {name}",soundTitle:"Проверка звука",soundDesc:"Шумомер класса через микрофон",micOnB:"Включить микрофон",micOffB:"Выключить",soundTest:"Проверить звук",cacheTitle:"Кэш устройства",cacheDesc:"Стереть локальные данные и подтянуть свежие из облака",cacheBtn:"Сбросить кэш",micError:"Нет доступа к микрофону",lvlQuiet:"Тихо",lvlOk:"Нормально",lvlLoud:"Шумно",logCleared:"Журнал очищен",users:"Пользователи",usersTitle:"Пользователи",uLogin:"Логин",uPass:"Пароль",uName:"Имя",uAdd:"Добавить",uDel:"Удалить",adminN:"Администратор",userExists:"Такой логин уже есть",userAdded:"Пользователь добавлен",userDeleted:"Пользователь удалён",fileTag:"файл",cloudOn:"Облако включено",modeLocal:"Локально",modeHub:"Хаб",modeCloud:"Облако",supaOk:"Облако отвечает",supaFail:"Облака нет",supaSaved:"Настройки облака сохранены",supaPushed:"Локальные данные выгружены",userSync:"Список логинов обновлён",netSave:"Сохранить",netTest:"Проверить",netOk:"Хаб отвечает",netFail:"Хаба нет",netSaved:"Адрес сохранён",teamDelT:"Удалить команду?",alreadyCalled:"Уже вызван, подожди немного",pvOpenExt:"Открыть в программе",pvOpening:"Открываю в программе…",pvNoApp:"Нет программы для этого файла",pvLoading:"Открываю файл…",pvFail:"Не удалось открыть файл",pvFull:"Во весь экран",pvNoPreview:"Предпросмотр недоступен — скачай файл",annDrop:"Очередь переполнена: старые объявления пропущены",sessLock:"Сессия завершена: 15 минут без действий",med:"Медпункт",medBtn:"В медпункт",medWait:"Ожидают",medIn:"В медпункте",medTotal:"Всего обращений",medEmpty:"Нет обращений",medArrived:"Прибыл",medDone:"В класс",medSendT:"Отправить в медпункт",medReason:"Причина (необязательно)",medSentToast:"Отправлен в медпункт: {name}",medAlready:"Уже в медпункте",logMed:"Отправлен в медпункт: <b>{name}</b> ({cls})",logMedIn:"Прибыл в медпункт: <b>{name}</b>",logMedBack:"Вернулся в класс: <b>{name}</b> ({cls})",stMed:"В медпункте",stAway:"В пути",medCallT:"Вызвать ученика",byExit:"Охраной вызван",byMed:"Медпунктом вызван",byReception:"Ресепшеном вызван",logMedCall:"Вызван в медпункт: <b>{name}</b> ({cls})",fileTooBig:"Файл слишком большой (макс. 1 ГБ)",myFiles:"Мои файлы",uploadBtn:"Загрузить файл",fileErr:"Не удалось сохранить файл на этом устройстве",fileAdded:"Файл добавлен",fileDeleted:"Файл удалён",calledBy:"вызвал",subject:"Предмет",absent:"Отсутствует",toExit:"На выход",toMed:"В медпункт",toRec:"На ресепшен",ceo:"СЕО",guest:"Гость",deny:"Нет прав",sendHome:"Отправить домой",logSentHome:"{name} отправлен(а) домой",teamExpDay:"На 1 день",teamExpAll:"На весь период",teamExp:"Срок",teamEditT:"Редактировать команду",teamUntil:"до {d}",jamolT:"Mr Jamol",jamolCall:"Вызвать Mr Jamol",jamolSend:"Отправить к Mr Jamol",jamolMsg:"Сообщение Mr Jamol",jamolMsgPh:"Текст сообщения...",jamolReason:"Причина...",jamolSent:"Отправлено",jamolPick:"Ученик",noticeT:"Уведомления",noticeDone:"Принять",noticeCall:"Срочный вызов",noticeSend:"Направить",noticeMsg:"Сообщение",noticeEmpty:"Нет уведомлений",schedEdit:"Редактировать",schedSave:"Сохранить расписание",schedAddRow:"Добавить строку",schedSaved:"Расписание сохранено",edDay:"День",edSlot:"Урок",edTime:"Время",edClass:"Класс",edRoom:"Кабинет",gTitle:"Табло",gIn:"В школе",editStudent:"Редактировать ученика",logEditStudent:"{name} обновлён",selStudent:"Ученик",lesson7:"7 урок",createLesson7:"Создать урок / 7 урок (кружок)",dispatch:"Начать отправку",dispatchOff:"Завершить отправку",dispatchOn:"Отправка идёт",dispatchEarly:"Доступно после 17:30",subT:"Замены",subEmpty:"Нет замен",subPh:"Имя замены...",duty:"Дежурство",cafeteria:"Столовая",toCaf:"В столовую",dutyCall:"Вызвать на дежурство",dutyClasses:"Классы на дежурство",dutyEmpty:"Отметьте классы",toClub:"В кружок",clubSel:"Кружок",tablesT:"Столы",tablesDeal:"Раздать случайно",tableN:"Стол {n}",warn5:"До начала урока 5 минут: {c}",csvDown:"Скачать CSV",csvUp:"Загрузить CSV",csvSaved:"CSV скачан",csvLoaded:"CSV загружен — нажмите Сохранить",csvEmpty:"Пустой CSV",dayToday:"Сегодня",dayYesterday:"Вчера",warn5go:"Оповестить всех",walkie:"Рация",walkieTeachers:"Учителя",walkieClasses:"Классы",walkieSearchPh:"Поиск учителя...",walkieNotFound:"Ничего не найдено",walkieMsgPh:"Сообщение...",walkieMsg:"Сообщение",walkieCall:"Вызвать к себе",walkiePick:"Выберите хотя бы одного",walkieNeedText:"Напишите сообщение",walkieNoHolder:"Нет учителя на связи:",walkieAll:"Все",walkieFree:"нет урока",vmsgRecord:"Голос",vmsgStop:"Стоп",vmsgRecording:"Запись…",vmsgHint:"Проверьте и отправьте",vmsgUploading:"Отправка…",vmsgPickOne:"Выберите одного учителя",vmsgOnlyTeachers:"Голосовое — только одному учителю",vmsgUnsupported:"Запись голоса недоступна",vmsgMicDenied:"Нет доступа к микрофону",vmsgTooShort:"Слишком коротко",vmsgSent:"Голосовое отправлено",vmsgSendFail:"Не удалось отправить голосовое",vmsgPlayFail:"Не удалось воспроизвести",vmsgIncoming:"Голосовое от {who}",vmsgPlay:"Слушать",vmsgVoice:"Голосовое",ttForever:"Навсегда",ttOneDay:"На 1 день",wholeClassOpt:"Весь класс",jamolAccepted:"Mr Jamol принял вызов",clubT:"Кружок",clubNamePh:"Название кружка...",clubCreate:"Создать кружок",clubEmpty:"Кружка пока нет — придумайте название и добавьте учеников",clubAdd:"Добавить",clubDel:"Удалить кружок",clubDelT:"Удалить кружок?",closeCall:"Закрыть вызов",substitute:"Замена",nothingFound:"Не найдено",updSection:"Обновление",updBanner:"Доступно обновление {v}",updBannerManual:"Версия устарела. Скачайте {v} и установите вручную",updBannerBtn:"Обновить",updDownload:"Скачать",updCheck:"Проверить обновление",updCur:"Версия",updTitle:"Доступно обновление {v}",updDo:"Обновить и перезапустить",updLatest:"У вас последняя версия",updDl:"Скачивание {p}%",updSync:"Сохраняю данные в облако…",updInstall:"Установка и перезапуск…",updRestart:"Приложение перезапустится через пару секунд",updFail:"Не удалось обновить: {e}",updOffline:"Нет интернета — обновление отложено",updHint:"Перед перезапуском данные сохраняются в облако. Локальный кэш и вход останутся.",updBadge:"Обновить",updLater:"Позже",updNotes:"Что нового",subStartT:"Замена: начать урок",subWho:"Кто вы (ФИО)?",subLesson:"Какой урок ведёте?",subCover:"Кого замещаете?",classLoading:"Класс ещё загружается — повторите через пару секунд",logJamolClosed:"Вызов закрыт: <b>{name}</b> ({c})",seventhShared:"Общая группа",seventhGroup1:"Понедельник / Среда",seventhGroup2:"Вторник / Четверг",seventhOpenGroup:"Открыть группу ({n})",seventhFriday:"Пятница",seventhFridayDesc:"Выберите класс, чтобы открыть его обычный экран урока.",seventhChooseClass:"Выбрать класс",seventhChooseClassTitle:"Выберите класс",seventhChooseFridayTitle:"Выберите класс на пятницу",seventhGroupStudents:"Учеников: {n}",seventhGroupEmpty:"В группе пока никого.",seventhAddHint:"Добавьте учеников, чтобы начать.",seventhAddStudents:"+ Добавить учеников",seventhStudentList:"Класс {c} — список учеников",seventhNoRoster:"Список класса недоступен. Доступ к классу мог быть закрыт правилами; обход не выполнялся.",seventhAddSelected:"Добавить выбранных",seventhUnavailableStudent:"Данные ученика недоступны",seventhRemove:"Удалить ученика",seventhClub:"Мой кружок",seventhStartClub:"Начать кружок",seventhOpenClub:"Открыть сегодняшний кружок",seventhClubName:"Кружок: {g} — {d}",seventhErrDefault:"Не удалось синхронизировать группы седьмого урока.",seventhErrLoad:"Не удалось загрузить общие группы. Проверьте соединение и доступ.",seventhErrSave:"Не удалось сохранить группу. Показан последний подтверждённый состав.",seventhErrSignInLoad:"Войдите, чтобы синхронизировать группы седьмого урока.",seventhErrSignInSave:"Войдите, чтобы сохранить группы седьмого урока.",seventhErrNoClass:"Этот класс не открыт в ваших вкладках. Правила доступа к классам не менялись.",seventhErrSelected:"Не удалось сохранить выбранных учеников.",seventhErrRefresh:"Не удалось обновить группы: Realtime недоступен, REST повторит попытку."},
@@ -2202,7 +2204,7 @@ function resumeSession(login){
     }).catch(()=>{ try{ logout(); }catch(e){} });
   }catch(e){ try{ logout(); }catch(e){} }
 }
-const APP_VER="v5.5.40";
+const APP_VER="v5.5.41";
 var splashDone=false;
 function hideSplash(){ if(splashDone) return; splashDone=true; try{ document.getElementById("splash").classList.add("hide"); }catch(e){} try{ const v=document.getElementById("splashVid"); if(v) v.pause(); }catch(e){} setTimeout(()=>{ try{ document.getElementById("splash").remove(); }catch(e){} },600); }
 function setVer(){ try{ document.getElementById("jsok").textContent=APP_VER; }catch(e){} try{ var _lv=document.getElementById("loginVer"); if(_lv) _lv.textContent=APP_VER; }catch(e){} }
@@ -2264,6 +2266,7 @@ function showApp(){
   try{ setInterval(()=>{ try{ if(document.visibilityState==="visible") updateCheck(true); }catch(e){} }, 15*60*1000); }catch(e){}
   try{ document.addEventListener("visibilitychange", ()=>{ try{ if(document.visibilityState==="visible"&&updAvail()) updateCheck(true); }catch(e){} }); }catch(e){}
   try{ updBtn(); }catch(e){}
+  try{ restoreClubPending(); }catch(e){}
 renderClassTabs(); renderAll();
 try{ setVer(); }catch(e){}
   const tr=document.getElementById("threshRange"); if(tr) tr.value=bellThreshold;
@@ -3853,12 +3856,20 @@ function renameClub(){ try{ const tm=clubEdit(); if(!tm) return;
 function deleteClub(){ try{ const t2=clubEdit(); if(!t2) return;
   const fromGroup=clubEditId.indexOf("g-")===0;
   openModal({title:t("clubDelT"),sub:esc(dn(t2.name||"")),fields:"",
-    onOk:async ()=>{ clubs=clubs.filter(x=>x.id!==t2.id); if(clubEditId===t2.id) clubEditId="";
-      try{ const me=currentUser();
-        if(me&&(me.role==="admin"||String(t2.owner||"").toLowerCase()===String(me.login||"").toLowerCase()))
-          try{ await supaFetch("clubs?id=eq."+pq(t2.id),{method:"DELETE"}); }catch(e){}
-      }catch(e){}
-      clubSave(); if(fromGroup) seventhGo("group"); }}); }catch(e){} }
+    onOk:async ()=>{ try{
+      const me=currentUser();
+      const id=String(t2.id);
+      // The tombstone is the durable delete signal: it lands before the row
+      // disappears locally, and it is retried until the cloud accepts it.
+      if(supaMode()==="cloud"&&me){
+        clubTombstonePending[id]={id:id,owner_login:String(t2.owner||me.login||"").toLowerCase(),deleted_at:new Date().toISOString()};
+        clubDeletePending[id]=1;
+        persistClubPending();
+      }
+      clubTombstones[id]=1;
+      clubs=clubs.filter(x=>x.id!==id); if(clubEditId===t2.id) clubEditId="";
+      clubSave(); if(fromGroup) seventhGo("group");
+    }catch(e){ toast(t("saveError"),true); return false; } }}); }catch(e){} }
 function renderClubsPub(boxId){ const box=document.getElementById(boxId); if(!box) return; try{
   const rows=(clubs||[]).slice().sort((a,b)=>String(a.name).localeCompare(String(b.name),"ru"));
   if(!rows.length){ box.innerHTML=""; return; }
@@ -4092,7 +4103,7 @@ async function resetCache(){
   try{
     CLASSES.forEach(c=>{ db[c]=[]; });
     teachers={}; lessons={}; calls=[]; logs=[]; board=""; teams=[]; medReqs=[];
-    supaMark={students:"1970-01-01T00:00:00Z",med:"1970-01-01T00:00:00Z",lessons:"1970-01-01T00:00:00Z",teams:"1970-01-01T00:00:00Z",clubs:"1970-01-01T00:00:00Z",seventh_groups:"1970-01-01T00:00:00Z",journal:0,calls:0,callsId:0,notices:0,noticesId:0};
+    supaMark={students:"1970-01-01T00:00:00Z",med:"1970-01-01T00:00:00Z",lessons:"1970-01-01T00:00:00Z",teams:"1970-01-01T00:00:00Z",clubs:"1970-01-01T00:00:00Z",club_tombstones:"1970-01-01T00:00:00Z",seventh_groups:"1970-01-01T00:00:00Z",journal:0,calls:0,callsId:0,notices:0,noticesId:0};
     supaAdopted=false; supaJPushed=0; supaCPushed=0; supaIdleN=0;
     supaHash={}; supaSentStudents={}; supaKnownStudents={}; supaUnpushable={}; supaSentLessons={};
     try{ rtReconnect(); }catch(e){}
@@ -5651,7 +5662,7 @@ function rbLoudAlert(times){
 }
 function notify(key, p, cls, cid, silent){
   try{ if(cid&&notifs.some(n=>n&&n.cid===cid)) return false; }catch(e){}
-  notifs.unshift({t:now(), key:key, p:p||{}, cls:cls||"", cid:cid||""});
+  notifs.unshift({id:"l"+(++localNotifSeq), t:now(), key:key, p:p||{}, cls:cls||"", cid:cid||""});
   if(!silent){ try{ rbVibrate(); }catch(e){} }
   if(notifs.length>30) notifs.pop();
   unread++;
@@ -5676,6 +5687,23 @@ function toggleNotifs(){
 function noticeFrom(n){ try{ const _l=String((n&&n.from)||"").toLowerCase(); const _u=(users||[]).find(u=>String(u.login||"").toLowerCase()===_l); return (_u&&(_u.name||_u.login))||(n&&n.from)||""; }catch(e){ return ""; } }
 let notifShowHistory=false;
 function notifTab(v){ try{ notifShowHistory=!!v; renderNotifPanel(); }catch(e){} }
+function notifDismissLocal(id){ try{ if(id===undefined||id===null||id==="") return; notifLocallyDismissed.add(String(id)); renderNotifPanel(); }catch(e){} }
+let notifTouchState=null;
+function notifTouchStart(e){ try{
+  if(!e||!e.touches||e.touches.length!==1) return;
+  const target=e.target;
+  if(target&&target.closest&&target.closest("button,a,input,textarea,select,audio,video")) return;
+  const card=target&&target.closest?target.closest(".notif-item[data-notice-id]"):null;
+  notifTouchState={x:e.touches[0].clientX,y:e.touches[0].clientY,card:card};
+}catch(err){ notifTouchState=null; } }
+function notifTouchEnd(e){ try{
+  const st=notifTouchState; notifTouchState=null;
+  if(!st||!e||!e.changedTouches||!e.changedTouches.length) return;
+  const dx=e.changedTouches[0].clientX-st.x,dy=e.changedTouches[0].clientY-st.y;
+  if(Math.abs(dx)<60&&Math.abs(dy)<60) return;
+  if(Math.abs(dx)>Math.abs(dy)*1.3&&dx< -60&&st.card){ notifDismissLocal(st.card.getAttribute("data-notice-id")); return; }
+  if(Math.abs(dy)>Math.abs(dx)*1.3&&dy>70) closeNotifPanel();
+}catch(err){ notifTouchState=null; } }
 function renderNotifPanel(){
   const p=document.getElementById("notifList"); if(!p) return;
   let nh="", locals=[];
@@ -5686,9 +5714,9 @@ function renderNotifPanel(){
     const _mine=String((me&&me.login)||"").toLowerCase().trim();
     if(notifShowHistory){
       const hist=noticesArr.slice().reverse().filter(n=>n && n.id).slice(0,20);
-      const rows=hist.map(n=>{
+      const rows=hist.filter(n=>!notifLocallyDismissed.has(String(n.id))).map(n=>{
         const st=n.status==="accepted"?t("noticeAccepted"):t("noticeNew");
-        return "<div class='log-item notif-item'><div class='ni-head'><span class='ni-time'>"+esc(fmtTash(n.t||""))+"</span><b>"+esc(noticeKindName(n.kind))+"</b>"+
+        return "<div class='log-item notif-item' data-notice-id='"+esc(String(n.id))+"'><div class='ni-head'><span class='ni-time'>"+esc(fmtTash(n.t||""))+"</span><b>"+esc(noticeKindName(n.kind))+"</b>"+
           (n.student?"<span class='ni-meta'>"+esc(n.student)+"</span>":"")+"</div>"+
           "<div class='ni-from'>"+esc(noticeFrom(n))+" · "+st+"</div></div>";
       }).join("");
@@ -5704,22 +5732,23 @@ function renderNotifPanel(){
       return true;
     });
     const seen={}, cloudCids={};
-    const vis=all.filter(n=>{ const cid=n.cid||("id:"+n.id); if(seen[cid]) return false; seen[cid]=1; if(n.cid) cloudCids[n.cid]=1; return true; }).slice(0,10);
+    const vis=all.filter(n=>{ const cid=n.cid||("id:"+n.id); if(seen[cid]) return false; seen[cid]=1; if(n.cid) cloudCids[n.cid]=1; return !notifLocallyDismissed.has(String(n.id)); }).slice(0,10);
     nh=(vis.map(n=>{
+      const noticeId=esc(String(n.id));
       const ctx=[(n.cls?esc(clsName(n.cls)):""),(n.subject||""),esc(n.student||"")].filter(Boolean).join(" \u00b7 ");
       const acts=[noticeBodyHtml(n),noticeReplyTextBtn(n),voiceReplyBtn(n),
         (canDone?"<button class='chip-btn primary' onclick='noticeDone("+n.id+")'>"+t("noticeDone")+"</button>":"")].filter(Boolean);
-      return "<div class='log-item notif-item'>"
+      return "<div class='log-item notif-item' data-notice-id='"+noticeId+"'>"
         +"<div class='ni-head'><span class='ni-time'>"+esc(fmtTash(n.t||""))+"</span><b>"+esc(noticeKindName(n.kind))+"</b>"+(ctx?"<span class='ni-meta'>"+ctx+"</span>":"")+"</div>"
         +(n.text?"<div class='ni-text'>"+esc(n.text)+"</div>":"")
         +(acts.length?"<div class='ni-acts'>"+acts.join("")+"</div>":"")
         +"<div class='ni-from'>"+esc(noticeFrom(n))+"</div></div>";
     }).join("")||"<span class='muted'>"+t("noticeEmpty")+"</span>");
     const lseen={};
-    locals=notifs.filter(n=>{ if(n.cid&&cloudCids[n.cid]) return false; const cid=n.cid||("k:"+n.key+"|"+n.t); if(lseen[cid]) return false; lseen[cid]=1; return true; });
+    locals=notifs.filter(n=>{ if(notifLocallyDismissed.has(String(n.id))) return false; if(n.cid&&cloudCids[n.cid]) return false; const cid=n.cid||("k:"+n.key+"|"+n.t); if(lseen[cid]) return false; lseen[cid]=1; return true; });
   }catch(e){}
   const tabs="<div class='notif-tabs'><button class='chip-btn primary' onclick='notifTab(0)'>"+t("notifNewTab")+"</button><button class='chip-btn' onclick='notifTab(1)'>"+t("notifHistoryTab")+"</button></div>";
-  p.innerHTML=tabs+((nh||"")+(locals||[]).map(n=>"<div class='log-item'><span class='muted'>"+esc(n.t)+"</span><span>"+notifText(n)+"</span></div>").join("")||'<span class="muted">'+t("noAlerts")+'</span>');
+  p.innerHTML=tabs+((nh||"")+(locals||[]).map(n=>"<div class='log-item notif-item' data-notice-id='"+esc(String(n.id))+"'><span class='muted'>"+esc(n.t)+"</span><span>"+notifText(n)+"</span></div>").join("")||'<span class="muted">'+t("noAlerts")+'</span>');
 }
 function pickVoice(tag){
   try{
@@ -5830,12 +5859,14 @@ let voiceActive=false;
 const annQueue=[]; let annBusy=false;
 function playUrl(url, vol){
   return new Promise(res=>{
-    let done=false; const to={id:0}; let objUrl="";
-    const fin=v=>{ if(done) return; done=true; try{clearTimeout(to.id);}catch(e){} try{ if(objUrl) URL.revokeObjectURL(objUrl); }catch(e){} voiceActive=false; res(v); };
+    let done=false; const to={id:0}; let objUrl="",audio=null;
+    const fin=v=>{ if(done) return; done=true; try{clearTimeout(to.id);}catch(e){} try{ if(audio){ audio.onended=null; audio.onerror=null; if(!v) audio.pause(); audio.removeAttribute("src"); audio.load(); } }catch(e){} try{ if(objUrl) URL.revokeObjectURL(objUrl); }catch(e){} voiceActive=false; res(v); };
     const b64ToBlob=(b64,mime)=>{ try{ const bin=atob(b64); const u8=new Uint8Array(bin.length); for(let i=0;i<bin.length;i++) u8[i]=bin.charCodeAt(i); return new Blob([u8],{type:mime||"audio/mpeg"}); }catch(e){ return null; } };
     const mimeOf=u=>/\.m4a($|\?)/i.test(String(u||""))?"audio/mp4":"audio/mpeg";
     const start=async()=>{
       try{
+        // Cover secure read and network fetch too: either can hang indefinitely.
+        to.id=setTimeout(()=>fin(false),9000);
         // Media elements cannot reliably read inside app.asar. Order:
         // 1) bytes from main (Node fs, asar-transparent), 2) fetch->blob,
         // 3) direct URL as last resort.
@@ -5851,12 +5882,12 @@ function playUrl(url, vol){
           }catch(e){}
         }
         if(blob){ try{ src=URL.createObjectURL(blob); objUrl=src; }catch(e){ src=url; } }
-        const a=new Audio(src);
+        if(done){ if(objUrl){ try{URL.revokeObjectURL(objUrl);}catch(e){} objUrl=""; } return; }
+        const a=audio=new Audio(src);
         try{ a.volume=Math.min(1,Math.max(0,(vol===undefined?1:vol))); }catch(e){}
         voiceActive=true;
         a.onended=()=>fin(true);
         a.onerror=()=>fin(false);
-        to.id=setTimeout(()=>fin(false),9000);
         const pr=a.play();
         if(pr&&pr.catch) pr.catch(()=>fin(false));
       }catch(e){ fin(false); }
@@ -5864,7 +5895,7 @@ function playUrl(url, vol){
     start();
   });
 }
-async function annRunner(){ if(annBusy) return; annBusy=true; while(annQueue.length){ const job=annQueue.shift(); if(!voiceOn) continue; try{ await job(); }catch(e){} } annBusy=false; }
+async function annRunner(){ if(annBusy) return; annBusy=true; try{ while(annQueue.length){ const job=annQueue.shift(); if(!voiceOn) continue; try{ await job(); }catch(e){} } }finally{ annBusy=false; } }
 function annEnqueue(job){ annQueue.push(job); if(annQueue.length>25){ annQueue.splice(0,annQueue.length-25); try{ toast(t("annDrop")); }catch(e){} } annRunner(); }
 function fullVoice(dest,name){
   try{
@@ -5964,10 +5995,10 @@ function markLaterModal(c,id){
     title:t("laterTitle"), sub:esc(dn(s.name))+", "+esc(clsName(c)),
     fields:whoFields(s.pickedBy),
     onOk:()=>{
-      const who=(document.getElementById("fWho").value||"").trim()||t("enterName");
+      const who=(document.getElementById("fWho").value||"").trim();
       const rel=document.getElementById("fRel").value;
-      s.pickedBy=who+" ("+rel.toLowerCase()+")"; s.time=now(); s.status="wait"; s.called=false; s.calledBy=""; s.calledAt=0;
-      const mp={name:esc(dn(s.name)),c:c,who:esc(who)};
+      s.pickedBy=who?who+" ("+rel.toLowerCase()+")":""; s.time=now(); s.status="wait"; s.called=false; s.calledBy=""; s.calledAt=0;
+      const mp={name:esc(dn(s.name)),c:c,who:who?esc(who):"("+esc(rel.toLowerCase())+")"};
       logs.push({t:s.time, key:"logLater", d:logDayISO(new Date()), p:mp});
       notify("logLater",mp,c);
       try{ pushNow(); }catch(e){}
@@ -6305,7 +6336,7 @@ function hubPush(kind, data){ try{ supaHeat(120000); supaPushSoon(); }catch(e){}
 // клиент. Один сокет, топик на таблицу, postgres_changes/*, heartbeat,
 // экспоненциальный реконнект, переподписка со свежим JWT каждые 45 минут.
 var rtSock=null, rtRef=1, rtWant=false, rtBackoff=3000, rtPingT=null, rtReT=null, rtVisArmed=false;
-var RT_TABLES=["calls","journal","students","med","lessons","teams","meta","users","notices","clubs","seventh_groups"];
+var RT_TABLES=["calls","journal","students","med","lessons","teams","meta","users","notices","clubs","club_tombstones","seventh_groups"];
 var rtJoinState={}; // tb -> "wait"|"ok"|"err": покрыт ли топик живой подпиской
 function rtWsUrl(){ const c=supaCfg(); return c.url.replace(/^http/,"ws")+"/realtime/v1/websocket?apikey="+c.key+"&vsn=1.0.0"; }
 function rtSend(o){ try{ if(rtSock&&rtSock.readyState===1) rtSock.send(JSON.stringify(o)); }catch(e){} }
@@ -6403,7 +6434,24 @@ var supaPullAgain=false;
 
 // ---------- облако supabase: общая база ----------
 let supaTimer=null;
-let supaMark={students:"1970-01-01T00:00:00Z",med:"1970-01-01T00:00:00Z",lessons:"1970-01-01T00:00:00Z",teams:"1970-01-01T00:00:00Z",clubs:"1970-01-01T00:00:00Z",seventh_groups:"1970-01-01T00:00:00Z",journal:0,calls:0,callsId:0,notices:0,noticesId:0};
+let supaMark={students:"1970-01-01T00:00:00Z",med:"1970-01-01T00:00:00Z",lessons:"1970-01-01T00:00:00Z",teams:"1970-01-01T00:00:00Z",clubs:"1970-01-01T00:00:00Z",club_tombstones:"1970-01-01T00:00:00Z",seventh_groups:"1970-01-01T00:00:00Z",journal:0,calls:0,callsId:0,notices:0,noticesId:0};
+let clubTombstonePending={};
+let clubDeletePending={};
+function persistClubPending(){
+  try{
+    localStorage.setItem("rb_club_tombstones",JSON.stringify(Object.keys(clubTombstonePending).map(k=>clubTombstonePending[k])));
+    localStorage.setItem("rb_club_deletes",JSON.stringify(Object.keys(clubDeletePending)));
+  }catch(e){}
+}
+function restoreClubPending(){
+  try{
+    const ts=JSON.parse(localStorage.getItem("rb_club_tombstones")||"[]");
+    (Array.isArray(ts)?ts:[]).forEach(x=>{ if(x&&x.id){ clubTombstonePending[String(x.id)]=x; clubTombstones[String(x.id)]=1; } });
+    const ds=JSON.parse(localStorage.getItem("rb_club_deletes")||"[]");
+    (Array.isArray(ds)?ds:[]).forEach(id=>{ if(id){ clubDeletePending[String(id)]=1; clubTombstones[String(id)]=1; } });
+    clubs=clubs.filter(x=>!clubTombstones[String(x.id)]);
+  }catch(e){}
+}
 let supaAdopted=false;
 let supaJPushed=0, supaCPushed=0, supaBusy=false, supaUsersSig="";
 // Диета egress под 38 устройств (free-лимит 5 ГБ/мес): реалтайм идёт по
@@ -6767,7 +6815,16 @@ async function supaPushAll(){
       // the whole batch fail RLS; push admin=all, others=own only.
       const _cm=clubs.filter(t2=>role==="admin"||String(t2.owner||"").toLowerCase()===_ml)
         .map(t2=>({id:t2.id,owner_login:String(t2.owner||"").toLowerCase(),name:t2.name||"",members:t2.members||[],present:t2.marks||{},present_date:t2.date||"",updated_at:now}));
-      if(_cm.length) await post("clubs","clubs?on_conflict=id",_cm); }
+       if(_cm.length) await post("clubs","clubs?on_conflict=id",_cm);
+       const _ct=Object.keys(clubTombstonePending).map(id=>clubTombstonePending[id]);
+       if(_ct.length&&await post("club_tombstones","club_tombstones?on_conflict=id",_ct)){ _ct.forEach(x=>{ delete clubTombstonePending[x.id]; clubTombstones[x.id]=1; }); persistClubPending(); }
+       const _cd=Object.keys(clubDeletePending);
+       if(_cd.length){
+         for(const id of _cd){
+           try{ const rr=await supaFetch("clubs?id=eq."+pq(id),{method:"DELETE"}); if(rr&&rr.ok) delete clubDeletePending[id]; }catch(e){}
+         }
+         persistClubPending();
+       } }
     // Грязные метки (timetable/tables/ttday/dispatch/substitutions) сбрасываем
     // ТОЛЬКО после успешного post. Иначе разовый сбой сети навсегда терял
     // изменение: локально флаг уже снят, в облако не ушло.
@@ -6835,7 +6892,7 @@ async function supaPull(){
     // select=* убран: тянем только колонки, нужные обработке ниже.
     const ST_COLS="id,class,name,status,picked_by,time,late,called,called_by,called_at,grade,updated_at";
     const seventhPullGeneration={mw:seventhWriteGeneration.mw,tth:seventhWriteGeneration.tth};
-    const [st,us,md,ls,tm,tcl,mm,sg]=await Promise.all([
+    const [st,us,md,ls,tm,tcl,mm,sg,ct]=await Promise.all([
       // Все таблицы — через Safe: одна упавшая (сеть/RLS) не должна ронять
       // весь опрос и замораживать остальные метки.
       supaReqSafe("students?select="+ST_COLS+"&updated_at=gt."+pq(supaMark.students)+"&order=updated_at&limit=2000"),
@@ -6845,8 +6902,10 @@ async function supaPull(){
       supaReqSafe("teams?select=*&updated_at=gt."+pq(supaMark.teams)+"&order=updated_at&limit=100"),
       supaReqSafe("clubs?select=*&updated_at=gt."+pq(supaMark.clubs)+"&order=updated_at&limit=100"),
       supaReqSafe("meta?select=key,value&key=like.board*&limit=60"),
-      supaReqSafe("seventh_groups?select=group_key,members,updated_at&updated_at=gt."+pq(supaMark.seventh_groups)+"&order=updated_at&limit=20")
+      supaReqSafe("seventh_groups?select=group_key,members,updated_at&updated_at=gt."+pq(supaMark.seventh_groups)+"&order=updated_at&limit=20"),
+      supaReqSafe("club_tombstones?select=id,deleted_at&deleted_at=gt."+pq(supaMark.club_tombstones)+"&order=deleted_at&limit=200")
     ]);
+    restoreClubPending();
     if(sg){
       seventhMergeRows(sg,seventhPullGeneration);
       sg.forEach(r=>{ if(r&&r.updated_at&&seventhPullGeneration[r.group_key]===seventhWriteGeneration[r.group_key]&&!seventhPending[r.group_key]&&r.updated_at>supaMark.seventh_groups) supaMark.seventh_groups=r.updated_at; });
@@ -6943,7 +7002,16 @@ async function supaPull(){
     });
     // tcl загружен выше (Promise.all). ВАЖНО: отдельный цикл, а не вложенный
     // в teams — иначе кружки не тянулись бы, пока не изменится хоть одна команда.
+    (ct||[]).forEach(r=>{
+      if(!r||!r.id) return;
+      clubTombstones[String(r.id)]=1;
+      if(clubTombstonePending[String(r.id)]){ delete clubTombstonePending[String(r.id)]; persistClubPending(); }
+      clubs=clubs.filter(x=>String(x.id)!==String(r.id));
+      if(r.deleted_at&&r.deleted_at>supaMark.club_tombstones) supaMark.club_tombstones=r.deleted_at;
+      changed=true;
+    });
     (tcl||[]).forEach(r=>{
+      if(clubTombstones[String(r.id)]){ if(r.updated_at&&r.updated_at>supaMark.clubs) supaMark.clubs=r.updated_at; return; }
       const ci=clubs.findIndex(x=>x.id===r.id);
       const co={id:r.id,owner:r.owner_login||"",name:r.name||"",members:r.members||[],marks:r.present||{},date:r.present_date||""};
       if(ci>=0){ if(JSON.stringify(clubs[ci])!==JSON.stringify(co)){ clubs[ci]=co; changed=true; } }
@@ -7474,7 +7542,7 @@ function supaBoot(){
   try{ if(supaFastT) clearTimeout(supaFastT); }catch(e){}
   supaTimer=null; supaFastT=null;
   if(supaMode()!=="cloud") return;
-  supaMark={students:"1970-01-01T00:00:00Z",med:"1970-01-01T00:00:00Z",lessons:"1970-01-01T00:00:00Z",teams:"1970-01-01T00:00:00Z",clubs:"1970-01-01T00:00:00Z",seventh_groups:"1970-01-01T00:00:00Z",journal:0,calls:0,callsId:0,notices:0,noticesId:0};
+  supaMark={students:"1970-01-01T00:00:00Z",med:"1970-01-01T00:00:00Z",lessons:"1970-01-01T00:00:00Z",teams:"1970-01-01T00:00:00Z",clubs:"1970-01-01T00:00:00Z",club_tombstones:"1970-01-01T00:00:00Z",seventh_groups:"1970-01-01T00:00:00Z",journal:0,calls:0,callsId:0,notices:0,noticesId:0};
   supaAdopted=false;
   supaIdleN=0; supaHotUntil=0;
   supaJPushed=0; supaCPushed=0;
@@ -7663,11 +7731,11 @@ function releaseModal(c,id){
     fields:whoFields(s.pickedBy),
     onOk:()=>{
       if(!needLesson(c)) return;
-      const who=(document.getElementById("fWho").value||"").trim()||t("enterName");
+      const who=(document.getElementById("fWho").value||"").trim();
       const rel=document.getElementById("fRel").value;
-      s.pickedBy=who+" ("+rel.toLowerCase()+")"; s.time=now(); s.status="out"; s.called=false; s.calledBy=""; s.calledAt=0;
+      s.pickedBy=who?who+" ("+rel.toLowerCase()+")":""; s.time=now(); s.status="out"; s.called=false; s.calledBy=""; s.calledAt=0;
       resolveMedRequests(c,id);
-      const lmsg={name:esc(dn(s.name)),c:c,who:esc(who)};
+      const lmsg={name:esc(dn(s.name)),c:c,who:who?esc(who):"("+esc(rel.toLowerCase())+")"};
       logs.push({t:s.time, key:"logLeft", d:logDayISO(new Date()), p:lmsg});
       notify("logLeft",lmsg,c);
       audit("release",{name:s.name,cls:c,who:who});
