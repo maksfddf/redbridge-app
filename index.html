@@ -12,7 +12,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default" />
 <meta name="apple-mobile-web-app-title" content="RedBridge" />
 <meta name="theme-color" content="#C1272D" />
-<meta name="app-version" content="v5.5.39" />
+<meta name="app-version" content="v5.5.40" />
 <!-- Приложение — один инлайновый скрипт, поэтому script-src вынужденно
      допускает 'unsafe-inline'. Зато default-src/connect-src закрывают
      подгрузку чужих скриптов и утечку данных на сторонние хосты:
@@ -1230,7 +1230,7 @@ html.standalone-ios body{overscroll-behavior-y:none}
       <div class="login-error" id="loginError" data-i18n="loginError">Неверный логин или пароль</div>
       <button type="submit" data-i18n="signIn">Войти</button>
     </form>
-    <div class="muted" id="loginVer" style="text-align:center;margin-top:14px">v5.5.39</div>
+    <div class="muted" id="loginVer" style="text-align:center;margin-top:14px">v5.5.40</div>
   </div>
 </div>
 
@@ -1268,13 +1268,13 @@ html.standalone-ios body{overscroll-behavior-y:none}
   <div id="sysBanner" class="sys-banner" role="status" style="display:none">
     <span id="sysBannerText"></span>
     <button class="chip-btn" id="sysBannerBtn" onclick="sysBannerAct()" style="display:none"></button>
-    <button class="sys-x" id="sysBannerX" onclick="sysBannerClose()" aria-label="Закрыть" title="Закрыть">✕</button>
+    <button class="sys-x" id="sysBannerX" onclick="sysBannerClose()" aria-label="Закрыть" data-i18n-aria="close">✕</button>
   </div>
 </header>
 <div id="updBanner" class="upd-banner" style="display:none">
   <span id="updText"></span>
   <span class="spacer"></span>
-  <button class="btn btn-go btn-sm" id="updAct" onclick="bannerAct()">Обновить</button>
+  <button class="btn btn-go btn-sm" id="updAct" onclick="bannerAct()" data-i18n="updBannerBtn">Обновить</button>
   <button class="btn btn-back btn-sm" onclick="hideBanner()" data-i18n="updLater">Позже</button>
 </div>
 
@@ -1399,7 +1399,7 @@ html.standalone-ios body{overscroll-behavior-y:none}
       <div id="teamsList" style="margin-top:12px"></div>
       <div id="clubsPubE"></div>
     </div>
-    <div class="log"><h3 data-i18n="calls">Вызовы</h3><div id="callsList"><span class="muted">Пока никого не вызывали</span></div></div>
+    <div class="log"><h3 data-i18n="calls">Вызовы</h3><div id="callsList"><span class="muted" data-i18n="callsEmpty">Пока никого не вызывали</span></div></div>
   </section>
 
   <!-- УТИЛИТЫ -->
@@ -1525,9 +1525,9 @@ html.standalone-ios body{overscroll-behavior-y:none}
       <input id="searchL" placeholder="Поиск по журналу..." enterkeyhint="search" inputmode="search" oninput="debRender()" data-i18n-ph="searchLog" />
       <button class="btn btn-back btn-sm" onclick="clearLog()" data-i18n="clearLog">Очистить журнал</button>
       <span class="btn-row log-nav">
-        <button class="btn btn-back btn-sm" onclick="logShift(-1)" aria-label="Предыдущий день">‹</button>
+        <button class="btn btn-back btn-sm" onclick="logShift(-1)" aria-label="Предыдущий день" data-i18n-aria="prevDay">‹</button>
         <button class="btn btn-back btn-sm" onclick="logTodayGo()" data-i18n="dayToday">Сегодня</button>
-        <button class="btn btn-back btn-sm" onclick="logShift(1)" aria-label="Следующий день">›</button>
+        <button class="btn btn-back btn-sm" onclick="logShift(1)" aria-label="Следующий день" data-i18n-aria="nextDay">›</button>
         <input type="date" id="logDayInput" onchange="logDayPick(this)" style="max-width:150px;flex:0 0 auto" />
       </span>
     </div>
@@ -1538,7 +1538,7 @@ html.standalone-ios body{overscroll-behavior-y:none}
 
 <div class="call-overlay" id="callOverlay">
   <div class="call-box">
-    <div class="call-kicker" id="callKick">Вызов</div>
+    <div class="call-kicker" id="callKick" data-i18n="callLabel">Вызов</div>
     <div class="call-name" id="callName"></div>
     <div class="call-dest" id="callDestLabel"></div>
     <div class="muted" id="callMeta"></div>
@@ -1568,7 +1568,7 @@ html.standalone-ios body{overscroll-behavior-y:none}
     <div id="mFields"></div>
     <div class="row">
       <button class="cancel" onclick="closeModal()" data-i18n="cancel">Отмена</button>
-      <button class="ok" id="mOk" onclick="confirmModal()">Подтвердить</button>
+      <button class="ok" id="mOk" onclick="confirmModal()" data-i18n="ok">Подтвердить</button>
     </div>
   </div>
 </div>
@@ -1624,34 +1624,34 @@ html.standalone-ios body{overscroll-behavior-y:none}
 <div class="overlay" id="walkieOverlay">
   <div class="modal modal-wide walkie-modal">
     <div class="walkie-head">
-      <h3 id="walkieTitle">Рация</h3>
+      <h3 id="walkieTitle" data-i18n="walkie">Рация</h3>
       <button class="icon-btn" onclick="closeWalkie()" aria-label="×">×</button>
     </div>
     <div class="walkie-tabs">
-      <button class="ctab active" id="walkieTabT" onclick="walkieTabSw('t')">Учителя</button>
-      <button class="ctab" id="walkieTabC" onclick="walkieTabSw('c')">Классы</button>
+      <button class="ctab active" id="walkieTabT" onclick="walkieTabSw('t')" data-i18n="walkieTeachers">Учителя</button>
+      <button class="ctab" id="walkieTabC" onclick="walkieTabSw('c')" data-i18n="walkieClasses">Классы</button>
       <span class="spacer"></span>
-      <button class="btn btn-back btn-sm" id="walkieAllBtn" onclick="walkieAll()">Все</button>
+      <button class="btn btn-back btn-sm" id="walkieAllBtn" onclick="walkieAll()" data-i18n="walkieAll">Все</button>
     </div>
     <div class="walkie-search" id="walkieSearchWrap">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>
       <input id="walkieSearch" type="search" autocomplete="off" enterkeyhint="search" placeholder="Поиск учителя..." data-i18n-ph="walkieSearchPh" oninput="walkieFilter()" />
     </div>
     <div id="walkieList" class="club-pick walkie-list"></div>
-    <textarea id="walkieText" class="walkie-text" rows="2" placeholder="Сообщение..."></textarea>
+    <textarea id="walkieText" class="walkie-text" rows="2" placeholder="Сообщение..." data-i18n-ph="walkieMsgPh"></textarea>
     <div id="walkieVoiceBar" class="walkie-voice" style="display:none">
       <span id="walkieVoiceDot" class="walkie-rec-dot"></span>
       <span id="walkieVoiceTime" class="walkie-voice-time">0:00</span>
       <span id="walkieVoiceHint" class="muted"></span>
       <span class="spacer"></span>
-      <button class="btn btn-back btn-sm" id="walkieVoiceCancelBtn" onclick="walkieVoiceCancel()">Отмена</button>
-      <button class="btn btn-go btn-sm" id="walkieVoiceSendBtn" onclick="walkieVoiceSend()">Отправить</button>
+      <button class="btn btn-back btn-sm" id="walkieVoiceCancelBtn" onclick="walkieVoiceCancel()" data-i18n="cancel">Отмена</button>
+      <button class="btn btn-go btn-sm" id="walkieVoiceSendBtn" onclick="walkieVoiceSend()" data-i18n="vrepSend">Отправить</button>
     </div>
     <div class="row-btns walkie-foot">
       <button class="btn btn-back" onclick="closeWalkie()" data-i18n="cancel">Отмена</button>
-      <button class="btn btn-back" id="walkieVoiceBtn" onclick="walkieVoiceToggle()">Голос</button>
-      <button class="btn btn-back" id="walkieMsgBtn" onclick="walkieSend('message')">Сообщение</button>
-      <button class="btn btn-go" id="walkieCallBtn" onclick="walkieSend('call')">Вызвать к себе</button>
+      <button class="btn btn-back" id="walkieVoiceBtn" onclick="walkieVoiceToggle()" data-i18n="vmsgRecord">Голос</button>
+      <button class="btn btn-back" id="walkieMsgBtn" onclick="walkieSend('message')" data-i18n="walkieMsg">Сообщение</button>
+      <button class="btn btn-go" id="walkieCallBtn" onclick="walkieSend('call')" data-i18n="walkieCall">Вызвать к себе</button>
     </div>
   </div>
 </div>
@@ -1662,7 +1662,7 @@ html.standalone-ios body{overscroll-behavior-y:none}
     <div id="mFields"></div>
     <div class="row">
       <button class="cancel" onclick="closeModal()" data-i18n="cancel">Отмена</button>
-      <button class="ok" id="mOk" onclick="confirmModal()">Подтвердить</button>
+      <button class="ok" id="mOk" onclick="confirmModal()" data-i18n="ok">Подтвердить</button>
     </div>
   </div>
 </div>
@@ -1715,7 +1715,7 @@ html.standalone-ios body{overscroll-behavior-y:none}
     <div id="flatSchedBody"></div>
   </div>
 </div>
-<button id="radioFab" class="radio-fab" style="display:none" onclick="radioOpenTalk()" aria-label="Эфир" title="Эфир">
+<button id="radioFab" class="radio-fab" style="display:none" onclick="radioOpenTalk()" aria-label="Эфир" data-i18n-aria="radioTab">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/></svg>
 </button>
 <div class="overlay" id="radioTalkOverlay">
@@ -1726,7 +1726,7 @@ html.standalone-ios body{overscroll-behavior-y:none}
     <div class="radio-row radio-target" style="margin:4px 0 12px"><span data-i18n="radioSendTo">Кому:</span>
       <select id="radioTalkTarget"></select>
     </div>
-    <button class="btn btn-go radio-btn" id="radioTalkBtn" onclick="radioTalkToggle()">Говорить</button>
+    <button class="btn btn-go radio-btn" id="radioTalkBtn" onclick="radioTalkToggle()" data-i18n="radioTalk">Говорить</button>
     <div class="radio-state" id="radioTalkState"></div>
     <button class="btn btn-back btn-sm" style="width:100%;margin-top:8px" onclick="radioTestTone()" data-i18n="radioTest">Проверить эфир (сигнал)</button>
     <div class="muted" id="radioDiag" style="text-align:center;font-size:11.5px;margin-top:6px"></div>
@@ -1738,7 +1738,7 @@ html.standalone-ios body{overscroll-behavior-y:none}
   <div class="rl-meta" id="radioLiveMeta"></div>
   <div class="rl-ring"></div>
   <div class="rl-actions">
-    <button class="btn btn-back" id="radioLiveSound" onclick="radioEnableSound()">Включить звук</button>
+    <button class="btn btn-back" id="radioLiveSound" onclick="radioEnableSound()" data-i18n="radioEnableSound">Включить звук</button>
     <button class="btn btn-back" onclick="radioHideLive()" data-i18n="close">Закрыть</button>
   </div>
 </div>
@@ -1878,7 +1878,14 @@ try{
     replyFail:"Не удалось отправить ответ",
     vmsgGone:"голосовое удалено — хранится 30 минут",
     logVoiceSent:"Голосовой ответ: <b>{name}</b> ({ms})",
-    perfOffToast:"Режим экономии выключен — полный интерфейс"
+    perfOffToast:"Режим экономии выключен — полный интерфейс",
+    appTitle:"RedBridge — Внутренняя система",
+    radioDiagLive:"канал: подключён",
+    radioDiagConnecting:"канал: подключаюсь…",
+    radioSent:"отправлено",
+    seventhClubNameLabel:"Название кружка",
+    prevDay:"Предыдущий день",
+    nextDay:"Следующий день"
   });
   Object.assign(I18N.en,{
     perfTitle:"Performance",
@@ -1942,7 +1949,14 @@ try{
     replyFail:"Could not send the reply",
     vmsgGone:"voice deleted — kept for 30 minutes",
     logVoiceSent:"Voice reply: <b>{name}</b> ({ms})",
-    perfOffToast:"Lite mode off — full UI"
+    perfOffToast:"Lite mode off — full UI",
+    appTitle:"RedBridge — School system",
+    radioDiagLive:"channel: connected",
+    radioDiagConnecting:"channel: connecting…",
+    radioSent:"sent",
+    seventhClubNameLabel:"Club name",
+    prevDay:"Previous day",
+    nextDay:"Next day"
   });
   Object.assign(I18N.uz,{
     perfTitle:"Unumdorlik",
@@ -1967,16 +1981,80 @@ try{
     perfOffToast:"Tejash rejimi o'chirildi — to'liq interfeys"
   });
 }catch(e){}
+// UZ-словарь отставал от RU/EN: 41 ключ падал в русский фолбэк, и узбекский
+// интерфейс местами оставался на русском. Добиваем недостающее отдельным
+// блоком, чтобы правки не разъезжались с основным словарём.
+try{ Object.assign(I18N.uz, {
+  appTitle:"RedBridge — Maktab tizimi",
+  iosSoundOff:"Ovoz o‘chirilgan: «Jim» rejimini o‘chiring va ovozni ko‘taring",
+  sessLost:"Sessiya tugadi — qaytadan kiring",
+  noNet:"Internet yo‘q — aloqa tiklanganda ma’lumotlar yangilanadi",
+  netBack:"Aloqa tiklandi",
+  notifNewTab:"Yangi",
+  notifHistoryTab:"Tarix",
+  noticeNew:"yangi",
+  noticeAccepted:"qabul qilindi",
+  themeTitle:"Mavzu",
+  themeDesc:"Avto — tizimdagidek. Qorong‘i mavzu kechqurun ko‘zni asraydi.",
+  themeAuto:"Avto",
+  themeLight:"Yorug‘",
+  themeDark:"Qorong‘i",
+  themeChanged:"Mavzu o‘zgartirildi",
+  radioTab:"Efir",
+  radioAll:"Hammaga",
+  radioSendTo:"Kimga:",
+  radioTalk:"Gapirish",
+  radioStop:"To‘xtatish",
+  radioIdle:"Efir bo‘sh",
+  radioYouLive:"Siz efirdasiz",
+  radioLive:"{who} gapirmoqda",
+  radioListening:"Efir tinglanmoqda…",
+  radioEnableSound:"Ovozni yoqish",
+  radioNoMic:"Mikrofon mavjud emas",
+  radioTest:"Efirni tekshirish (signal)",
+  radioTestSent:"Signal yuborildi — ikkinchi qurilmani tekshiring",
+  radioPackets:"qabul qilindi",
+  radioTalkTitle:"Efir",
+  radioTalkSub:"Gapiring — tanlanganlarning hammasi eshitadi, qo‘ng‘iroq va menyusiz.",
+  radioLiveKicker:"Efirda",
+  radioSomeone:"Kimdir gapirmoqda",
+  radioDiagLive:"kanal: ulandi",
+  radioDiagConnecting:"kanal: ulanmoqda…",
+  radioSent:"yuborildi",
+  pushDesc:"Tizim bildirishnomalari ilova yopiq bo‘lsa ham keladi.",
+  pushIosHint:"iPhone’da: ilovani «Bosh ekran»ga qo‘shing (Safari → Ulashish) va shu yerda yoqing.",
+  pushIsOn:"Bildirishnomalar: yoniq",
+  pushIsOff:"Bildirishnomalarni yoqish",
+  pushOn:"Bildirishnomalar yoqildi",
+  pushOff:"Bildirishnomalar o‘chirildi",
+  pushDenied:"Brauzer sozlamalarida bildirishnomalarga ruxsat bering",
+  pushFail:"Bildirishnomalarni yoqib bo‘lmadi",
+  pushNoSupport:"Bu qurilmada bildirishnomalar mavjud emas",
+  seventhClubNameLabel:"To‘garak nomi",
+  prevDay:"Oldingi kun",
+  nextDay:"Keyingi kun"
+}); }catch(e){}
 function t(k,p){ let s=(I18N[lang]&&I18N[lang][k])||I18N.ru[k]||k; if(p) for(const x in p) s=s.split("{"+x+"}").join(p[x]); return s; }
 function tEn(k,p){ const l=lang; lang="en"; try{ return t(k,p); }finally{ lang=l; } }
 function latName(n){ try{ return String(n||"").replace(/[А-Яа-яЁё]/g,ch=>CYR[ch]!==undefined?CYR[ch]:""); }catch(e){ return String(n||""); } }
 function kindName(v){ if(!v) return ""; return v==="на день"?t("kind3"):t("kind2"); }
-function setLang(l){ lang=l; try{localStorage.setItem("rb_lang",l);}catch(e){} document.querySelectorAll("#langSwitch button").forEach(b=>b.classList.toggle("active",b.getAttribute("data-lang")===l)); applyI18n(); try{ updBanner(); }catch(e){} renderClassTabs(); renderAll(); }
-function applyI18n(){ document.documentElement.lang=lang; document.querySelectorAll("[data-i18n]").forEach(el=>{ const ic=el.getAttribute("data-i18n-icon"); const tx=t(el.getAttribute("data-i18n")); el.innerHTML=ic?"<span class='btn-ic'>"+rbIcon(ic)+"</span>"+esc(tx):esc(tx); }); document.querySelectorAll("[data-i18n-ph]").forEach(el=>{ el.placeholder=t(el.getAttribute("data-i18n-ph")); }); try{ assistApplyI18n(); }catch(e){} }
+function setLang(l){ lang=l; try{localStorage.setItem("rb_lang",l);}catch(e){} document.querySelectorAll("#langSwitch button").forEach(b=>b.classList.toggle("active",b.getAttribute("data-lang")===l)); applyI18n(); try{ updBanner(); }catch(e){} try{ sysBannerRelang(); }catch(e){} try{ syncVoiceBtn(); }catch(e){} try{ renderPerfBtn(); }catch(e){} try{ renderPushBtn(); }catch(e){} try{ radioTalkPaint(); }catch(e){} try{ supaState(window.__supaState||""); }catch(e){} renderClassTabs(); renderAll(); }
+function applyI18n(){ document.documentElement.lang=lang; try{ document.title=t("appTitle"); }catch(e){}
+  document.querySelectorAll("[data-i18n]").forEach(el=>{ const ic=el.getAttribute("data-i18n-icon"); const tx=t(el.getAttribute("data-i18n")); el.innerHTML=ic?"<span class='btn-ic'>"+rbIcon(ic)+"</span>"+esc(tx):esc(tx); });
+  document.querySelectorAll("[data-i18n-ph]").forEach(el=>{ el.placeholder=t(el.getAttribute("data-i18n-ph")); });
+  // aria-label/title не текст: data-i18n их не трогает, а скринридер и подсказка
+  // оставались на языке первого рендера после переключения RU/EN/UZ.
+  document.querySelectorAll("[data-i18n-aria]").forEach(el=>{ const v=t(el.getAttribute("data-i18n-aria")); el.setAttribute("aria-label",v); el.setAttribute("title",v); });
+  try{ assistApplyI18n(); }catch(e){} }
 let codeCounter = 101;
 
-function clsName(c){ return lang==="ru" ? c+" класс" : "Grade "+c; }
-function subName(s,c){ if(c==="10-11"&&s&&s.grade) return lang==="ru" ? s.grade+" класс" : "Grade "+s.grade; return clsName(c); }
+// Название класса зависит от языка: RU «1-А класс», UZ «1-A sinf», EN «Grade 1-A».
+// Буквы секций А/В/С — кириллица в данных, поэтому для EN/UZ они латинизируются
+// как A/B/C, а не общим транслитом (иначе получалось «Grade 1-V»).
+const CLS_SEC={"А":"A","В":"B","С":"C"};
+function clsLat(c){ return String(c==null?"":c).replace(/[АВС]/g,ch=>CLS_SEC[ch]||ch); }
+function clsName(c){ return lang==="ru" ? String(c==null?"":c)+" класс" : lang==="uz" ? clsLat(c)+" sinf" : "Grade "+clsLat(c); }
+function subName(s,c){ if(c==="10-11"&&s&&s.grade){ const g=String(s.grade); return lang==="ru" ? g+" класс" : lang==="uz" ? clsLat(g)+" sinf" : "Grade "+clsLat(g); } return clsName(c); }
 function myClasses(){ const me=currentUser(); if(!me||me.role!=="teacher") return [...CLASSES]; const l=(Array.isArray(me.classes)&&me.classes.length)?me.classes:[me.cls]; const r=CLASSES.filter(c=>l.indexOf(c)>=0); return r.length?r:[...CLASSES]; }
 function now(){ const d=new Date(); return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0"); }
 function esc(s){ return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;"); }
@@ -2124,7 +2202,7 @@ function resumeSession(login){
     }).catch(()=>{ try{ logout(); }catch(e){} });
   }catch(e){ try{ logout(); }catch(e){} }
 }
-const APP_VER="v5.5.39";
+const APP_VER="v5.5.40";
 var splashDone=false;
 function hideSplash(){ if(splashDone) return; splashDone=true; try{ document.getElementById("splash").classList.add("hide"); }catch(e){} try{ const v=document.getElementById("splashVid"); if(v) v.pause(); }catch(e){} setTimeout(()=>{ try{ document.getElementById("splash").remove(); }catch(e){} },600); }
 function setVer(){ try{ document.getElementById("jsok").textContent=APP_VER; }catch(e){} try{ var _lv=document.getElementById("loginVer"); if(_lv) _lv.textContent=APP_VER; }catch(e){} }
@@ -2288,7 +2366,7 @@ function applyRole(me){
     if(on&&_sub&&b.dataset.role==="teacher"){ b.textContent=t("substitute"); b.removeAttribute("data-i18n"); }
   });
   state.role=allowed.includes(state.role)?state.role:allowed[0];
-  if(_sub&&state.role==="teacher") state.seventh=false;
+  if(_sub&&state.role==="teacher"){ state.seventh=false; seventhFriday=false; }
   document.querySelectorAll("#roles button").forEach(b=>b.classList.toggle("active",b.dataset.role===state.role));
   if(me.role==="teacher"){ const mc=myClasses(); if(mc.indexOf(state.cls)<0) state.cls=mc[0]||state.cls; }
   syncClassBar();
@@ -2328,7 +2406,7 @@ document.querySelectorAll("#roles button").forEach(x=>{
     state.role=x.dataset.role;
     // «7 урок» — режим внутри экрана класса. При уходе на другую вкладку
     // он раньше оставался включённым и возвращался вместе с вкладкой.
-    if(state.role!=="teacher") state.seventh=false;
+    if(state.role!=="teacher"){ state.seventh=false; seventhFriday=false; }
     syncClassBar();
     document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
     const vw0=document.getElementById("view-"+state.role); if(vw0) vw0.classList.add("active");
@@ -2347,12 +2425,12 @@ function renderClassTabs(){
     const b=document.createElement("button");
     b.className="ctab"+(c===state.cls&&!state.seventh?" active":"");
     b.textContent=clsName(c);
-    b.onclick=()=>{ if(state.cls===c&&!state.seventh) return; const _di=(CLASSES.indexOf(c)>=CLASSES.indexOf(state.cls))?1:-1; state.cls=c; state.seventh=false; renderClassTabs(); const rf=RENDER_BY_ROLE[state.role]; switchAnim(rf&&window[rf]?window[rf]:renderTeacher,_di); };
+    b.onclick=()=>{ if(state.cls===c&&!state.seventh&&!seventhFriday) return; const _di=(CLASSES.indexOf(c)>=CLASSES.indexOf(state.cls))?1:-1; state.cls=c; state.seventh=false; seventhFriday=false; renderClassTabs(); const rf=RENDER_BY_ROLE[state.role]; switchAnim(rf&&window[rf]?window[rf]:renderTeacher,_di); };
     el.appendChild(b);
   });
   try{ const _me7=currentUser(); if(state.role==="teacher"&&_me7&&["teacher","admin","ceo"].indexOf(_me7.role)>=0){
     const _b7=document.createElement("button"); _b7.className="ctab"+(state.seventh?" active":""); _b7.textContent=t("lesson7");
-    _b7.onclick=()=>{ state.seventh=true; seventhRoute="home"; renderClassTabs(); seventhLoad(); const rf=RENDER_BY_ROLE[state.role]; switchAnim(rf&&window[rf]?window[rf]:renderTeacher,1); };
+    _b7.onclick=()=>{ state.seventh=true; seventhFriday=false; seventhRoute="home"; renderClassTabs(); seventhLoad(); const rf=RENDER_BY_ROLE[state.role]; switchAnim(rf&&window[rf]?window[rf]:renderTeacher,1); };
     el.appendChild(_b7); } }catch(e){}
   // на телефоне активная вкладка класса должна быть видна без ручного скролла
   try{
@@ -2476,7 +2554,7 @@ function renderLessonPanel(){
       +"<div class='muted' style='margin-top:8px;line-height:1.8'>"+t("startedAt",{t:esc(L.startedAt)})+"<br>"+t("teacherIs",{t:esc(dn(lessonOwnerName(L)||panelTeacher(state.cls)||"—"))})+"<br>"+t("inLessonN",{n})+"</div>"
       +(mineP?"<div class='row-btns'><button class='btn btn-go' onclick='finishLesson()'>"+t("finishLesson")+"</button></div>":"");
   }else{
-    p.innerHTML="<h3>"+(state.seventh?t("createLesson7"):t("createLesson",{c:esc(clsName(state.cls))}))+"</h3>"
+    p.innerHTML="<h3>"+((state.seventh||seventhFriday)?t("createLesson7"):t("createLesson",{c:esc(clsName(state.cls))}))+"</h3>"
       +"<div class='muted' style='margin-top:8px;line-height:1.8'>"+t("teacherIs",{t:esc(dn(panelTeacher(state.cls)||"—"))})+"</div>"
       +"<div class='row-btns'><button class='btn btn-go' onclick='startLesson()'>"+t("startLesson")+"</button></div>";
   }
@@ -2496,6 +2574,23 @@ function startLesson(){
       }
     }
   }catch(e){}
+  // Пятница, 7-й урок — это кружок, а не предмет. Спрашиваем название кружка
+  // (по умолчанию — уже созданный кружок учителя), а не список предметов.
+  if(seventhFriday){
+    const own=myClub();
+    const def=(own&&own.name)||"";
+    openModal({
+      title:t("seventhStartClub"),
+      sub:esc(clsName(state.cls)),
+      fields:"<label>"+t("seventhClubNameLabel")+"</label><input id='fClub7' value='"+esc(def)+"' maxlength='64' placeholder='"+t("clubNamePh")+"' />",
+      onOk:()=>{
+        const v=((document.getElementById("fClub7")||{}).value||"").trim();
+        if(!v){ toast(t("enterName")); return false; }
+        startLessonGo(v,{seventhClub:true});
+      }
+    });
+    return;
+  }
   const subs=(me&&Array.isArray(me.subjects)&&me.subjects.length)?me.subjects:[];
   // Замена: аккаунт общий, поэтому перед уроком спрашиваем, кто это
   // и какой урок ведёт. Оба поля уходят в облако и в журнал.
@@ -3381,18 +3476,26 @@ function walkieTabSw(tab){
   try{ if(radioSending && tab!=="l") radioStop(); }catch(e){}
   try{ walkieTab=tab; const ws=document.getElementById("walkieSearch"); if(ws) ws.value=""; walkieRender(); }catch(e){} }
 // ===== системная плашка и мелочи надёжности =====
-function sysBanner(text, actionText, action){
+function sysBanner(text, actionText, action, keys){
   try{
     const b=document.getElementById("sysBanner"); if(!b) return;
     let t=document.getElementById("sysBannerText"); if(t) t.textContent=text;
     let btn=document.getElementById("sysBannerBtn");
     window.__sysAct=action||null;
+    // Ключи нужны, чтобы плашка перевелась при смене RU/EN/UZ: текст в неё
+    // приходит уже переведённым, и без ключей он оставался на старом языке.
+    window.__sysBannerKeys=keys||null;
     if(btn){ if(actionText){ btn.style.display=""; btn.textContent=actionText; } else btn.style.display="none"; }
     const x=document.getElementById("sysBannerX");
     // Внимание: локальная t выше — это элемент плашки, а не функция перевода.
     if(x){ let lb="Close"; try{ lb=window.t("close")||lb; }catch(e){} x.setAttribute("aria-label",lb); x.title=lb; }
     b.style.display="flex";
   }catch(e){}
+}
+function sysBannerRelang(){
+  const k=window.__sysBannerKeys; if(!k) return;
+  const b=document.getElementById("sysBanner"); if(!b||b.style.display==="none") return;
+  sysBanner(t(k.key||""), k.actKey?t(k.actKey):"", window.__sysAct, k);
 }
 function sysBannerHide(){ try{ const b=document.getElementById("sysBanner"); if(b) b.style.display="none"; }catch(e){} }
 function sysBannerClose(){ try{ window.__sysAct=null; window.__sysBannerClosedAt=Date.now(); }catch(e){} sysBannerHide(); }
@@ -3403,7 +3506,7 @@ function rbAuthLost(){
     const now=Date.now(); if(now-authLostAt<30000) return; authLostAt=now;
     // Пользователь закрыл плашку — пять минут не возвращаем её снова.
     if(now-(window.__sysBannerClosedAt||0)<300000) return;
-    sysBanner(t("sessLost"), t("signIn"), ()=>{ sysBannerHide(); try{ logout(); }catch(e){} });
+    sysBanner(t("sessLost"), t("signIn"), ()=>{ sysBannerHide(); try{ logout(); }catch(e){} }, {key:"sessLost",actKey:"signIn"});
   }catch(e){}
 }
 try{
@@ -3411,7 +3514,7 @@ try{
   const toastsEl=document.getElementById("toasts"); if(toastsEl){ toastsEl.setAttribute("aria-live","polite"); toastsEl.setAttribute("role","log"); }
 }catch(e){}
 try{
-  window.addEventListener("offline", ()=>{ try{ sysBanner(t("noNet")); }catch(e){} });
+  window.addEventListener("offline", ()=>{ try{ sysBanner(t("noNet"),"",null,{key:"noNet"}); }catch(e){} });
   window.addEventListener("online", ()=>{ try{ sysBannerHide(); toast(t("netBack")); }catch(e){} });
   document.addEventListener("keydown", (e)=>{
     try{
@@ -3531,6 +3634,9 @@ function renderClubInto(target){
 // Seventh lesson is a separate teacher-only destination. Shared groups are
 // committed locally only after Supabase confirms the upsert representation.
 let seventhRoute="home", seventhGroup="mw", seventhClass="", seventhError="";
+// Пятница: выбран класс, но урок ещё не начат. Флаг нужен, чтобы кнопка
+// «Начать урок» спрашивала название кружка, а не предмет учителя.
+let seventhFriday=false;
 let seventhGroups={mw:[],tth:[]}, seventhConfirmed={mw:[],tth:[]}, seventhGroupUpdated={mw:"",tth:""};
 let seventhLoadGeneration=0, seventhWriteGeneration={mw:0,tth:0}, seventhPending={mw:false,tth:false}, seventhLastDay=-1;
 // Saves go one at a time per group: a second removal must build on the first,
@@ -3657,7 +3763,7 @@ function seventhStartClub(key){
 }
 function seventhOpenClubEditor(){ clubEditId=""; seventhGo("club"); }
 function seventhFridayClass(value){
-  state.cls=value; state.seventh=false; seventhRoute="home"; seventhError="";
+  state.cls=value; state.seventh=false; seventhFriday=true; seventhRoute="home"; seventhError="";
   renderClassTabs(); renderTeacher();
 }
 function seventhMemberMarkup(member){
@@ -5008,7 +5114,7 @@ function radioTalkPaint(){
     }
     const sel=document.getElementById("radioTalkTarget"); if(sel) sel.disabled=radioSending;
     const dg=document.getElementById("radioDiag");
-    if(dg) dg.textContent=(radioJoined?"канал: подключён":"канал: подключаюсь…")+" · отправлено "+radioStats.sent+" · принято "+radioStats.got;
+    if(dg) dg.textContent=(radioJoined?t("radioDiagLive"):t("radioDiagConnecting"))+" · "+t("radioSent")+" "+radioStats.sent+" · "+t("radioPackets")+" "+radioStats.got;
   }catch(e){}
 }
 async function radioTestTone(){
@@ -5252,10 +5358,22 @@ function renderPushBtn(){
     const b=document.getElementById("pushBtn"); if(!b) return;
     if(!pushSupported()){ b.textContent=t('pushNoSupport'); b.disabled=true; return; }
     b.disabled=false;
+    // Подпись ставим сразу: pushState() асинхронный, и после смены языка
+    // кнопка успевала остаться на старом. Уточним состояние ниже.
+    const known=window.__pushOn;
+    if(known===undefined) b.textContent=t('pushIsOff');
+    if(typeof renderPushHint==="function") renderPushHint();
     pushState().then(st=>{
+      window.__pushOn=!!st.ok;
       b.textContent = st.ok ? t('pushIsOn') : t('pushIsOff');
-      const h=document.getElementById("pushHint"); if(h) h.textContent = fcmPlugin() ? t('pushDesc') : (pushIsStandalone()||!/iPhone|iPad/.test(navigator.userAgent) ? t('pushDesc') : t('pushIosHint'));
-    }).catch(()=>{});
+      renderPushHint();
+    }).catch(()=>{ b.textContent=t('pushIsOff'); renderPushHint(); });
+  }catch(e){}
+}
+function renderPushHint(){
+  try{
+    const h=document.getElementById("pushHint"); if(!h) return;
+    h.textContent = fcmPlugin() ? t('pushDesc') : (pushIsStandalone()||!/iPhone|iPad/.test(navigator.userAgent) ? t('pushDesc') : t('pushIosHint'));
   }catch(e){}
 }
 
@@ -5499,8 +5617,8 @@ function logAddR(key,p,bk){ try{ p=p||{}; if(!p.by) p.by=hubBy(bk||"exit"); }cat
 function logSig(t,key,p){ try{ const o=p||{}; const ks=Object.keys(o).filter(k=>k!=="auth").sort(); return (t||"")+"|"+(key||"")+"|"+ks.map(k=>k+":"+JSON.stringify(o[k])).join(","); }catch(e){ return (t||"")+"|"+(key||""); } }
 function htmlEscAngles(v){ return String(v==null?"":v).replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
 function htmlSafeP(o){ const r={}; try{ for(const k in (o||{})){ const v=o[k]; r[k]=(typeof v==="string")?htmlEscAngles(v):v; } }catch(e){} return r; }
-function logText(l){ if(!l) return ""; if(l.key){ const p=Object.assign({subj:"",names:"",dest:""},l.p||{}); if(p.c) p.cls=esc(clsName(p.c)); if(p.mc) p.cls=p.mc.map(c=>esc(clsName(c))).join(", "); if(p.kind) p.kind=kindName(p.kind); let h=t(l.key,htmlSafeP(p)); try{ const _by=(l.p&&(l.p.by||l.p.who))||""; if(_by) h+=' <span class="muted">\u2014 '+esc(_by)+'</span>'; }catch(e){} return h; } return l.text||""; }
-function notifText(n){ if(!n) return ""; if(n.key){ const p=Object.assign({},n.p||{}); if(p.c) p.cls=esc(clsName(p.c)); if(p.mc) p.cls=p.mc.map(c=>esc(clsName(c))).join(", "); if(p.kind) p.kind=kindName(p.kind); let h=t(n.key,htmlSafeP(p)); try{ const _by=(n.p&&(n.p.by||n.p.who))||""; if(_by) h+=' <span class="muted">\u2014 '+esc(_by)+'</span>'; }catch(e){} return h; } return esc(n.text||""); }
+function logText(l){ if(!l) return ""; if(l.key){ const p=Object.assign({subj:"",names:"",dest:""},l.p||{}); if(p.c) p.cls=esc(clsName(p.c)); if(p.mc) p.cls=p.mc.map(c=>esc(clsName(c))).join(", "); if(p.kind) p.kind=kindName(p.kind); let h=t(l.key,htmlSafeP(p)); try{ const _by=(l.p&&(l.p.by||l.p.who))||""; if(_by&&l.key!=="logLeft"&&l.key!=="logLater") h+=' <span class="muted">\u2014 '+esc(_by)+'</span>'; }catch(e){} return h; } return l.text||""; }
+function notifText(n){ if(!n) return ""; if(n.key){ const p=Object.assign({},n.p||{}); if(p.c) p.cls=esc(clsName(p.c)); if(p.mc) p.cls=p.mc.map(c=>esc(clsName(c))).join(", "); if(p.kind) p.kind=kindName(p.kind); let h=t(n.key,htmlSafeP(p)); try{ const _by=(n.p&&(n.p.by||n.p.who))||""; if(_by&&n.key!=="logLeft"&&n.key!=="logLater") h+=' <span class="muted">\u2014 '+esc(_by)+'</span>'; }catch(e){} return h; } return esc(n.text||""); }
 // Системное уведомление ОС через Electron (macOS/Windows), когда окно скрыто.
 // В браузере и APK функции нет — там либо Web Push, либо ничего.
 function osNotify(r){
@@ -6700,6 +6818,9 @@ function debugSync(){
 }
 function supaState(s){
   const el=document.getElementById("supaState");
+  // Запоминаем состояние: setLang перерисовывает подпись, иначе она
+  // оставалась на языке, на котором пришёл ответ облака.
+  window.__supaState=s||"";
   if(el) el.textContent=s==="ok"?t("supaOk"):s==="fail"?t("supaFail"):"";
 }
 async function supaPull(){
@@ -8644,7 +8765,7 @@ function assistLessonOK(c){ try{ const me=currentUser(); if(!me) return false; i
 function assistSwitchClass(c){
   try{
     if(!c||astAllowedClasses().indexOf(c)<0) return false;
-    if(state.cls!==c){ state.cls=c; state.seventh=false; try{ renderClassTabs(); }catch(e){} try{ const rf=RENDER_BY_ROLE[state.role]; (rf&&window[rf]?window[rf]:renderTeacher)(); }catch(e){} }
+    if(state.cls!==c){ state.cls=c; state.seventh=false; seventhFriday=false; try{ renderClassTabs(); }catch(e){} try{ const rf=RENDER_BY_ROLE[state.role]; (rf&&window[rf]?window[rf]:renderTeacher)(); }catch(e){} }
     return true;
   }catch(e){ return false; }
 }
