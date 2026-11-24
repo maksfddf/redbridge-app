@@ -12,7 +12,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default" />
 <meta name="apple-mobile-web-app-title" content="RedBridge" />
 <meta name="theme-color" content="#C1272D" />
-<meta name="app-version" content="v5.5.51" />
+<meta name="app-version" content="v5.5.52" />
 <!-- Приложение — один инлайновый скрипт, поэтому script-src вынужденно
      допускает 'unsafe-inline'. Зато default-src/connect-src закрывают
      подгрузку чужих скриптов и утечку данных на сторонние хосты:
@@ -1265,6 +1265,10 @@ html.standalone-ios body{overscroll-behavior-y:none}
 .chat-error{padding:0 14px 10px;color:var(--red-text);font-size:12px}
 .chat-note{padding:0 14px 10px;color:var(--muted);font-size:12px}
 .chat-lightbox{position:fixed;inset:0;z-index:4000;background:rgba(8,10,14,.88);display:grid;place-items:center;padding:24px}
+.chat-lightbox-close{position:fixed;top:18px;right:18px;z-index:4001;width:44px;height:44px;border-radius:50%;border:1px solid rgba(255,255,255,.4);background:rgba(16,18,26,.6);color:#fff;font-size:24px;line-height:1;display:grid;place-items:center;cursor:pointer;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);transition:background-color .15s var(--ease-smooth-out),transform .12s var(--ease-smooth-out)}
+.chat-lightbox-close:hover{background:rgba(193,39,45,.9)}
+.chat-lightbox-close:active{transform:scale(.94)}
+.chat-lightbox-close:focus-visible{outline:2px solid #fff;outline-offset:2px}
 .chat-lightbox img,.chat-lightbox video{max-width:96vw;max-height:92vh;border-radius:12px}
 .chat-dot{position:absolute;top:7px;right:9px;width:8px;height:8px;border-radius:50%;background:var(--red);box-shadow:0 0 0 2px rgba(255,255,255,.9)}
 .roles button.active .chat-dot{background:#fff;box-shadow:0 0 0 2px rgba(193,39,45,.35)}
@@ -1345,7 +1349,7 @@ html.standalone-ios body{overscroll-behavior-y:none}
       <div class="login-error" id="loginError" data-i18n="loginError">Неверный логин или пароль</div>
       <button type="submit" data-i18n="signIn">Войти</button>
     </form>
-    <div class="muted" id="loginVer" style="text-align:center;margin-top:14px">v5.5.51</div>
+    <div class="muted" id="loginVer" style="text-align:center;margin-top:14px">v5.5.52</div>
   </div>
 </div>
 
@@ -2375,7 +2379,7 @@ function resumeSession(login){
     }).catch(()=>{ try{ logout(); }catch(e){} });
   }catch(e){ try{ logout(); }catch(e){} }
 }
-const APP_VER="v5.5.51";
+const APP_VER="v5.5.52";
 var splashDone=false;
 function hideSplash(){ if(splashDone) return; splashDone=true; try{ document.getElementById("splash").classList.add("hide"); }catch(e){} try{ const v=document.getElementById("splashVid"); if(v) v.pause(); }catch(e){} setTimeout(()=>{ try{ document.getElementById("splash").remove(); }catch(e){} },600); }
 function setVer(){ try{ document.getElementById("jsok").textContent=APP_VER; }catch(e){} try{ var _lv=document.getElementById("loginVer"); if(_lv) _lv.textContent=APP_VER; }catch(e){} }
@@ -7024,9 +7028,25 @@ async function chatOpenMedia(path,kind){
   try{
     const url=await chatMediaUrl(path);
     const d=document.createElement("div"); d.className="chat-lightbox";
-    d.onclick=()=>{ try{ const v=d.querySelector("video"); if(v) v.pause(); }catch(e){} d.remove(); };
-    d.innerHTML=kind==="video"?("<video src='"+esc(url)+"' controls autoplay playsinline></video>"):("<img src='"+esc(url)+"' alt=''>");
-    try{ const el=d.firstElementChild; if(el) el.onclick=ev=>ev.stopPropagation(); }catch(e){}
+    d.setAttribute("role","dialog"); d.setAttribute("aria-modal","true");
+    let onKey=null;
+    const close=()=>{
+      try{ if(onKey) document.removeEventListener("keydown",onKey); }catch(e){}
+      try{ const v=d.querySelector("video"); if(v) v.pause(); }catch(e){}
+      try{ d.remove(); }catch(e){}
+    };
+    onKey=(ev)=>{
+      try{ if(d&&!d.isConnected){ document.removeEventListener("keydown",onKey); return; } }catch(e){}
+      if(ev&&ev.key==="Escape"){ try{ev.preventDefault();}catch(e){} close(); }
+    };
+    document.addEventListener("keydown",onKey);
+    d.onclick=close;
+    d.innerHTML="<button class='chat-lightbox-close' type='button' aria-label='"+esc(t("close"))+"' title='"+esc(t("close"))+"'>✕</button>"
+      +(kind==="video"?("<video class='chat-lightbox-media' src='"+esc(url)+"' controls autoplay playsinline></video>"):("<img class='chat-lightbox-media' src='"+esc(url)+"' alt=''>"));
+    const cb=d.querySelector(".chat-lightbox-close");
+    if(cb) cb.onclick=ev=>{ try{ev.stopPropagation();}catch(e){} close(); };
+    const media=d.querySelector(".chat-lightbox-media");
+    if(media) media.onclick=ev=>ev.stopPropagation();
     document.body.appendChild(d);
   }catch(e){ toast(t("chatMediaFail"),true); }
 }
@@ -7324,6 +7344,7 @@ function chatStop(){
   try{ Object.keys(chatMediaUrls).forEach(k=>{ try{ URL.revokeObjectURL(chatMediaUrls[k]); }catch(e){} }); }catch(e){}
   chatMediaUrls={}; chatMediaLoading={}; chatSeen={};
   chatAttachClear(true);
+  try{ document.querySelectorAll(".chat-lightbox").forEach(el=>el.remove()); }catch(e){}
   try{ const b=document.getElementById("chatMessages"); if(b) b.innerHTML=""; }catch(e){}
   try{ const tBox=document.getElementById("chatThreadList"); if(tBox) tBox.innerHTML=""; }catch(e){}
   try{ const p=document.getElementById("chatPeople"); if(p){ p.innerHTML=""; p.style.display="none"; } }catch(e){}
