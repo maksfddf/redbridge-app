@@ -12,7 +12,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default" />
 <meta name="apple-mobile-web-app-title" content="RedBridge" />
 <meta name="theme-color" content="#C1272D" />
-<meta name="app-version" content="v5.5.41" />
+<meta name="app-version" content="v5.5.42" />
 <!-- Приложение — один инлайновый скрипт, поэтому script-src вынужденно
      допускает 'unsafe-inline'. Зато default-src/connect-src закрывают
      подгрузку чужих скриптов и утечку данных на сторонние хосты:
@@ -164,7 +164,7 @@ tr.called{background:rgba(193,39,45,.06)}
   .utils-col:nth-child(3){grid-area:tools;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;align-items:start}
   .utils-col:nth-child(3)>#utilsUpd{grid-column:1/-1}
 }
-@media(max-width:820px){
+ @media(max-width:820px){
   .utils-cols{display:block}
   .utils-col{display:contents}
   .utils-cols .card{margin-bottom:10px}
@@ -265,7 +265,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border:none;border-ra
 .logo{background:transparent;box-shadow:none;transition:transform .3s var(--ease);width:auto;height:40px;display:block;padding:0}
 .logo:hover{transform:scale(1.03)}
 .logo img{height:100%;width:auto;object-fit:contain}
-.login-logo{display:block;margin:0 auto 16px;height:64px;width:auto;max-width:260px;object-fit:contain;filter:drop-shadow(0 4px 12px rgba(193,39,45,.25))}
+.login-logo{display:block;margin:0 auto 16px;height:84px;width:auto;max-width:280px;object-fit:contain;filter:drop-shadow(0 4px 12px rgba(193,39,45,.25))}
 .btn,.ctab,.roles button,.btn-logout,.login-form button,.modal .row button,.lib-item,.stat{transition-duration:.4s;transition-timing-function:cubic-bezier(.32,.72,0,1)}
 .btn{will-change:transform}
 .btn-go::after,.ok::after{content:"";position:absolute;top:0;left:0;width:50%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.55),transparent);transform:translateX(-160%) skewX(-20deg);transition:transform .7s cubic-bezier(.32,.72,0,1);pointer-events:none}
@@ -1202,7 +1202,29 @@ html.standalone-ios body{overscroll-behavior-y:none}
   .seventh-club-table td:nth-child(4){grid-area:2/2;justify-self:end}
   .seventh-club-table tr.club-wrap-row{display:block;padding:0}
   .seventh-club-table tr.club-wrap-row>td{display:block}
-}
+ }
+
+/* Общий чат учителей */
+#teacherChat{margin:14px 0;overflow:hidden}
+#teacherChat .chat-head{display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid var(--line-solid)}
+#teacherChat .chat-mark{display:grid;place-items:center;width:38px;height:38px;flex:0 0 38px;border-radius:13px;background:var(--red);color:#fff;font-size:18px;font-weight:800}
+#teacherChat .chat-title{margin:0;font-size:16px}
+#teacherChat .chat-sub{margin-top:2px;font-size:12px;color:var(--muted)}
+#teacherChat .chat-status{margin-left:auto;font-size:11px;color:var(--muted)}
+#teacherChat .chat-messages{height:300px;overflow:auto;padding:14px 18px;display:flex;flex-direction:column;gap:9px;overscroll-behavior:contain}
+#teacherChat .chat-empty{margin:auto;text-align:center;color:var(--muted);font-size:13px;max-width:280px;line-height:1.5}
+#teacherChat .chat-msg{align-self:flex-start;max-width:min(76%,620px);padding:8px 11px 7px;border-radius:5px 15px 15px 15px;background:rgba(226,232,240,.7);overflow-wrap:anywhere}
+#teacherChat .chat-msg.mine{align-self:flex-end;border-radius:15px 5px 15px 15px;background:rgba(193,39,45,.11)}
+#teacherChat .chat-author{font-size:11px;font-weight:750;color:var(--red-text);margin-bottom:3px}
+#teacherChat .chat-body{font-size:14px;line-height:1.4;white-space:pre-wrap}
+#teacherChat .chat-time{font-size:10px;color:var(--muted);text-align:right;margin-top:3px}
+#teacherChat .chat-compose{display:flex;gap:9px;padding:12px 14px;border-top:1px solid var(--line-solid);align-items:flex-end}
+#teacherChat .chat-compose textarea{flex:1;min-width:0;max-height:112px;min-height:42px;resize:vertical;border:1px solid var(--line-solid);border-radius:13px;padding:10px 12px;background:var(--bg);color:var(--ink);font:inherit;line-height:1.35}
+#teacherChat .chat-compose textarea:focus{outline:2px solid rgba(193,39,45,.35);outline-offset:1px}
+#teacherChat .chat-compose button{min-height:42px;white-space:nowrap}
+#teacherChat .chat-error{padding:0 16px 12px;color:var(--red-text);font-size:12px}
+@media(max-width:700px){#teacherChat .chat-messages{height:260px;padding:12px}#teacherChat .chat-msg{max-width:88%}#teacherChat .chat-head{padding:12px}#teacherChat .chat-compose{padding:10px}}
+@media(prefers-reduced-motion:reduce){#teacherChat *{scroll-behavior:auto!important}}
 
 </style>
 </head>
@@ -1230,7 +1252,7 @@ html.standalone-ios body{overscroll-behavior-y:none}
       <div class="login-error" id="loginError" data-i18n="loginError">Неверный логин или пароль</div>
       <button type="submit" data-i18n="signIn">Войти</button>
     </form>
-    <div class="muted" id="loginVer" style="text-align:center;margin-top:14px">v5.5.41</div>
+    <div class="muted" id="loginVer" style="text-align:center;margin-top:14px">v5.5.42</div>
   </div>
 </div>
 
@@ -1279,6 +1301,21 @@ html.standalone-ios body{overscroll-behavior-y:none}
 </div>
 
 <div class="classes" id="classBar"><div class="wrap" id="classTabs"></div></div>
+<div class="wrap" id="chatWrap" style="display:none">
+  <section class="card" id="teacherChat" aria-label="Общий чат" aria-labelledby="chatTitle">
+    <div class="chat-head">
+      <div class="chat-mark" aria-hidden="true">↗</div>
+      <div><h3 class="chat-title" id="chatTitle" data-i18n="chatTitle">Общий чат</h3><div class="chat-sub" data-i18n="chatSubtitle">Сообщения видны всем пользователям</div></div>
+      <span class="chat-status" id="chatStatus" role="status"></span>
+    </div>
+    <div class="chat-messages" id="chatMessages" role="log" aria-live="polite" aria-relevant="additions text"></div>
+    <form class="chat-compose" id="chatForm" onsubmit="chatSend(event)">
+      <textarea id="chatInput" rows="1" maxlength="2000" placeholder="Написать сообщение…" data-i18n-ph="chatPlaceholder" aria-label="Сообщение"></textarea>
+      <button class="btn btn-go btn-sm" type="submit" data-i18n="chatSend">Отправить</button>
+    </form>
+    <div class="chat-error" id="chatError" role="alert" style="display:none"></div>
+  </section>
+</div>
           <div class="notif-panel card" id="notifPanel" ontouchstart="notifTouchStart(event)" ontouchend="notifTouchEnd(event)" ontouchcancel="notifTouchEnd(null)"><h4 data-i18n="noticeT">Оповещения</h4><div id="notifList"></div></div>
 
 <div class="wrap main">
@@ -1815,6 +1852,9 @@ ru:{teacher:"Учитель",reception:"Ресепшен",exit:"Охрана(в�
 en:{teacher:"Teacher",reception:"Reception",exit:"Security (exit)",log:"Journal",logout:"Sign out",login:"Login",password:"Password",lockout:"Too many attempts, wait a minute",remember:"Remember me",loginError:"Wrong login or password",signIn:"Sign in",total:"Students in class",present:"In lesson",out:"Left",late:"Late",searchStudent:"Search students...",fAll:"All",fPresent:"In lesson",fAbsent:"Absent",fOut:"Left",addStudent:"Add student",classes:"Classes",screen:"Screen",schedBtn:"Schedule",schedTitle:"Lesson schedule",schedFull:"Full schedule",schedMine:"My schedule",schedDay:"Day",schedTeacher:"Teacher",schedNoMine:"No lessons for this teacher",schedEmpty:"No lessons",thLesson:"Lesson",thTime:"Time",thClass:"Class",thSubject:"Subject",thTeacher:"Teacher",thRoom:"Room",schUp:"Upcoming",schNow:"Now",schDone:"Done",thStudent:"Student",thPresent:"In lesson",thStatus:"Status",thWho:"Picked up by / time",library:"Library",board:"Online board",boardPh:"Lesson notes...",save:"Save",del:"Delete",open:"Open",inSchoolNow:"In school now",totalStudents:"Total students",gone:"Left",waiting:"Waiting",searchAll:"Search all classes...",invite:"Invite",teamTitle:"On the way — exit team",teamDesc:"Tick the children, create a team, then call everyone or only selected.",teamPh:"Team name (e.g. Bus 1)...",createTeam:"Create team",callSelected:"Call selected",kind1:"Call: one-time",kind2:"Call: group",kind3:"Call: day",eTotal:"Students in class",eIn:"In school",eOut:"Left",eCalled:"Called",searchPh:"Search...",fIn:"In school",fCalled:"Called",callClass:"Call whole class",courses:"Courses",calls:"Calls",callsEmpty:"No one called yet",searchLog:"Search journal...",clearLog:"Clear journal",logToday:"Journal",cancel:"Cancel",skip:"Skip",ok:"Confirm",close:"Close",stIn:"In school",stOut:"Left",stWait:"Waiting",stLate:"Late",lateDeny:"Only reception and security may mark late",stCalled:"Called",stCalledBy:"Called: Security",exitShort:"Security",stInClass:"In class",stNoLesson:"no lesson",stForeign:"in class with {t}",stLeftAt:"left at {t}",call:"Call",markLate:"Late",release:"Release",back:"Return",callAllBtn:"Call all",delStudent:"Delete student",delStudentSub:"The student will vanish from all lists at once",studentDeleted:"Removed from school: {name}",logStudentDel:"Removed from school: <b>{name}</b> ({cls})",delBtn:"Delete",noStudents:"No students",noOne:"No one in class",emptyLog:"Empty",studentsN:"{n} students",teacherIs:"Teacher: {t}",lessonGo:"Lesson in progress, {c}{subj}",noLesson:"No lessons in this class",createLesson:"Create lesson, {c}",startLesson:"Start lesson",finishLesson:"Finish lesson",lessonBusy:"Finish your current lesson ({c}) first",startedAt:"Started at {t}",inLessonN:"In lesson: <b>{n}</b>",ongoingIn:"A lesson is running in <b>{c}</b>. Finish it first — you cannot start a new one.",goTo:"Go to: {c}",newStudent:"New student",addBase:"Adding to database",fullName:"Full name",fullNamePh:"E.g. Aliya Nurlanova",classLabel:"Class",whoCame:"Who came for the child? (full name)",whoPh:"E.g. mother Aigerim",relation:"Relation",comment:"Comment (optional)",relMama:"Mother",relPapa:"Father",relGrand:"Grandparent",relDriver:"Driver",relNanny:"Nanny",relSelf:"Leaves alone",relOther:"Other",releaseT:"Release child",coursesT:"Clubs and courses",coursesSub:"Sign up at reception",finishFirst:"Finish the lesson in {c} first",lessonStarted:"Lesson started",lessonLogStart:"Lesson started: <b>{c}</b>{subj}",lessonLogEnd:"Lesson finished: <b>{c}</b> — present: {n}{subj}",lessonDone:"Lesson finished. Present: {n}",notYourLesson:"This is another teacher\u2019s lesson",boardSaved:"Board saved",boardCleared:"Note deleted",screenOn:"Screen mode on",screenOff:"Screen mode off",inviteSent:"Invitation sent for {name}",alreadyGone:"Student already left",logCalled:"Called: <b>{name}</b> ({cls})",calledToast:"Called: {name} ({kind})",noOneInClass:"No one in class",logCalledAll:"Whole class called <b>{cls}</b> — {dest}",calledAllToast:"Whole class called ({n})",logLate:"<b>{name}</b> ({cls}) — late (after 8:40)",lateToast:"Marked late: {name}",logLeft:"<b>{name}</b> ({cls}) — left with: {who}",releasedToast:"Released: {name}",logBack:"<b>{name}</b> — back in class ({cls})",enterName:"Enter a name",logNewStudent:"New student: <b>{name}</b> ({cls})",studentAdded:"Added: {name}",saved:"Saved",saveError:"Save error",pickChildren:"Tick children first",logTeam:"Team created <b>{name}</b> ({cls}): {n} students",teamMade:"Team created: {name}",noneSelected:"No one selected",logCalledSel:"Selected called (<b>{n}</b>, {cls}): {names}",calledSelToast:"Called: {n}",logCalledTeam:"Team called <b>{name}</b> ({n}): {names}",calledTeamToast:"Team called: {name} ({n})",teamDel:"Team deleted: {name}",teamDefault:"Team {n}",wholeClass:"Whole class ({n})",selectedName:"Selected ({n})",teamCallName:"Team {name} ({n})",libSchedule:"Bell schedule",libTextbooks:"Textbooks",libBooks:"Books",alertsTitle:"Alerts",noAlerts:"No new alerts",callLabel:"Call",callExitLabel:"call exit",gotIt:"Got it",laterBtn:"Later",laterTitle:"Later pickup",logLater:"Later pickup: <b>{name}</b> ({cls}) — {who}",laterToast:"Later pickup: {name}",attn:"Attention",goPhrase:"Please proceed to {dest}",guardPhrase:"Proceed to the exit with your belongings",willPick:"will pick up",exitWord:"exit",voiceOnB:"Voice: on",voiceOffB:"Voice: off",voiceEnabled:"Voice enabled",threshLabel:"Bell threshold",logInvited:"Invited: <b>{name}</b> ({cls})",utils:"Utilities",randTitle:"Randomizer",randDesc:"Random student from the current class",randBtn:"Pick",randWin:"Picked: {name}",randNeedLesson:"Start the lesson first — selection works only during a lesson",randEmpty:"Nobody in class to pick",randCount:"On the wheel: {n}",randSpinning:"Picking...",randKeep:"Keep",randRemove:"Remove from wheel",randSkipped:"Removed from wheel",randRestoreAll:"Restore all",randRemoved:"Removed from wheel: {name}",soundTitle:"Sound check",soundDesc:"Classroom noise meter via microphone",micOnB:"Enable microphone",micOffB:"Stop",soundTest:"Test sound",cacheTitle:"Device cache",cacheDesc:"Erase local data and pull fresh from cloud",cacheBtn:"Reset cache",micError:"Microphone access denied",lvlQuiet:"Quiet",lvlOk:"Okay",lvlLoud:"Loud",logCleared:"Journal cleared",users:"Users",usersTitle:"Users",uLogin:"Login",uPass:"Password",uName:"Name",uAdd:"Add",uDel:"Delete",adminN:"Administrator",userExists:"Login already exists",userAdded:"User added",userDeleted:"User deleted",fileTag:"file",cloudOn:"Cloud on",modeLocal:"Local",modeHub:"Hub",modeCloud:"Cloud",supaOk:"Cloud OK",supaFail:"No cloud",supaSaved:"Cloud settings saved",supaPushed:"Local data uploaded",userSync:"Login list updated",netSave:"Save",netTest:"Check",netOk:"Hub OK",netFail:"No hub",netSaved:"Address saved",teamDelT:"Delete team?",alreadyCalled:"Already called, please wait",pvOpenExt:"Open in app",pvOpening:"Opening in app…",pvNoApp:"No app for this file",pvLoading:"Opening file…",pvFail:"Cannot open file",pvFull:"Fullscreen",pvNoPreview:"No preview — download the file",annDrop:"Queue full: oldest announcements skipped",sessLock:"Session ended: 15 minutes idle",med:"Medical room",medBtn:"To nurse",medWait:"Waiting",medIn:"At nurse",medTotal:"Total visits",medEmpty:"No requests",medArrived:"Arrived",medDone:"To class",medSendT:"Send to nurse",medReason:"Reason (optional)",medSentToast:"Sent to nurse: {name}",medAlready:"Already at nurse",logMed:"Sent to nurse: <b>{name}</b> ({cls})",logMedIn:"Arrived at nurse: <b>{name}</b>",logMedBack:"Returned to class: <b>{name}</b> ({cls})",stMed:"At nurse",stAway:"On the way",medCallT:"Call student",byExit:"Called by security",byMed:"Called by nurse",byReception:"Called by reception",logMedCall:"Called to nurse: <b>{name}</b> ({cls})",fileTooBig:"File too big (max 1 GB)",myFiles:"My files",uploadBtn:"Upload file",fileErr:"Could not save the file on this device",fileAdded:"File added",fileDeleted:"File deleted",calledBy:"called by",subject:"Subject",absent:"Absent",toExit:"To exit",toMed:"To nurse",toRec:"To reception",ceo:"CEO",guest:"Guest",deny:"No permission",sendHome:"Send home",logSentHome:"{name} sent home",teamExpDay:"For 1 day",teamExpAll:"Permanent",teamExp:"Valid",teamEditT:"Edit team",teamUntil:"until {d}",jamolT:"Mr Jamol",jamolCall:"Call Mr Jamol",jamolSend:"Send to Mr Jamol",jamolMsg:"Message Mr Jamol",jamolMsgPh:"Message text...",jamolReason:"Reason...",jamolSent:"Sent",jamolPick:"Student",noticeT:"Notices",noticeDone:"Accept",noticeCall:"Urgent call",noticeSend:"Direct",noticeMsg:"Message",noticeEmpty:"No notices",schedEdit:"Edit",schedSave:"Save timetable",schedAddRow:"Add row",schedSaved:"Timetable saved",edDay:"Day",edSlot:"Slot",edTime:"Time",edClass:"Class",edRoom:"Room",gTitle:"Board",gIn:"In school",editStudent:"Edit student",logEditStudent:"{name} updated",selStudent:"Student",lesson7:"Lesson 7",createLesson7:"Create lesson / Lesson 7 (club)",dispatch:"Start dismissal",dispatchOff:"End dismissal",dispatchOn:"Dismissal active",dispatchEarly:"Available after 17:30",subT:"Substitutes",subEmpty:"No substitutes",subPh:"Substitute name...",duty:"Duty",cafeteria:"Cafeteria",toCaf:"To cafeteria",dutyCall:"Call for duty",dutyClasses:"Duty classes",dutyEmpty:"Tick classes",toClub:"To club",clubSel:"Club",tablesT:"Tables",tablesDeal:"Shuffle",tableN:"Table {n}",warn5:"5 minutes to lesson: {c}",csvDown:"Download CSV",csvUp:"Upload CSV",csvSaved:"CSV downloaded",csvLoaded:"CSV loaded — press Save",csvEmpty:"Empty CSV",dayToday:"Today",dayYesterday:"Yesterday",warn5go:"Notify everyone",ttForever:"Forever",ttOneDay:"For 1 day",wholeClassOpt:"Whole class",jamolAccepted:"Mr Jamol accepted the call",clubT:"Club",clubNamePh:"Club name...",clubCreate:"Create club",clubEmpty:"No club yet — pick a name and add students",clubAdd:"Add",clubDel:"Delete club",clubDelT:"Delete club?",closeCall:"Close call",substitute:"Substitute",nothingFound:"Nothing found",updSection:"Update",updBanner:"Update {v} is available",updBannerManual:"Your version is outdated. Download {v} and install manually",updBannerBtn:"Update",updDownload:"Download",updCheck:"Check for updates",updCur:"Version",updTitle:"Update {v} is available",updDo:"Update and restart",updLatest:"You have the latest version",updDl:"Downloading {p}%",updSync:"Saving data to the cloud…",updInstall:"Installing and restarting…",updRestart:"The app will restart in a moment",updFail:"Update failed: {e}",updOffline:"No internet — update postponed",updHint:"Data is saved to the cloud before restart. Local cache and sign-in stay.",updBadge:"Update",updLater:"Later",updNotes:"What's new",subStartT:"Substitute: start lesson",subWho:"Who are you (full name)?",subLesson:"Which lesson?",subCover:"Whom do you cover?",classLoading:"Class is still loading — try again in a moment",logJamolClosed:"Call closed: <b>{name}</b> ({c})",walkie:"Walkie-talkie",walkieTeachers:"Teachers",walkieClasses:"Classes",walkieSearchPh:"Search teacher...",walkieNotFound:"Nothing found",walkieMsgPh:"Message...",walkieMsg:"Message",walkieCall:"Summon",walkiePick:"Select at least one",walkieNeedText:"Write a message",walkieNoHolder:"No teacher available:",walkieAll:"All",walkieFree:"no lesson",vmsgRecord:"Voice",vmsgStop:"Stop",vmsgRecording:"Recording…",vmsgHint:"Preview and send",vmsgUploading:"Uploading…",vmsgPickOne:"Select one teacher",vmsgOnlyTeachers:"Voice is for one teacher only",vmsgUnsupported:"Voice recording is unavailable",vmsgMicDenied:"Microphone access denied",vmsgTooShort:"Too short",vmsgSent:"Voice message sent",vmsgSendFail:"Could not send voice message",vmsgPlayFail:"Could not play voice message",vmsgIncoming:"Voice message from {who}",vmsgPlay:"Play",vmsgVoice:"Voice message",seventhShared:"Shared student group",seventhGroup1:"Monday / Wednesday",seventhGroup2:"Tuesday / Thursday",seventhOpenGroup:"Open group ({n})",seventhFriday:"Friday",seventhFridayDesc:"Choose a class to open its existing lesson view.",seventhChooseClass:"Choose class",seventhChooseClassTitle:"Choose a class",seventhChooseFridayTitle:"Choose Friday class",seventhGroupStudents:"Students: {n}",seventhGroupEmpty:"No students in this group yet.",seventhAddHint:"Add students to get started.",seventhAddStudents:"+ Add students",seventhStudentList:"Grade {c} — Student List",seventhNoRoster:"No roster is available for this class. Existing class-level access may deny this data; no access was bypassed.",seventhAddSelected:"Add selected students",seventhUnavailableStudent:"Student data unavailable",seventhRemove:"Remove student",seventhClub:"My club",seventhStartClub:"Start club",seventhOpenClub:"Open today's club",seventhClubName:"Club: {g} — {d}",seventhErrDefault:"Could not sync seventh-lesson groups.",seventhErrLoad:"Could not load shared groups. Check your connection and group access.",seventhErrSave:"Could not save shared group. Your last confirmed changes are still shown.",seventhErrSignInLoad:"Sign in to sync seventh-lesson groups.",seventhErrSignInSave:"Sign in to save seventh-lesson groups.",seventhErrNoClass:"This class is not available in your teacher class tabs. Existing class access rules were not changed.",seventhErrSelected:"Could not save selected students.",seventhErrRefresh:"Could not refresh shared groups. Realtime is unavailable; REST refresh will retry."},
 uz:{pushTitle:"Bildirishnomalar",teacher:"O'qituvchi",reception:"Qabulxona",exit:"Xavfsizlik (chiqish)",log:"Jurnal",logout:"Chiqish",login:"Login",password:"Parol",lockout:"Urinishlar ko'p, bir daqiqa kuting",remember:"Meni eslab qol",loginError:"Login yoki parol noto'g'ri",signIn:"Kirish",total:"Sinfda o'quvchilar",present:"Darsda",out:"Chiqdi",late:"Kechikkan",searchStudent:"O'quvchilarni qidirish...",fAll:"Hammasi",fPresent:"Darsda",fAbsent:"Qatnashmagan",fOut:"Chiqqan",addStudent:"O'quvchi qo'shish",classes:"Sinflar",screen:"Ekran",schedBtn:"Jadval",schedTitle:"Dars jadvali",schedFull:"To'liq jadval",schedMine:"Mening jadvalim",schedDay:"Kun",schedTeacher:"O'qituvchi",schedNoMine:"Bu o'qituvchida dars yo'q",schedEmpty:"Darslar yo'q",thLesson:"Dars",thTime:"Vaqt",thClass:"Sinf",thSubject:"Fan",thTeacher:"O'qituvchi",thRoom:"Xona",schUp:"Kutilmoqda",schNow:"Hozir",schDone:"Tugadi",thStudent:"O'quvchi",thPresent:"Darsda",thStatus:"Holat",thWho:"Kim oldi / vaqt",library:"Kutubxona",board:"Onlayn doska",boardPh:"Dars izohlari...",save:"Saqlash",del:"O'chirish",open:"Ochish",inSchoolNow:"Hozir maktabda",totalStudents:"Jami o'quvchilar",gone:"Chiqdi",waiting:"Kutilmoqda",searchAll:"Barcha sinflardan qidirish...",invite:"Taklif qilish",teamTitle:"Yo'lda — chiqish jamoasi",teamDesc:"Bolalarni belgilang, jamoa yarating, keyin hammani yoki tanlanganlarni chaqiring.",teamPh:"Jamoa nomi (masalan, Avtobus 1)...",createTeam:"Jamoa yaratish",callSelected:"Tanlanganlarni chaqirish",kind1:"Chaqiruv: bir martalik",kind2:"Chaqiruv: guruh",kind3:"Chaqiruv: kunlik",eTotal:"Sinfda o'quvchilar",eIn:"Maktabda",eOut:"Chiqdi",eCalled:"Chaqirilgan",searchPh:"Qidirish...",fIn:"Maktabda",fCalled:"Chaqirilgan",callClass:"Butun sinfni chaqirish",courses:"Kurslar",calls:"Chaqiruvlar",callsEmpty:"Hali hech kim chaqirilmagan",searchLog:"Jurnalni qidirish...",clearLog:"Jurnalni tozalash",logToday:"Jurnal",cancel:"Bekor qilish",skip:"O'tkazib yuborish",ok:"Tasdiqlash",close:"Yopish",stIn:"Maktabda",stOut:"Chiqdi",stWait:"Kutilmoqda",stLate:"Kechikkan",lateDeny:"Faqat qabulxona va xavfsizlik kechikkani belgilashi mumkin",stCalled:"Chaqirilgan",stCalledBy:"Chaqirildi: Xavfsizlik",exitShort:"Xavfsizlik",stInClass:"Sinfda",stNoLesson:"dars yo'q",stForeign:"{t} bilan sinfda",stLeftAt:"{t} da chiqdi",call:"Chaqirish",markLate:"Kechikkan",release:"Chiqarish",back:"Qaytarish",callAllBtn:"Hammani chaqirish",delStudent:"O'quvchini o'chirish",delStudentSub:"O'quvchi barcha ro'yxatlardan birdaniga o'chadi",studentDeleted:"Maktabdan o'chirildi: {name}",logStudentDel:"Maktabdan o'chirildi: <b>{name}</b> ({cls})",delBtn:"O'chirish",noStudents:"O'quvchilar yo'q",noOne:"Sinfda hech kim yo'q",emptyLog:"Bo'sh",studentsN:"{n} ta o'quvchi",teacherIs:"O'qituvchi: {t}",lessonGo:"Dars ketmoqda, {c}{subj}",noLesson:"Bu sinfda dars yo'q",createLesson:"Dars yaratish, {c}",startLesson:"Darsni boshlash",finishLesson:"Darsni yakunlash",lessonBusy:"Avval joriy darsni ({c}) yakunlang",startedAt:"{t} da boshlangan",inLessonN:"Darsda: <b>{n}</b>",ongoingIn:"<b>{c}</b> da dars ketmoqda. Avval uni yakunlang — yangisini boshlab bo'lmaydi.",goTo:"O'tish: {c}",newStudent:"Yangi o'quvchi",addBase:"Bazaga qo'shish",fullName:"F.I.Sh.",fullNamePh:"Masalan, Aliya Nurlanova",classLabel:"Sinf",whoCame:"Bolani kim oldi? (F.I.Sh.)",whoPh:"Masalan, onasi Aigerim",relation:"Qarindoshlik",comment:"Izoh (ixtiyoriy)",relMama:"Onasi",relPapa:"Otasi",relGrand:"Bobosi/buvisi",relDriver:"Haydovchi",relNanny:"Enaga",relSelf:"Yolg'iz ketadi",relOther:"Boshqa",releaseT:"Bolani chiqarish",coursesT:"To'garaklar va kurslar",coursesSub:"Qabulxonada yoziling",finishFirst:"Avval {c} dagi darsni yakunlang",lessonStarted:"Dars boshlandi",lessonLogStart:"Dars boshlandi: <b>{c}</b>{subj}",lessonLogEnd:"Dars yakunlandi: <b>{c}</b> — qatnashdi: {n}{subj}",lessonDone:"Dars yakunlandi. Qatnashdi: {n}",notYourLesson:"Bu boshqa o'qituvchining darsi",boardSaved:"Doska saqlandi",boardCleared:"Izoh o'chirildi",screenOn:"Ekran rejimi yoqildi",screenOff:"Ekran rejimi o'chirildi",inviteSent:"{name} uchun taklif yuborildi",alreadyGone:"O'quvchi allaqachon chiqib ketgan",logCalled:"Chaqirildi: <b>{name}</b> ({cls})",calledToast:"Chaqirildi: {name} ({kind})",noOneInClass:"Sinfda hech kim yo'q",logCalledAll:"Butun sinf chaqirildi <b>{cls}</b> — {dest}",calledAllToast:"Butun sinf chaqirildi ({n})",logLate:"<b>{name}</b> ({cls}) — kechikkan (8:40 dan keyin)",lateToast:"Kechikkan deb belgilandi: {name}",logLeft:"<b>{name}</b> ({cls}) — oldi: {who}",releasedToast:"Chiqarildi: {name}",logBack:"<b>{name}</b> — sinfga qaytdi ({cls})",enterName:"Ism kiriting",logNewStudent:"Yangi o'quvchi: <b>{name}</b> ({cls})",studentAdded:"Qo'shildi: {name}",saved:"Saqlandi",saveError:"Saqlashda xatolik",pickChildren:"Avval bolalarni belgilang",logTeam:"Jamoa yaratildi <b>{name}</b> ({cls}): {n} o'quvchi",teamMade:"Jamoa yaratildi: {name}",noneSelected:"Hech kim tanlanmagan",logCalledSel:"Tanlanganlar chaqirildi (<b>{n}</b>, {cls}): {names}",calledSelToast:"Chaqirildi: {n}",logCalledTeam:"Jamoa chaqirildi <b>{name}</b> ({n}): {names}",calledTeamToast:"Jamoa chaqirildi: {name} ({n})",teamDel:"Jamoa o'chirildi: {name}",teamDefault:"Jamoa {n}",wholeClass:"Butun sinf ({n})",selectedName:"Tanlangan ({n})",teamCallName:"Jamoa {name} ({n})",libSchedule:"Qo'ng'iroq jadvali",libTextbooks:"Darsliklar",libBooks:"Kitoblar",alertsTitle:"Bildirishnomalar",noAlerts:"Yangi bildirishnoma yo'q",callLabel:"Chaqiruv",callExitLabel:"chiqishni chaqirish",gotIt:"Tushundim",laterBtn:"Keyinroq",laterTitle:"Keyinroq olib ketish",logLater:"Keyinroq olib ketish: <b>{name}</b> ({cls}) — {who}",laterToast:"Keyinroq olib ketish: {name}",attn:"Diqqat",goPhrase:"Iltimos, {dest} ga boring",guardPhrase:"Buyumlaringiz bilan chiqishga boring",willPick:"olib ketadi",exitWord:"chiqish",voiceOnB:"Ovoz: yoqilgan",voiceOffB:"Ovoz: o'chirilgan",voiceEnabled:"Ovoz yoqildi",threshLabel:"Shovqin chegarasi",logInvited:"Taklif qilindi: <b>{name}</b> ({cls})",utils:"Xizmatlar",randTitle:"Randomayzer",randDesc:"Joriy sinfdan tasodifiy o'quvchi",randBtn:"Tanlash",randWin:"Tanlandi: {name}",randNeedLesson:"Avval darsni boshlang — tanlash faqat darsda ishlaydi",randEmpty:"Tanlash uchun sinfda hech kim yo'q",randCount:"G'ildirakda: {n}",randSpinning:"Tanlanmoqda...",randKeep:"Qoldirish",randRemove:"G'ildirakdan olib tashlash",randSkipped:"G'ildirakdan olib tashlandi",randRestoreAll:"Hammasini tiklash",randRemoved:"G'ildirakdan olib tashlandi: {name}",soundTitle:"Ovozni tekshirish",soundDesc:"Mikrofon orqali sinf shovqin o'lchagichi",micOnB:"Mikrofonni yoqish",micOffB:"To'xtatish",soundTest:"Ovozni sinash",cacheTitle:"Qurilma keshi",cacheDesc:"Mahalliy ma'lumotlarni o'chirish va bulutdan yangilash",cacheBtn:"Keshni tozalash",micError:"Mikrofonga ruxsat berilmadi",lvlQuiet:"Jim",lvlOk:"Yaxshi",lvlLoud:"Shovqinli",logCleared:"Jurnal tozalandi",users:"Foydalanuvchilar",usersTitle:"Foydalanuvchilar",uLogin:"Login",uPass:"Parol",uName:"Ism",uAdd:"Qo'shish",uDel:"O'chirish",adminN:"Administrator",userExists:"Login allaqachon mavjud",userAdded:"Foydalanuvchi qo'shildi",userDeleted:"Foydalanuvchi o'chirildi",fileTag:"fayl",cloudOn:"Bulut yoqilgan",modeLocal:"Mahalliy",modeHub:"Hab",modeCloud:"Bulut",supaOk:"Bulut OK",supaFail:"Bulut yo'q",supaSaved:"Bulut sozlamalari saqlandi",supaPushed:"Mahalliy ma'lumotlar yuklandi",userSync:"Login ro'yxati yangilandi",netSave:"Saqlash",netTest:"Tekshirish",netOk:"Hab OK",netFail:"Hab yo'q",netSaved:"Manzil saqlandi",teamDelT:"Jamoani o'chirish?",alreadyCalled:"Allaqachon chaqirilgan, kuting",pvOpenExt:"Ilovada ochish",pvOpening:"Ilovada ochilmoqda…",pvNoApp:"Bu fayl uchun ilova yo'q",pvLoading:"Fayl ochilmoqda…",pvFail:"Faylni ochib bo'lmadi",pvFull:"To'liq ekran",pvNoPreview:"Ko'rish yo'q — faylni yuklab oling",annDrop:"Navbat to'ldi: eski e'lonlar o'tkazib yuborildi",sessLock:"Sessiya yakunlandi: 15 daqiqa harakatsizlik",med:"Tibbiy xona",medBtn:"Hamshira oldiga",medWait:"Kutilmoqda",medIn:"Hamshira oldida",medTotal:"Jami tashriflar",medEmpty:"So'rovlar yo'q",medArrived:"Yetib keldi",medDone:"Sinfga",medSendT:"Hamshira oldiga yuborish",medReason:"Sabab (ixtiyoriy)",medSentToast:"Hamshira oldiga yuborildi: {name}",medAlready:"Allaqachon hamshira oldida",logMed:"Hamshira oldiga yuborildi: <b>{name}</b> ({cls})",logMedIn:"Hamshira oldiga yetib keldi: <b>{name}</b>",logMedBack:"Sinfga qaytdi: <b>{name}</b> ({cls})",stMed:"Hamshira oldida",stAway:"Yo'lda",medCallT:"O'quvchini chaqirish",byExit:"Xavfsizlik chaqirdi",byMed:"Hamshira chaqirdi",byReception:"Qabulxona chaqirdi",logMedCall:"Hamshira oldiga chaqirildi: <b>{name}</b> ({cls})",fileTooBig:"Fayl juda katta (maks 1 GB)",myFiles:"Mening fayllarim",uploadBtn:"Fayl yuklash",fileErr:"Faylni bu qurilmada saqlab bo'lmadi",fileAdded:"Fayl qo'shildi",fileDeleted:"Fayl o'chirildi",calledBy:"chaqirdi",subject:"Fan",absent:"Qatnashmagan",toExit:"Chiqishga",toMed:"Hamshira oldiga",toRec:"Qabulxonaga",ceo:"Direktor",guest:"Mehmon",deny:"Ruxsat yo'q",sendHome:"Uyga yuborish",logSentHome:"{name} uyga yuborildi",teamExpDay:"1 kunga",teamExpAll:"Doimiy",teamExp:"Amal qiladi",teamEditT:"Jamoani tahrirlash",teamUntil:"{d} gacha",jamolT:"Jamol aka",jamolCall:"Jamol akani chaqirish",jamolSend:"Jamol akaga yuborish",jamolMsg:"Jamol akaga xabar",jamolMsgPh:"Xabar matni...",jamolReason:"Sabab...",jamolSent:"Yuborildi",jamolPick:"O'quvchi",noticeT:"E'lonlar",noticeDone:"Qabul qilish",noticeCall:"Shoshilinch chaqiruv",noticeSend:"To'g'ridan-to'g'ri",noticeMsg:"Xabar",noticeEmpty:"E'lonlar yo'q",schedEdit:"Tahrirlash",schedSave:"Jadvalni saqlash",schedAddRow:"Qator qo'shish",schedSaved:"Jadval saqlandi",edDay:"Kun",edSlot:"Dars",edTime:"Vaqt",edClass:"Sinf",edRoom:"Xona",gTitle:"Doska",gIn:"Maktabda",editStudent:"O'quvchini tahrirlash",logEditStudent:"{name} yangilandi",selStudent:"O'quvchi",lesson7:"7-dars",createLesson7:"Dars yaratish / 7-dars (to'garak)",dispatch:"Tarqatishni boshlash",dispatchOff:"Tarqatishni yakunlash",dispatchOn:"Tarqatish faol",dispatchEarly:"17:30 dan keyin mavjud",subT:"O'rinbosarlar",subEmpty:"O'rinbosarlar yo'q",subPh:"O'rinbosar ismi...",jamolAccepted:"Jamol aka chaqiruvni qabul qildi",clubT:"To'garak",clubNamePh:"To'garak nomi...",clubCreate:"To'garak yaratish",clubEmpty:"Hali to'garak yo'q — nom tanlang va o'quvchi qo'shing",clubAdd:"Qo'shish",clubDel:"To'garakni o'chirish",clubDelT:"To'garak o'chirilsinmi?",closeCall:"Chaqiruvni yopish",substitute:"O'rinbosar",nothingFound:"Hech narsa topilmadi",updSection:"Yangilanish",updBanner:"{v} yangilanish mavjud",updBannerManual:"Versiya eskirgan. {v} ni yuklab olib, qo'lda o'rnating",updBannerBtn:"Yangilash",updDownload:"Yuklab olish",updCheck:"Yangilanishni tekshirish",updCur:"Versiya",updTitle:"{v} yangilanish mavjud",updDo:"Yangilash va qayta ishga tushirish",updLatest:"Sizda oxirgi versiya",updDl:"Yuklanmoqda {p}%",updSync:"Ma'lumotlar bulutga saqlanmoqda…",updInstall:"O'rnatilmoqda va qayta ishga tushirilmoqda…",updRestart:"Ilova bir necha soniyada qayta ishga tushadi",updFail:"Yangilab bo'lmadi: {e}",updOffline:"Internet yo'q — yangilash kechiktirildi",updHint:"Qayta ishga tushirishdan oldin ma'lumotlar bulutga saqlanadi.",updBadge:"Yangilash",updLater:"Keyinroq",updNotes:"Nima yangi",subStartT:"O'rinbosar: darsni boshlash",subWho:"Siz kim (F.I.Sh.)?",subLesson:"Qaysi dars?",subCover:"Kimni almashtirasiz?",classLoading:"Sinf hali yuklanmoqda — biroz kutib qayta urinib ko'ring",logJamolClosed:"Chaqiruv yopildi: <b>{name}</b> ({c})",walkie:"Ratsiya",walkieTeachers:"O'qituvchilar",walkieClasses:"Sinflar",walkieSearchPh:"O'qituvchi qidirish...",walkieNotFound:"Hech narsa topilmadi",walkieMsgPh:"Xabar...",walkieMsg:"Xabar",walkieCall:"Chaqirish",walkiePick:"Kamida bittasini tanlang",walkieNeedText:"Xabar yozing",walkieNoHolder:"Aloqada o'qituvchi yo'q:",walkieAll:"Hammasi",walkieFree:"dars yo'q",vmsgRecord:"Ovoz",vmsgStop:"To'xtatish",vmsgRecording:"Yozilmoqda…",vmsgHint:"Tekshirib yuboring",vmsgUploading:"Yuborilmoqda…",vmsgPickOne:"Bitta o'qituvchini tanlang",vmsgOnlyTeachers:"Ovozli xabar — faqat bitta o'qituvchiga",vmsgUnsupported:"Ovoz yozish mavjud emas",vmsgMicDenied:"Mikrofonga ruxsat yo'q",vmsgTooShort:"Juda qisqa",vmsgSent:"Ovozli xabar yuborildi",vmsgSendFail:"Ovozli xabarni yuborib bo'lmadi",vmsgPlayFail:"Ovozni ijro etib bo'lmadi",vmsgIncoming:"{who} dan ovozli xabar",vmsgPlay:"Tinglash",vmsgVoice:"Ovozli xabar",cafeteria:"Oshxona",clubSel:"To'garak",csvDown:"CSV yuklab olish",csvUp:"CSV yuklash",csvSaved:"CSV yuklab olindi",csvLoaded:"CSV yuklandi — Saqlashni bosing",csvEmpty:"Bo'sh CSV",dayToday:"Bugun",dayYesterday:"Kecha",duty:"Navbatchilik",dutyCall:"Navbatchilikka chaqirish",dutyClasses:"Navbatchilik sinflari",dutyEmpty:"Sinflarni belgilang",tableN:"Stol {n}",tablesDeal:"Tasodifiy taqsimlash",tablesT:"Stollar",toCaf:"Oshxonaga",toClub:"To'garakka",ttForever:"Doimiy",ttOneDay:"1 kunga",warn5:"Darsgacha 5 daqiqa: {c}",warn5go:"Hammani ogohlantirish",wholeClassOpt:"Butun sinf",seventhShared:"Umumiy o‘quvchilar guruhi",seventhGroup1:"Dushanba / Chorshanba",seventhGroup2:"Seshanba / Payshanba",seventhOpenGroup:"Guruhni ochish ({n})",seventhFriday:"Juma",seventhFridayDesc:"Darsning odatiy ekranini ochish uchun sinfni tanlang.",seventhChooseClass:"Sinfni tanlash",seventhChooseClassTitle:"Sinfni tanlang",seventhChooseFridayTitle:"Juma uchun sinfni tanlang",seventhGroupStudents:"O‘quvchilar: {n}",seventhGroupEmpty:"Guruhda hali hech kim yo‘q.",seventhAddHint:"Boshlash uchun o‘quvchilarni qo‘shing.",seventhAddStudents:"+ O‘quvchilarni qo‘shish",seventhStudentList:"{c}-sinf — o‘quvchilar ro‘yxati",seventhNoRoster:"Sinf ro‘yxati mavjud emas. Sinfga kirish qoidalar bilan yopilgan bo‘lishi mumkin; qoida chetlab o‘tilmadi.",seventhAddSelected:"Tanlanganlarni qo‘shish",seventhUnavailableStudent:"O‘quvchi ma’lumoti mavjud emas",seventhRemove:"O‘quvchini olib tashlash",seventhClub:"Mening to‘garagim",seventhStartClub:"To‘garakni boshlash",seventhOpenClub:"Bugungi to‘garakni ochish",seventhClubName:"To‘garak: {g} — {d}",seventhErrDefault:"Yettinchi dars guruhlarini sinxronlash amalga oshmadi.",seventhErrLoad:"Umumiy guruhlarni yuklab bo‘lmadi. Ulanish va ruxsatni tekshiring.",seventhErrSave:"Guruhni saqlab bo‘lmadi. Oxirgi tasdiqlangan tarkib ko‘rsatilgan.",seventhErrSignInLoad:"Yettinchi dars guruhlarini sinxronlash uchun kiring.",seventhErrSignInSave:"Yettinchi dars guruhlarini saqlash uchun kiring.",seventhErrNoClass:"Bu sinf sizning sinf varaqlaringizda yo‘q. Sinfga kirish qoidalari o‘zgartirilmadi.",seventhErrSelected:"Tanlangan o‘quvchilarni saqlab bo‘lmadi.",seventhErrRefresh:"Guruhlarni yangilab bo‘lmadi: Realtime mavjud emas, REST qayta urinadi."}
 };
+Object.assign(I18N.ru,{chatTitle:"Общий чат",chatSubtitle:"Сообщения видны всем пользователям",chatPlaceholder:"Написать сообщение…",chatSend:"Отправить",chatEmpty:"Пока сообщений нет. Начните разговор.",chatConnecting:"Подключение…",chatOnline:"В сети",chatPolling:"Обновление чата",chatFail:"Не удалось загрузить чат. Проверьте подключение.",chatSendFail:"Не удалось отправить сообщение. Попробуйте ещё раз."});
+Object.assign(I18N.en,{chatTitle:"General chat",chatSubtitle:"Messages are visible to everyone",chatPlaceholder:"Write a message…",chatSend:"Send",chatEmpty:"No messages yet. Start the conversation.",chatConnecting:"Connecting…",chatOnline:"Online",chatPolling:"Chat updates",chatFail:"Could not load chat. Check your connection.",chatSendFail:"Could not send the message. Please try again."});
+Object.assign(I18N.uz,{chatTitle:"Umumiy chat",chatSubtitle:"Xabarlar barcha foydalanuvchilarga ko‘rinadi",chatPlaceholder:"Xabar yozing…",chatSend:"Yuborish",chatEmpty:"Hozircha xabarlar yo‘q. Suhbatni boshlang.",chatConnecting:"Ulanmoqda…",chatOnline:"Onlayn",chatPolling:"Chat yangilanmoqda",chatFail:"Chatni yuklab bo‘lmadi. Internetni tekshiring.",chatSendFail:"Xabar yuborilmadi. Qayta urinib ko‘ring."});
 // Строки режима производительности — отдельно, чтобы не править гигантские
 // словари целиком (t() и так падает обратно на ru).
 try{
@@ -2132,6 +2172,7 @@ function rememberOn(){ try{ return localStorage.getItem("rb_remember")==="1"; }c
 function userStoreGet(){ try{ const l=localStorage.getItem("rb_user"); if(l) return l; }catch(e){} try{ return sessionStorage.getItem("rb_user"); }catch(e){ return null; } }
 function userStoreSet(l){ try{ sessionStorage.removeItem("rb_user"); localStorage.removeItem("rb_user"); if(!l) return; if(rememberOn()) localStorage.setItem("rb_user",l); else sessionStorage.setItem("rb_user",l); }catch(e){} }
 function currentUser(){ try{ const l=userStoreGet(); if(!l) return null; return (users||[]).find(x=>x.login===l)||null; }catch(e){ return null; } }
+function chatAllowed(me){ return !!(me&&["teacher","reception","exit","med","ceo","guest","duty","admin"].includes(String(me.role||""))); }
 function checkAuth(){ try{ const s=supaSessionGet(); return !!userStoreGet()&&!!(s&&s.t); }catch(e){ return false; } }
 function togglePw(){
   const p=document.getElementById("loginPass"); if(!p) return;
@@ -2161,6 +2202,7 @@ async function logout(){
   try{ if(fcmPlugin()) await fcmOff(true); else await pushUnsubscribe(true); }catch(e){}   // устройство не должно получать пуши после выхода
   try{
   try{ uiGen++; }catch(e){}
+  try{ chatStop(); }catch(e){}
   try{ clubEditId=""; }catch(e){}
   try{ if(typeof lockFiles==="function") lockFiles(); }catch(e){}
   try{ supaMem=null; }catch(e){}
@@ -2204,7 +2246,7 @@ function resumeSession(login){
     }).catch(()=>{ try{ logout(); }catch(e){} });
   }catch(e){ try{ logout(); }catch(e){} }
 }
-const APP_VER="v5.5.41";
+const APP_VER="v5.5.42";
 var splashDone=false;
 function hideSplash(){ if(splashDone) return; splashDone=true; try{ document.getElementById("splash").classList.add("hide"); }catch(e){} try{ const v=document.getElementById("splashVid"); if(v) v.pause(); }catch(e){} setTimeout(()=>{ try{ document.getElementById("splash").remove(); }catch(e){} },600); }
 function setVer(){ try{ document.getElementById("jsok").textContent=APP_VER; }catch(e){} try{ var _lv=document.getElementById("loginVer"); if(_lv) _lv.textContent=APP_VER; }catch(e){} }
@@ -2349,6 +2391,8 @@ function syncClassBar(){
   document.getElementById("classBar").style.display=show?"":"none";
 }
 function applyRole(me){
+  try{ chatSetUser(me); }catch(e){}
+  try{ const cw=document.getElementById("chatWrap"); if(cw) cw.style.display=chatAllowed(me)?"":"none"; }catch(e){}
   try{ const _rf=document.getElementById("radioFab"); if(_rf) _rf.style.display=me?"":"none"; }catch(e){}
   try{
     if(window.Sentry){
@@ -6336,7 +6380,7 @@ function hubPush(kind, data){ try{ supaHeat(120000); supaPushSoon(); }catch(e){}
 // клиент. Один сокет, топик на таблицу, postgres_changes/*, heartbeat,
 // экспоненциальный реконнект, переподписка со свежим JWT каждые 45 минут.
 var rtSock=null, rtRef=1, rtWant=false, rtBackoff=3000, rtPingT=null, rtReT=null, rtVisArmed=false;
-var RT_TABLES=["calls","journal","students","med","lessons","teams","meta","users","notices","clubs","club_tombstones","seventh_groups"];
+var RT_TABLES=["calls","journal","students","med","lessons","teams","meta","users","notices","clubs","club_tombstones","seventh_groups","teacher_chat"];
 var rtJoinState={}; // tb -> "wait"|"ok"|"err": покрыт ли топик живой подпиской
 function rtWsUrl(){ const c=supaCfg(); return c.url.replace(/^http/,"ws")+"/realtime/v1/websocket?apikey="+c.key+"&vsn=1.0.0"; }
 function rtSend(o){ try{ if(rtSock&&rtSock.readyState===1) rtSock.send(JSON.stringify(o)); }catch(e){} }
@@ -6387,7 +6431,7 @@ function rtAlive(){ try{ return !!(rtSock&&rtSock.readyState===1); }catch(e){ re
 function rtCovered(){
   try{
     if(!rtAlive()) return false;
-    for(let i=0;i<RT_TABLES.length;i++){ if(rtJoinState[RT_TABLES[i]]!=="ok") return false; }
+    for(let i=0;i<RT_TABLES.length;i++){ if(RT_TABLES[i]!=="teacher_chat"&&rtJoinState[RT_TABLES[i]]!=="ok") return false; }
     return true;
   }catch(e){ return false; }
 }
@@ -6404,7 +6448,8 @@ function rtOnMsg(m){
     const tb=String(m.topic||"").split(":").pop();
     if(RT_TABLES.indexOf(tb)>=0){
       rtJoinState[tb]=(m.payload&&m.payload.status==="ok")?"ok":"err";
-      if(rtJoinState[tb]==="err"){ try{ toast("realtime denied: "+tb); }catch(e){} }
+      if(tb==="teacher_chat"){ try{ chatSetRealtime(rtJoinState[tb]==="ok"); }catch(e){} }
+      else if(rtJoinState[tb]==="err"){ try{ toast("realtime denied: "+tb); }catch(e){} }
     }
     return;
   }
@@ -6412,6 +6457,7 @@ function rtOnMsg(m){
   const tb=String(m.topic||"").split(":").pop();
   if(RT_TABLES.indexOf(tb)<0) return;
   try{ rtCounts[tb]=(rtCounts[tb]||0)+1; }catch(e){}
+  if(tb==="teacher_chat"){ try{ chatLoad(true); }catch(e){} try{ rtLastMsg=Date.now(); }catch(e){} return; }
   try{ supaHeat(60000); }catch(e){}
   if(tb==="calls"||tb==="journal"||tb==="notices"){ try{ supaPullCalls(); }catch(e){} }
   else { try{ supaPullNow(); }catch(e){} }
@@ -6640,6 +6686,80 @@ async function supaReq(path, opts){
   }catch(e){ return null; }
 }
 async function supaReqSafe(path, opts){ try{ return await supaReq(path, opts); }catch(e){ return null; } }
+// ---------- общий чат вошедших пользователей ----------
+var chatUserLogin="", chatPollT=null, chatBusy=false, chatRealtime=false, chatRows=[];
+function chatSetStatus(text){ const el=document.getElementById("chatStatus"); if(el) el.textContent=text||""; }
+function chatShowError(text){ const el=document.getElementById("chatError"); if(!el) return; el.textContent=text||""; el.style.display=text?"":"none"; }
+function chatRender(){
+  const box=document.getElementById("chatMessages"); if(!box) return;
+  if(!chatRows.length){ box.innerHTML="<div class=\"chat-empty\">"+esc(t("chatEmpty"))+"</div>"; return; }
+  const wasBottom=box.scrollHeight-box.scrollTop-box.clientHeight<60;
+  box.innerHTML=chatRows.map(m=>{
+    const mine=String(m.author_login||"").toLowerCase()===String(chatUserLogin||"").toLowerCase();
+    const who=String(m.author_name||m.author_login||"");
+    const dt=new Date(m.created_at);
+    const time=Number.isNaN(dt.getTime())?"":dt.toLocaleTimeString(lang==="ru"?"ru-RU":lang==="uz"?"uz-UZ":"en-GB",{hour:"2-digit",minute:"2-digit"});
+    return "<article class=\"chat-msg"+(mine?" mine":"")+"\"><div class=\"chat-author\">"+esc(who)+"</div><div class=\"chat-body\">"+esc(m.body)+"</div><div class=\"chat-time\">"+esc(time)+"</div></article>";
+  }).join("");
+  if(wasBottom) box.scrollTop=box.scrollHeight;
+}
+async function chatLoad(silent){
+  if(!chatAllowed(currentUser())||!supaTokenSync()||chatBusy) return;
+  chatBusy=true;
+  if(!silent) chatSetStatus(t("chatConnecting"));
+  try{
+    const rows=await supaReq("teacher_chat?select=id,author_login,author_name,body,created_at&order=created_at.desc,id.desc&limit=100");
+    if(Array.isArray(rows)&&chatAllowed(currentUser())){
+      chatRows=rows.slice().reverse();
+      chatRender();
+      chatShowError("");
+      chatSetStatus(chatRealtime?t("chatOnline"):t("chatPolling"));
+    }
+  }catch(e){ if(!silent){ chatSetStatus(""); chatShowError(t("chatFail")); } }
+  finally{ chatBusy=false; }
+}
+async function chatSend(event){
+  if(event&&event.preventDefault) event.preventDefault();
+  const me=currentUser(), input=document.getElementById("chatInput");
+  if(!chatAllowed(me)||!input||!supaTokenSync()) return;
+  const body=String(input.value||"").trim();
+  if(!body) return;
+  if(body.length>2000){ chatShowError(t("chatSendFail")); return; }
+  const btn=document.querySelector("#chatForm button[type=submit]");
+  if(btn) btn.disabled=true;
+  chatShowError("");
+  try{
+    const rows=await supaReq("teacher_chat",{method:"POST",headers:{Prefer:"return=representation"},body:JSON.stringify({body})});
+    if(Array.isArray(rows)&&rows.length){
+      const item=rows[0];
+      chatRows=chatRows.filter(x=>String(x.id)!==String(item.id));
+      chatRows.push(item); chatRows.sort((a,b)=>String(a.created_at).localeCompare(String(b.created_at))||Number(a.id)-Number(b.id));
+      chatRows=chatRows.slice(-100); chatRender();
+      input.value=""; chatShowError("");
+    }else throw new Error("empty response");
+  }catch(e){ chatShowError(t("chatSendFail")); }
+  finally{ if(btn) btn.disabled=false; }
+}
+function chatSetRealtime(on){ chatRealtime=!!on; if(chatUserLogin) chatSetStatus(chatRealtime?t("chatOnline"):t("chatPolling")); }
+function chatStop(){
+  chatUserLogin=""; chatRealtime=false; chatRows=[]; chatBusy=false;
+  try{ if(chatPollT) clearInterval(chatPollT); }catch(e){} chatPollT=null;
+  try{ const b=document.getElementById("chatMessages"); if(b) b.innerHTML=""; }catch(e){}
+  try{ const w=document.getElementById("chatWrap"); if(w) w.style.display="none"; }catch(e){}
+  chatSetStatus(""); chatShowError("");
+}
+function chatSetUser(me){
+  const login=chatAllowed(me)?String(me.login||"").toLowerCase():"";
+  const wrap=document.getElementById("chatWrap");
+  if(wrap) wrap.style.display=login?"":"none";
+  if(login===chatUserLogin) return;
+  chatStop();
+  if(!login) return;
+  chatUserLogin=login;
+  chatSetStatus(t("chatConnecting"));
+  chatLoad(false);
+  chatPollT=setInterval(()=>{ if(chatAllowed(currentUser())) chatLoad(true); else chatStop(); },30000);
+}
 // Storage (голосовые): тот же refresh-цикл, что и у REST, но без JSON-заголовка.
 async function supaStorage(path, opts){
   const c=supaCfg();
