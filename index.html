@@ -12,7 +12,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default" />
 <meta name="apple-mobile-web-app-title" content="RedBridge" />
 <meta name="theme-color" content="#C1272D" />
-<meta name="app-version" content="v5.5.48" />
+<meta name="app-version" content="v5.5.49" />
 <!-- Приложение — один инлайновый скрипт, поэтому script-src вынужденно
      допускает 'unsafe-inline'. Зато default-src/connect-src закрывают
      подгрузку чужих скриптов и утечку данных на сторонние хосты:
@@ -1206,14 +1206,14 @@ html.standalone-ios body{overscroll-behavior-y:none}
 
 /* Общий чат учителей */
 /* Чаты: общий чат и личные переписки */
-.chat-shell{display:grid;grid-template-columns:300px minmax(0,1fr);height:min(78vh,720px);min-height:460px;padding:0;overflow:hidden;border-radius:18px}
-.chat-side{display:flex;flex-direction:column;min-width:0;border-right:1px solid var(--line-solid);background:rgba(255,255,255,.35)}
+.chat-shell{display:grid;grid-template-columns:300px minmax(0,1fr);grid-template-rows:minmax(0,1fr);height:min(78vh,720px);min-height:460px;padding:0;overflow:hidden;border-radius:18px}
+.chat-side{display:flex;flex-direction:column;min-width:0;min-height:0;overflow:hidden;border-right:1px solid var(--line-solid);background:rgba(255,255,255,.35)}
 .chat-side-head{display:flex;align-items:center;gap:10px;padding:14px 14px 8px}
 .chat-side-head h3{margin:0;font-size:18px}
 .chat-new{margin-left:auto;width:34px;height:34px;flex:0 0 34px;border-radius:50%;border:0;background:linear-gradient(135deg,var(--red),var(--red-dark));color:#fff;font-size:22px;line-height:1;cursor:pointer;box-shadow:0 4px 12px rgba(193,39,45,.35)}
 .chat-side-search{padding:0 12px 10px}
 .chat-side-search input{width:100%;height:38px;border-radius:12px;border:1px solid var(--line-solid);background:var(--bg);color:var(--ink);padding:0 12px;font:inherit}
-.chat-thread-list{overflow:auto;padding:4px 8px 12px;overscroll-behavior:contain;flex:1}
+.chat-thread-list{overflow:auto;padding:4px 8px 12px;overscroll-behavior:contain;flex:1;min-height:0;-webkit-overflow-scrolling:touch}
 .chat-list-label{padding:10px 10px 4px;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
 .chat-thread{display:flex;align-items:center;gap:10px;padding:9px 8px;border-radius:12px;cursor:pointer;position:relative}
 .chat-thread:hover{background:rgba(193,39,45,.06)}
@@ -1230,20 +1230,25 @@ html.standalone-ios body{overscroll-behavior-y:none}
 .chat-person{display:flex;align-items:center;gap:10px;padding:8px;border-radius:10px;cursor:pointer}
 .chat-person:hover{background:rgba(193,39,45,.06)}
 .chat-person small{display:block;color:var(--muted);font-size:11px}
-.chat-main{display:flex;flex-direction:column;min-width:0}
+.chat-main{display:flex;flex-direction:column;min-width:0;min-height:0}
 .chat-main-head{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--line-solid);min-height:64px}
 .chat-back{display:none;width:36px;height:36px;flex:0 0 36px;border-radius:50%;border:1px solid var(--line-solid);background:var(--bg);color:var(--ink);font-size:18px;cursor:pointer;place-items:center;padding:0}
 .chat-main-title{min-width:0}
 .chat-main-title b{display:block;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .chat-main-title small{display:block;color:var(--muted);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .chat-status{margin-left:auto;font-size:11px;color:var(--muted);white-space:nowrap}
-.chat-messages{flex:1;overflow:auto;padding:14px 16px;display:flex;flex-direction:column;gap:8px;overscroll-behavior:contain}
+.chat-messages{flex:1;min-height:0;overflow:auto;padding:14px 16px;display:flex;flex-direction:column;gap:8px;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
 .chat-empty{margin:auto;text-align:center;color:var(--muted);font-size:13px;max-width:300px;line-height:1.5}
 .chat-msg{align-self:flex-start;max-width:min(78%,640px);padding:7px 11px 6px;border-radius:6px 16px 16px 16px;background:rgba(226,232,240,.75);overflow-wrap:anywhere}
 .chat-msg.mine{align-self:flex-end;border-radius:16px 6px 16px 16px;background:rgba(193,39,45,.12)}
 .chat-author{font-size:11px;font-weight:750;color:var(--red-text);margin-bottom:3px}
 .chat-body{font-size:14px;line-height:1.42;white-space:pre-wrap}
-.chat-time{font-size:10px;color:var(--muted);text-align:right;margin-top:3px}
+.chat-time{display:flex;align-items:center;justify-content:flex-end;gap:8px;font-size:10px;color:var(--muted);margin-top:3px}
+.chat-actions{display:inline-flex;gap:2px;opacity:.65}
+.chat-msg:hover .chat-actions{opacity:1}
+.chat-act{border:0;background:transparent;color:var(--muted);font:inherit;font-size:12px;line-height:1;cursor:pointer;padding:1px 3px;border-radius:5px}
+.chat-act:hover{background:rgba(193,39,45,.12);color:var(--red-text)}
+.chat-deleted{color:var(--muted);font-style:italic}
 .chat-media{margin:2px 0 5px;border-radius:10px;overflow:hidden;display:block;border:0;padding:0;background:rgba(0,0,0,.08);cursor:pointer;max-width:100%;color:var(--muted)}
 .chat-media img{display:block;width:100%;max-width:420px;max-height:340px;object-fit:cover}
 .chat-media-ph{display:flex;align-items:center;gap:8px;padding:10px 12px;font-size:12px}
@@ -1270,6 +1275,7 @@ html.standalone-ios body{overscroll-behavior-y:none}
   .chat-shell.chat-open .chat-side{display:none}
   .chat-shell:not(.chat-open) .chat-main{display:none}
   .chat-msg{max-width:88%}
+  .chat-act{font-size:15px;padding:3px 6px}
 }
 @media(prefers-reduced-motion:reduce){.chat-shell *{scroll-behavior:auto!important}}
 
@@ -1299,7 +1305,7 @@ html.standalone-ios body{overscroll-behavior-y:none}
       <div class="login-error" id="loginError" data-i18n="loginError">Неверный логин или пароль</div>
       <button type="submit" data-i18n="signIn">Войти</button>
     </form>
-    <div class="muted" id="loginVer" style="text-align:center;margin-top:14px">v5.5.48</div>
+    <div class="muted" id="loginVer" style="text-align:center;margin-top:14px">v5.5.49</div>
   </div>
 </div>
 
@@ -1924,14 +1930,17 @@ Object.assign(I18N.ru,{chatTitle:"Общий чат",chatSubtitle:"Сообще�
 Object.assign(I18N.ru,{chats:"Чаты",chatGeneral:"Общий чат",chatAllStaff:"Все сотрудники",chatNew:"Новый чат",chatPeople:"Сотрудники",chatSearchPh:"Поиск чата или сотрудника...",chatNoThreads:"Пока нет личных чатов",chatMsgPh:"Написать сообщение…",chatAttach:"Прикрепить фото или видео",chatPhoto:"Фото",chatVideo:"Видео",chatSending:"Отправка…",chatUploadFail:"Не удалось загрузить файл",chatFileTooBig:"Файл слишком большой (фото до 8 МБ, видео до 50 МБ)",chatFileBadType:"Можно отправлять только фото и видео",chatRemove:"Убрать",chatMediaFail:"Не удалось открыть файл",chatEmptyThread:"Пока нет сообщений",chatYou:"Вы",chatDirect:"Личный чат",chatLegacy:"Личные чаты и медиа появятся после обновления сервера"});
 Object.assign(I18N.ru,{updReadonly:"Автообновление недоступно: приложение лежит в защищённой папке. Скачайте {v} и распакуйте в папку, доступную для записи (на Windows — например, C:\\RedBridge)."});
 Object.assign(I18N.ru,{chatStartChat:"Начать переписку"});
+Object.assign(I18N.ru,{chatEdit:"Изменить",chatDelete:"Удалить",chatDeleteT:"Удалить сообщение?",chatDeleteConfirm:"Сообщение исчезнет у всех. Отменить нельзя.",chatDeleted:"Сообщение удалено",chatEdited:"изменено",chatEditFail:"Не удалось изменить сообщение",chatDeleteFail:"Не удалось удалить сообщение"});
 Object.assign(I18N.en,{chatTitle:"General chat",chatSubtitle:"Messages are visible to everyone",chatPlaceholder:"Write a message…",chatSend:"Send",chatEmpty:"No messages yet. Start the conversation.",chatConnecting:"Connecting…",chatOnline:"Online",chatPolling:"Chat updates",chatFail:"Could not load chat. Check your connection.",chatSendFail:"Could not send the message. Please try again."});
 Object.assign(I18N.en,{chats:"Chats",chatGeneral:"General chat",chatAllStaff:"All staff",chatNew:"New chat",chatPeople:"Staff",chatSearchPh:"Search chats or staff...",chatNoThreads:"No direct chats yet",chatMsgPh:"Write a message…",chatAttach:"Attach a photo or video",chatPhoto:"Photo",chatVideo:"Video",chatSending:"Sending…",chatUploadFail:"Could not upload the file",chatFileTooBig:"File is too large (photos up to 8 MB, videos up to 50 MB)",chatFileBadType:"Only photos and videos can be sent",chatRemove:"Remove",chatMediaFail:"Could not open the file",chatEmptyThread:"No messages yet",chatYou:"You",chatDirect:"Direct chat",chatLegacy:"Direct chats and media will appear after the server update"});
 Object.assign(I18N.en,{updReadonly:"Auto-update is unavailable: the app is in a protected folder. Download {v} and unpack it to a writable folder (on Windows, e.g. C:\\RedBridge)."});
 Object.assign(I18N.en,{chatStartChat:"Start a chat"});
+Object.assign(I18N.en,{chatEdit:"Edit",chatDelete:"Delete",chatDeleteT:"Delete message?",chatDeleteConfirm:"The message disappears for everyone. This cannot be undone.",chatDeleted:"Message deleted",chatEdited:"edited",chatEditFail:"Could not edit the message",chatDeleteFail:"Could not delete the message"});
 Object.assign(I18N.uz,{chatTitle:"Umumiy chat",chatSubtitle:"Xabarlar barcha foydalanuvchilarga ko‘rinadi",chatPlaceholder:"Xabar yozing…",chatSend:"Yuborish",chatEmpty:"Hozircha xabarlar yo‘q. Suhbatni boshlang.",chatConnecting:"Ulanmoqda…",chatOnline:"Onlayn",chatPolling:"Chat yangilanmoqda",chatFail:"Chatni yuklab bo‘lmadi. Internetni tekshiring.",chatSendFail:"Xabar yuborilmadi. Qayta urinib ko‘ring."});
 Object.assign(I18N.uz,{chats:"Chatlar",chatGeneral:"Umumiy chat",chatAllStaff:"Barcha xodimlar",chatNew:"Yangi chat",chatPeople:"Xodimlar",chatSearchPh:"Chat yoki xodimni qidirish...",chatNoThreads:"Hozircha shaxsiy chatlar yo‘q",chatMsgPh:"Xabar yozing…",chatAttach:"Foto yoki video biriktirish",chatPhoto:"Foto",chatVideo:"Video",chatSending:"Yuborilmoqda…",chatUploadFail:"Faylni yuklab bo‘lmadi",chatFileTooBig:"Fayl juda katta (foto 8 MB gacha, video 50 MB gacha)",chatFileBadType:"Faqat foto va video yuborish mumkin",chatRemove:"Olib tashlash",chatMediaFail:"Faylni ochib bo‘lmadi",chatEmptyThread:"Hozircha xabarlar yo‘q",chatYou:"Siz",chatDirect:"Shaxsiy chat",chatLegacy:"Shaxsiy chatlar va media server yangilangandan so‘ng paydo bo‘ladi"});
 Object.assign(I18N.uz,{updReadonly:"Avtomatik yangilanish mavjud emas: ilova himoyalangan papkada. {v} ni yuklab, yozish mumkin bo‘lgan papkaga oching (Windows uchun, masalan, C:\\RedBridge)."});
 Object.assign(I18N.uz,{chatStartChat:"Suhbatni boshlash"});
+Object.assign(I18N.uz,{chatEdit:"Tahrirlash",chatDelete:"O‘chirish",chatDeleteT:"Xabarni o‘chirish?",chatDeleteConfirm:"Xabar hamma uchun yo‘qoladi. Buni qaytarib bo‘lmaydi.",chatDeleted:"Xabar o‘chirilgan",chatEdited:"tahrirlangan",chatEditFail:"Xabarni tahrirlab bo‘lmadi",chatDeleteFail:"Xabarni o‘chirib bo‘lmadi"});
 // Строки режима производительности — отдельно, чтобы не править гигантские
 // словари целиком (t() и так падает обратно на ru).
 try{
@@ -2323,7 +2332,7 @@ function resumeSession(login){
     }).catch(()=>{ try{ logout(); }catch(e){} });
   }catch(e){ try{ logout(); }catch(e){} }
 }
-const APP_VER="v5.5.48";
+const APP_VER="v5.5.49";
 var splashDone=false;
 function hideSplash(){ if(splashDone) return; splashDone=true; try{ document.getElementById("splash").classList.add("hide"); }catch(e){} try{ const v=document.getElementById("splashVid"); if(v) v.pause(); }catch(e){} setTimeout(()=>{ try{ document.getElementById("splash").remove(); }catch(e){} },600); }
 function setVer(){ try{ document.getElementById("jsok").textContent=APP_VER; }catch(e){} try{ var _lv=document.getElementById("loginVer"); if(_lv) _lv.textContent=APP_VER; }catch(e){} }
@@ -6836,7 +6845,7 @@ function chatRenderThreads(){
   list.forEach(th=>{
     if(!q&&th.key!=="general"&&!labeled){ html+="<div class='chat-list-label'>"+esc(t("chatPeople"))+"</div>"; labeled=true; }
     const last=th.last||{};
-    const prev=String(last.media_type||"")==="image"?t("chatPhoto"):String(last.media_type||"")==="video"?t("chatVideo"):String(last.body||"");
+    const prev=last.deleted_at?t("chatDeleted"):(String(last.media_type||"")==="image"?t("chatPhoto"):String(last.media_type||"")==="video"?t("chatVideo"):String(last.body||""));
     const who=String(last.author_login||"").toLowerCase()===chatUserLogin?t("chatYou")+": ":"";
     const line=prev?(who+prev):(th.key==="general"?(th.sub||""):((th.sub?th.sub+" · ":"")+t("chatStartChat")));
     html+="<div class='chat-thread"+(th.key===chatThread?" active":"")+"' onclick=\"chatOpenThread('"+jsq(th.key)+"')\">"
@@ -6878,26 +6887,35 @@ function chatRender(){
     box.innerHTML="<div class='chat-empty'>"+esc(chatThread==="general"?t("chatEmpty"):t("chatEmptyThread"))+"</div>";
     return;
   }
+  const me=currentUser(), mod=chatCanModerate(me);
   const wasBottom=box.scrollHeight-box.scrollTop-box.clientHeight<70;
   box.innerHTML=chatRows.map(m=>{
     const mine=String(m.author_login||"").toLowerCase()===chatUserLogin;
+    const deleted=!!m.deleted_at;
     const who=mine?t("chatYou"):String(m.author_name||m.author_login||"");
     let media="";
-    if(m.media_path&&m.media_type==="image"){
+    if(!deleted&&m.media_path&&m.media_type==="image"){
       const url=chatMediaUrls[m.media_path];
       media="<button class='chat-media' id='cmedia_"+esc(m.id)+"' onclick=\"chatOpenMedia('"+jsq(m.media_path)+"','image')\">"
         +(url?("<img src='"+esc(url)+"' alt=''>"):("<span class='chat-media-ph'>🖼 "+esc(t("chatPhoto"))+(m.media_size?" · "+esc(chatFmtSize(m.media_size)):"")+"</span>"))+"</button>";
-    }else if(m.media_path&&m.media_type==="video"){
+    }else if(!deleted&&m.media_path&&m.media_type==="video"){
       media="<button class='chat-media' onclick=\"chatOpenMedia('"+jsq(m.media_path)+"','video')\"><span class='chat-media-ph'>▶ "+esc(t("chatVideo"))+(m.media_size?" · "+esc(chatFmtSize(m.media_size)):"")+"</span></button>";
     }
+    const body=deleted
+      ?("<div class='chat-body chat-deleted'>"+esc(t("chatDeleted"))+"</div>")
+      :(String(m.body||"").trim()?"<div class='chat-body'>"+esc(m.body)+"</div>":"");
+    let acts="";
+    if(!deleted&&mine) acts+="<button class='chat-act' type='button' title='"+esc(t("chatEdit"))+"' onclick='chatEditMsg("+Number(m.id)+")'>✎</button>";
+    if(!deleted&&(mine||mod)) acts+="<button class='chat-act' type='button' title='"+esc(t("chatDelete"))+"' onclick='chatDeleteMsg("+Number(m.id)+")'>✕</button>";
+    const edited=(!deleted&&m.edited_at)?" · "+esc(t("chatEdited")):"";
     return "<article class='chat-msg"+(mine?" mine":"")+"' data-id='"+esc(m.id)+"'>"
       +"<div class='chat-author'>"+esc(who)+"</div>"
-      +(String(m.body||"").trim()?"<div class='chat-body'>"+esc(m.body)+"</div>":"")
-      +media
-      +"<div class='chat-time'>"+esc(chatTime(m.created_at))+"</div></article>";
+      +body+media
+      +"<div class='chat-time'><span>"+esc(chatTime(m.created_at))+edited+"</span>"
+      +(acts?("<span class='chat-actions'>"+acts+"</span>"):"")+"</div></article>";
   }).join("");
   if(wasBottom) box.scrollTop=box.scrollHeight;
-  chatRows.forEach(m=>{ if(m.media_path&&m.media_type==="image"&&!chatMediaUrls[m.media_path]) chatLoadImage(m.id,m.media_path); });
+  chatRows.forEach(m=>{ if(!m.deleted_at&&m.media_path&&m.media_type==="image"&&!chatMediaUrls[m.media_path]) chatLoadImage(m.id,m.media_path); });
 }
 async function chatLoadImage(id,path){
   try{ const url=await chatMediaUrl(path); const el=document.getElementById("cmedia_"+id); if(el) el.innerHTML="<img src='"+esc(url)+"' alt=''>"; }catch(e){}
@@ -7022,7 +7040,7 @@ async function chatLoad(silent){
   try{
     let rows;
     if(chatSchema){
-      const sel="select=id,author_login,author_name,body,recipient_login,media_path,media_type,media_name,media_size,created_at";
+      const sel="select=id,author_login,author_name,body,recipient_login,media_path,media_type,media_name,media_size,created_at,edited_at,deleted_at";
       if(chatThread==="general"){
         rows=await chatReq("teacher_chat?"+sel+"&recipient_login=eq.&order=created_at.desc,id.desc&limit=100");
       }else{
@@ -7057,10 +7075,10 @@ async function chatThreadsLoad(silent){
   try{
     let general, dms=[];
     if(chatSchema){
-      general=await chatReq("teacher_chat?select=id,author_login,author_name,recipient_login,body,media_type,created_at&recipient_login=eq.&order=created_at.desc,id.desc&limit=1");
+      general=await chatReq("teacher_chat?select=id,author_login,author_name,recipient_login,body,media_type,created_at,deleted_at&recipient_login=eq.&order=created_at.desc,id.desc&limit=1");
       if(chatCanDM(me)){
         const meL=chatEnc(me.login);
-        dms=await chatReq("teacher_chat?select=id,author_login,author_name,recipient_login,body,media_type,created_at&or=(author_login.eq."+meL+",recipient_login.eq."+meL+")&recipient_login=neq.&order=created_at.desc,id.desc&limit=200");
+        dms=await chatReq("teacher_chat?select=id,author_login,author_name,recipient_login,body,media_type,created_at,deleted_at&or=(author_login.eq."+meL+",recipient_login.eq."+meL+")&recipient_login=neq.&order=created_at.desc,id.desc&limit=200");
       }
     }else{
       general=await chatReq("teacher_chat?select=id,author_login,author_name,body,created_at&order=created_at.desc,id.desc&limit=1");
@@ -7144,6 +7162,58 @@ async function chatSend(event){
     const ab=document.getElementById("chatAttachBtn"); if(ab) ab.disabled=!chatSchema;
     chatSetStatus(chatRealtime?t("chatOnline"):t("chatPolling"));
   }
+}
+function chatCanModerate(me){ return !!(me&&["admin","ceo"].indexOf(String(me.role||""))>=0); }
+function chatMsgById(id){ try{ return (chatRows||[]).find(x=>String(x.id)===String(id))||null; }catch(e){ return null; } }
+function chatEditMsg(id){
+  const m=chatMsgById(id); if(!m||m.deleted_at) return;
+  const me=currentUser(); if(!me||String(m.author_login||"").toLowerCase()!==String(me.login||"").toLowerCase()) return;
+  openModal({
+    title:t("chatEdit"), sub:"",
+    fields:"<label>"+esc(t("chatEdit"))+"</label><textarea id='chatEditText' rows='4' maxlength='2000' style='width:100%;min-height:90px'>"+esc(m.body||"")+"</textarea>",
+    okText:t("save"),
+    onOk:()=>{
+      const el=document.getElementById("chatEditText");
+      const body=String((el&&el.value)||"").trim();
+      if(!body&&!m.media_path){ toast(t("chatEditFail"),true); return false; }
+      chatEditSubmit(id,body); return false;
+    }
+  });
+}
+async function chatEditSubmit(id,body){
+  try{
+    const r=await chatReq("rpc/rb_chat_edit",{method:"POST",body:JSON.stringify({p_id:Number(id),p_body:body})});
+    const row=Array.isArray(r)?r[0]:r;
+    if(!row) throw 0;
+    chatRows=chatRows.map(x=>String(x.id)===String(row.id)?Object.assign({},x,row):x);
+    chatRender(); closeModal(); chatThreadsLoad(true);
+  }catch(e){ toast(t("chatEditFail"),true); }
+}
+function chatDeleteMsg(id){
+  const m=chatMsgById(id); if(!m||m.deleted_at) return;
+  const me=currentUser(); const mine=String(m.author_login||"").toLowerCase()===String(chatUserLogin||"").toLowerCase();
+  if(!mine&&!chatCanModerate(me)) return;
+  openModal({
+    title:t("chatDeleteT"), sub:esc(t("chatDeleteConfirm")), fields:"",
+    okText:t("delBtn"),
+    onOk:()=>{ chatDeleteSubmit(id); return false; }
+  });
+}
+async function chatDeleteSubmit(id){
+  const m=chatMsgById(id);
+  try{
+    const r=await chatReq("rpc/rb_chat_delete",{method:"POST",body:JSON.stringify({p_id:Number(id)})});
+    const row=Array.isArray(r)?r[0]:r;
+    if(!row) throw 0;
+    try{
+      if(m&&m.media_path){
+        const enc=String(m.media_path).split("/").map(encodeURIComponent).join("/");
+        supaStorage("object/chat_media/"+enc,{method:"DELETE"}).catch(()=>{});
+      }
+    }catch(e){}
+    chatRows=chatRows.map(x=>String(x.id)===String(row.id)?Object.assign({},x,row):x);
+    chatRender(); closeModal(); chatThreadsLoad(true);
+  }catch(e){ toast(t("chatDeleteFail"),true); }
 }
 function chatOpenThread(key){
   if(key!=="general"&&!chatCanDM(currentUser())) return;
