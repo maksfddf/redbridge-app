@@ -12,7 +12,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default" />
 <meta name="apple-mobile-web-app-title" content="RedBridge" />
 <meta name="theme-color" content="#C1272D" />
-<meta name="app-version" content="v5.5.44" />
+<meta name="app-version" content="v5.5.45" />
 <!-- Приложение — один инлайновый скрипт, поэтому script-src вынужденно
      допускает 'unsafe-inline'. Зато default-src/connect-src закрывают
      подгрузку чужих скриптов и утечку данных на сторонние хосты:
@@ -1214,6 +1214,7 @@ html.standalone-ios body{overscroll-behavior-y:none}
 .chat-side-search{padding:0 12px 10px}
 .chat-side-search input{width:100%;height:38px;border-radius:12px;border:1px solid var(--line-solid);background:var(--bg);color:var(--ink);padding:0 12px;font:inherit}
 .chat-thread-list{overflow:auto;padding:4px 8px 12px;overscroll-behavior:contain;flex:1}
+.chat-list-label{padding:10px 10px 4px;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
 .chat-thread{display:flex;align-items:center;gap:10px;padding:9px 8px;border-radius:12px;cursor:pointer;position:relative}
 .chat-thread:hover{background:rgba(193,39,45,.06)}
 .chat-thread.active{background:rgba(193,39,45,.11)}
@@ -1298,7 +1299,7 @@ html.standalone-ios body{overscroll-behavior-y:none}
       <div class="login-error" id="loginError" data-i18n="loginError">Неверный логин или пароль</div>
       <button type="submit" data-i18n="signIn">Войти</button>
     </form>
-    <div class="muted" id="loginVer" style="text-align:center;margin-top:14px">v5.5.44</div>
+    <div class="muted" id="loginVer" style="text-align:center;margin-top:14px">v5.5.45</div>
   </div>
 </div>
 
@@ -1594,7 +1595,6 @@ html.standalone-ios body{overscroll-behavior-y:none}
       <aside class="chat-side">
         <div class="chat-side-head">
           <h3 data-i18n="chats">Чаты</h3>
-          <button class="chat-new" id="chatNewBtn" onclick="chatTogglePeople()" aria-label="Новый чат" data-i18n-aria="chatNew">+</button>
         </div>
         <div class="chat-side-search">
           <input id="chatSearch" placeholder="Поиск чата или сотрудника..." oninput="chatFilter()" data-i18n-ph="chatSearchPh" />
@@ -1923,12 +1923,15 @@ uz:{pushTitle:"Bildirishnomalar",teacher:"O'qituvchi",reception:"Qabulxona",exit
 Object.assign(I18N.ru,{chatTitle:"Общий чат",chatSubtitle:"Сообщения видны всем пользователям",chatPlaceholder:"Написать сообщение…",chatSend:"Отправить",chatEmpty:"Пока сообщений нет. Начните разговор.",chatConnecting:"Подключение…",chatOnline:"В сети",chatPolling:"Обновление чата",chatFail:"Не удалось загрузить чат. Проверьте подключение.",chatSendFail:"Не удалось отправить сообщение. Попробуйте ещё раз."});
 Object.assign(I18N.ru,{chats:"Чаты",chatGeneral:"Общий чат",chatAllStaff:"Все сотрудники",chatNew:"Новый чат",chatPeople:"Сотрудники",chatSearchPh:"Поиск чата или сотрудника...",chatNoThreads:"Пока нет личных чатов",chatMsgPh:"Написать сообщение…",chatAttach:"Прикрепить фото или видео",chatPhoto:"Фото",chatVideo:"Видео",chatSending:"Отправка…",chatUploadFail:"Не удалось загрузить файл",chatFileTooBig:"Файл слишком большой (фото до 8 МБ, видео до 50 МБ)",chatFileBadType:"Можно отправлять только фото и видео",chatRemove:"Убрать",chatMediaFail:"Не удалось открыть файл",chatEmptyThread:"Пока нет сообщений",chatYou:"Вы",chatDirect:"Личный чат",chatLegacy:"Личные чаты и медиа появятся после обновления сервера"});
 Object.assign(I18N.ru,{updReadonly:"Автообновление недоступно: приложение лежит в защищённой папке. Скачайте {v} и распакуйте в папку, доступную для записи (на Windows — например, C:\\RedBridge)."});
+Object.assign(I18N.ru,{chatStartChat:"Начать переписку"});
 Object.assign(I18N.en,{chatTitle:"General chat",chatSubtitle:"Messages are visible to everyone",chatPlaceholder:"Write a message…",chatSend:"Send",chatEmpty:"No messages yet. Start the conversation.",chatConnecting:"Connecting…",chatOnline:"Online",chatPolling:"Chat updates",chatFail:"Could not load chat. Check your connection.",chatSendFail:"Could not send the message. Please try again."});
 Object.assign(I18N.en,{chats:"Chats",chatGeneral:"General chat",chatAllStaff:"All staff",chatNew:"New chat",chatPeople:"Staff",chatSearchPh:"Search chats or staff...",chatNoThreads:"No direct chats yet",chatMsgPh:"Write a message…",chatAttach:"Attach a photo or video",chatPhoto:"Photo",chatVideo:"Video",chatSending:"Sending…",chatUploadFail:"Could not upload the file",chatFileTooBig:"File is too large (photos up to 8 MB, videos up to 50 MB)",chatFileBadType:"Only photos and videos can be sent",chatRemove:"Remove",chatMediaFail:"Could not open the file",chatEmptyThread:"No messages yet",chatYou:"You",chatDirect:"Direct chat",chatLegacy:"Direct chats and media will appear after the server update"});
 Object.assign(I18N.en,{updReadonly:"Auto-update is unavailable: the app is in a protected folder. Download {v} and unpack it to a writable folder (on Windows, e.g. C:\\RedBridge)."});
+Object.assign(I18N.en,{chatStartChat:"Start a chat"});
 Object.assign(I18N.uz,{chatTitle:"Umumiy chat",chatSubtitle:"Xabarlar barcha foydalanuvchilarga ko‘rinadi",chatPlaceholder:"Xabar yozing…",chatSend:"Yuborish",chatEmpty:"Hozircha xabarlar yo‘q. Suhbatni boshlang.",chatConnecting:"Ulanmoqda…",chatOnline:"Onlayn",chatPolling:"Chat yangilanmoqda",chatFail:"Chatni yuklab bo‘lmadi. Internetni tekshiring.",chatSendFail:"Xabar yuborilmadi. Qayta urinib ko‘ring."});
 Object.assign(I18N.uz,{chats:"Chatlar",chatGeneral:"Umumiy chat",chatAllStaff:"Barcha xodimlar",chatNew:"Yangi chat",chatPeople:"Xodimlar",chatSearchPh:"Chat yoki xodimni qidirish...",chatNoThreads:"Hozircha shaxsiy chatlar yo‘q",chatMsgPh:"Xabar yozing…",chatAttach:"Foto yoki video biriktirish",chatPhoto:"Foto",chatVideo:"Video",chatSending:"Yuborilmoqda…",chatUploadFail:"Faylni yuklab bo‘lmadi",chatFileTooBig:"Fayl juda katta (foto 8 MB gacha, video 50 MB gacha)",chatFileBadType:"Faqat foto va video yuborish mumkin",chatRemove:"Olib tashlash",chatMediaFail:"Faylni ochib bo‘lmadi",chatEmptyThread:"Hozircha xabarlar yo‘q",chatYou:"Siz",chatDirect:"Shaxsiy chat",chatLegacy:"Shaxsiy chatlar va media server yangilangandan so‘ng paydo bo‘ladi"});
 Object.assign(I18N.uz,{updReadonly:"Avtomatik yangilanish mavjud emas: ilova himoyalangan papkada. {v} ni yuklab, yozish mumkin bo‘lgan papkaga oching (Windows uchun, masalan, C:\\RedBridge)."});
+Object.assign(I18N.uz,{chatStartChat:"Suhbatni boshlash"});
 // Строки режима производительности — отдельно, чтобы не править гигантские
 // словари целиком (t() и так падает обратно на ru).
 try{
@@ -2320,7 +2323,7 @@ function resumeSession(login){
     }).catch(()=>{ try{ logout(); }catch(e){} });
   }catch(e){ try{ logout(); }catch(e){} }
 }
-const APP_VER="v5.5.44";
+const APP_VER="v5.5.45";
 var splashDone=false;
 function hideSplash(){ if(splashDone) return; splashDone=true; try{ document.getElementById("splash").classList.add("hide"); }catch(e){} try{ const v=document.getElementById("splashVid"); if(v) v.pause(); }catch(e){} setTimeout(()=>{ try{ document.getElementById("splash").remove(); }catch(e){} },600); }
 function setVer(){ try{ document.getElementById("jsok").textContent=APP_VER; }catch(e){} try{ var _lv=document.getElementById("loginVer"); if(_lv) _lv.textContent=APP_VER; }catch(e){} }
@@ -6829,32 +6832,29 @@ function chatRenderThreads(){
   const box=document.getElementById("chatThreadList"); if(!box) return;
   const q=String((document.getElementById("chatSearch")||{}).value||"").trim().toLowerCase();
   const list=chatThreads.filter(th=>!q||String(th.name||"").toLowerCase().includes(q));
-  box.innerHTML=list.map(th=>{
+  let html="", labeled=false;
+  list.forEach(th=>{
+    if(!q&&th.key!=="general"&&!labeled){ html+="<div class='chat-list-label'>"+esc(t("chatPeople"))+"</div>"; labeled=true; }
     const last=th.last||{};
     const prev=String(last.media_type||"")==="image"?t("chatPhoto"):String(last.media_type||"")==="video"?t("chatVideo"):String(last.body||"");
     const who=String(last.author_login||"").toLowerCase()===chatUserLogin?t("chatYou")+": ":"";
-    return "<div class='chat-thread"+(th.key===chatThread?" active":"")+"' onclick=\"chatOpenThread('"+jsq(th.key)+"')\">"
+    const line=prev?(who+prev):(th.key==="general"?(th.sub||""):((th.sub?th.sub+" · ":"")+t("chatStartChat")));
+    html+="<div class='chat-thread"+(th.key===chatThread?" active":"")+"' onclick=\"chatOpenThread('"+jsq(th.key)+"')\">"
       +"<div class='chat-avatar'>"+esc(th.avatar||"#")+"</div>"
       +"<div class='chat-thread-main'><div class='chat-thread-top'><span class='chat-thread-name'>"+esc(th.name)+"</span><span class='chat-thread-time'>"+esc(chatTime(last.created_at))+"</span></div>"
-      +"<div class='chat-thread-last'>"+esc(who)+esc(prev||th.sub||"")+"</div></div>"
+      +"<div class='chat-thread-last'>"+esc(line)+"</div></div>"
       +(chatThreadUnread(th)?"<span class='chat-unread' aria-hidden='true'></span>":"")+"</div>";
-  }).join("")||("<div class='chat-empty'>"+esc(t("chatNoThreads"))+"</div>");
+  });
+  box.innerHTML=html||("<div class='chat-empty'>"+esc(t("chatNoThreads"))+"</div>");
   chatRenderPeople();
   chatUpdateNav();
 }
 function chatRenderPeople(){
-  const box=document.getElementById("chatPeople"); if(!box) return;
-  const me=currentUser();
-  if(!chatCanDM(me)||!chatSchema){ box.style.display="none"; return; }
-  const q=String((document.getElementById("chatSearch")||{}).value||"").trim().toLowerCase();
-  const show=chatPicker||!!q;
-  if(!show){ box.style.display="none"; return; }
-  box.style.display="";
-  const staff=chatStaff().filter(u=>!q||String(u.name||u.login).toLowerCase().includes(q)||String(u.login).toLowerCase().includes(q));
-  box.innerHTML="<h4>"+esc(t("chatPeople"))+"</h4>"+(staff.map(u=>"<div class='chat-person' onclick=\"chatOpenThread('"+jsq(String(u.login).toLowerCase())+"')\"><div class='chat-avatar'>"+esc(chatInitial(u.name||u.login))+"</div><div><b>"+esc(u.name||u.login)+"</b><small>"+esc(chatRoleName(u))+"</small></div></div>").join("")||("<div class='chat-person'><span class='muted'>"+esc(t("nothingFound"))+"</span></div>"));
+  const box=document.getElementById("chatPeople");
+  if(box){ box.style.display="none"; box.innerHTML=""; }
 }
 function chatFilter(){ chatRenderThreads(); }
-function chatTogglePeople(){ if(!chatSchema) return; chatPicker=!chatPicker; chatRenderPeople(); }
+function chatTogglePeople(){ try{ const s=document.getElementById("chatSearch"); if(s){ s.focus(); s.select(); } }catch(e){} }
 function chatRenderHead(){
   const me=currentUser();
   const peer=document.getElementById("chatPeer"), sub=document.getElementById("chatPeerSub");
@@ -7072,11 +7072,30 @@ async function chatThreadsLoad(silent){
       const cur=byPeer[peer];
       if(!cur||String(m.created_at)>String(cur.created_at)||(String(m.created_at)===String(cur.created_at)&&Number(m.id)>Number(cur.id))) byPeer[peer]=m;
     });
-    chatThreads=[{key:"general",name:t("chatGeneral"),sub:t("chatAllStaff"),last:(Array.isArray(general)&&general[0])||null,avatar:"#"}];
-    Object.keys(byPeer).sort((a,b)=>String(byPeer[b].created_at).localeCompare(String(byPeer[a].created_at))).forEach(peer=>{
+    const generalThread={key:"general",name:t("chatGeneral"),sub:t("chatAllStaff"),last:(Array.isArray(general)&&general[0])||null,avatar:"#"};
+    const rows=[], seen={};
+    if(chatSchema){
+      chatStaff().forEach(u=>{
+        const key=String(u.login||"").toLowerCase();
+        if(!key||key===chatUserLogin||seen[key]) return;
+        seen[key]=1;
+        rows.push({key:key,name:u.name||u.login,sub:chatRoleName(u),last:byPeer[key]||null,avatar:chatInitial(u.name||u.login)});
+      });
+    }
+    Object.keys(byPeer).forEach(peer=>{
+      if(seen[peer]) return;
+      seen[peer]=1;
       const u=chatStaffUser(peer);
-      chatThreads.push({key:peer,name:(u&&(u.name||u.login))||peer,sub:u?chatRoleName(u):t("chatDirect"),last:byPeer[peer],avatar:chatInitial((u&&(u.name||u.login))||peer)});
+      rows.push({key:peer,name:(u&&(u.name||u.login))||peer,sub:u?chatRoleName(u):t("chatDirect"),last:byPeer[peer],avatar:chatInitial((u&&(u.name||u.login))||peer)});
     });
+    rows.sort((a,b)=>{
+      const al=a.last?String(a.last.created_at):"", bl=b.last?String(b.last.created_at):"";
+      if(al&&bl) return bl.localeCompare(al);
+      if(al) return -1;
+      if(bl) return 1;
+      return String(a.name).localeCompare(String(b.name),"ru");
+    });
+    chatThreads=[generalThread].concat(rows);
     chatRenderThreads();
   }catch(e){
     if(chatSchema&&e&&e.status===400){
