@@ -12,7 +12,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default" />
 <meta name="apple-mobile-web-app-title" content="RedBridge" />
 <meta name="theme-color" content="#C1272D" />
-<meta name="app-version" content="v5.5.49" />
+<meta name="app-version" content="v5.5.51" />
 <!-- Приложение — один инлайновый скрипт, поэтому script-src вынужденно
      допускает 'unsafe-inline'. Зато default-src/connect-src закрывают
      подгрузку чужих скриптов и утечку данных на сторонние хосты:
@@ -368,7 +368,7 @@ body::before{animation:none}
 /* ===== SMOOTH: лёгкие анимации + блюр в переходах ===== */
 .call-overlay{animation:none}
 .call-box .btn{animation:none}
-.view.active{animation:viewIn .45s var(--ease) both}
+.view.active:not(.view-in):not(.view-out){animation:viewIn .45s var(--ease) both}
 .overlay.open .modal{animation:popBlur .35s var(--ease) both}
 @keyframes popBlur{from{opacity:0;transform:scale(.94) translateY(14px);filter:blur(10px)}to{opacity:1;transform:none;filter:blur(0)}}
 #bellBtn.ring svg{animation:bellRing .6s var(--ease) 2;transform-origin:top center}
@@ -635,7 +635,7 @@ html.theme-dark .radio-target select{background:#151922;color:var(--ink);border-
   to{opacity:0;transform:translateX(calc(var(--rb-dir,8px) * -1));filter:blur(var(--page-blur))}
 }
 .view.view-in{animation:rbPageIn var(--page-slide-dur) var(--ease-smooth-out) both}
-.view.view-out{animation:rbPageOut var(--page-close-dur) var(--ease-smooth-out) both}
+.view.view-out{animation:rbPageOut var(--page-close-dur) var(--ease-smooth-out) both;pointer-events:none}
 
 /* лёгкий каскад карточек при входе раздела */
 @keyframes rbCardIn{
@@ -943,7 +943,7 @@ html.perf .st-call{animation:none!important}
 html.perf *{animation-duration:.28s}
 html.perf .call-box::before,html.perf .call-box::after{animation:none!important}
 html.perf .overlay.open .modal{animation:popIn .2s var(--ease) both}
-html.perf .view.active{animation:viewIn .24s var(--ease) both}
+html.perf .view.active:not(.view-in):not(.view-out){animation:viewIn .24s var(--ease) both}
 html.perf body{
   background:linear-gradient(180deg,#F7F8FA 0%,#FBEFF0 55%,#F7F8FA 100%);
   background-image:linear-gradient(180deg,#F7F8FA 0%,#FBEFF0 55%,#F7F8FA 100%);
@@ -1279,6 +1279,46 @@ html.standalone-ios body{overscroll-behavior-y:none}
 }
 @media(prefers-reduced-motion:reduce){.chat-shell *{scroll-behavior:auto!important}}
 
+/* ===== animation polish: одинаковые кнопки, без transition:all ===== */
+:root{--ui-press:90ms;--ui-fast:160ms;--ui-base:220ms}
+.btn,.ctab,.roles button,.btn-logout,.icon-btn,.chip-btn,.chat-attach,.chat-act,.login-form button,.modal .row button,.lib-item{
+  transition-property:transform,background-color,color,border-color,box-shadow,filter,opacity;
+  transition-duration:var(--ui-base),var(--ui-fast),var(--ui-fast),var(--ui-fast),var(--ui-base),var(--ui-fast),var(--ui-base);
+  transition-timing-function:var(--ease-smooth-out);
+}
+.btn,.ctab,.roles button,.btn-logout,.icon-btn,.chip-btn,.chat-attach,.chat-act{-webkit-tap-highlight-color:transparent}
+.btn{will-change:auto}
+.btn:active,.ctab:active,.roles button:active,.btn-logout:active,.icon-btn:active,.chip-btn:active,.chat-attach:active,.chat-act:active,.login-form button:active,.modal .row button:active{
+  transform:scale(.97);transition-duration:var(--ui-press);
+}
+.ctab.active,.roles button.active{
+  transition-property:background-color,color,border-color,box-shadow,transform;
+  transition-duration:var(--ui-base);
+  transition-timing-function:var(--ease-smooth-out);
+}
+.btn:disabled,.btn:disabled:hover{transform:none;filter:none}
+:where(.btn,.ctab,.roles button,.btn-logout,.icon-btn,.chip-btn,.chat-attach,.chat-act):focus-visible{
+  outline:2px solid rgba(193,39,45,.55);outline-offset:2px;
+}
+@media(hover:none){
+  .btn:hover,.ctab:hover,.roles button:hover,.btn-logout:hover,.icon-btn:hover,.btn-back:hover,.btn-go:hover{filter:none}
+  .logo:hover,.stat:hover,.lib-item:hover{transform:none}
+  .card:hover::before{transform:translateX(-130%)}
+  .btn-go::after{display:none}
+}
+@keyframes chatPaneIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes chatMsgIn{from{opacity:0;transform:translateY(10px) scale(.98)}to{opacity:1;transform:none}}
+@keyframes chatLightboxIn{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:none}}
+.chat-messages.chat-in{animation:chatPaneIn .22s var(--ease-smooth-out) both}
+.chat-msg.chat-in{animation:chatMsgIn .24s var(--ease-smooth-out) both}
+.chat-lightbox{animation:chatLightboxIn .18s var(--ease-smooth-out) both}
+.chat-thread{transition:background-color var(--ui-fast) var(--ease-smooth-out),transform var(--ui-fast) var(--ease-smooth-out)}
+.chat-thread:active{transform:scale(.99)}
+.chat-preview{animation:chatMsgIn .18s var(--ease-smooth-out) both}
+@media (prefers-reduced-motion:reduce){
+  .view.view-in,.view.view-out,.chat-messages.chat-in,.chat-msg.chat-in,.chat-lightbox,.chat-preview{animation:none!important}
+}
+
 </style>
 </head>
 <body>
@@ -1305,7 +1345,7 @@ html.standalone-ios body{overscroll-behavior-y:none}
       <div class="login-error" id="loginError" data-i18n="loginError">Неверный логин или пароль</div>
       <button type="submit" data-i18n="signIn">Войти</button>
     </form>
-    <div class="muted" id="loginVer" style="text-align:center;margin-top:14px">v5.5.49</div>
+    <div class="muted" id="loginVer" style="text-align:center;margin-top:14px">v5.5.51</div>
   </div>
 </div>
 
@@ -1929,16 +1969,19 @@ uz:{pushTitle:"Bildirishnomalar",teacher:"O'qituvchi",reception:"Qabulxona",exit
 Object.assign(I18N.ru,{chatTitle:"Общий чат",chatSubtitle:"Сообщения видны всем пользователям",chatPlaceholder:"Написать сообщение…",chatSend:"Отправить",chatEmpty:"Пока сообщений нет. Начните разговор.",chatConnecting:"Подключение…",chatOnline:"В сети",chatPolling:"Обновление чата",chatFail:"Не удалось загрузить чат. Проверьте подключение.",chatSendFail:"Не удалось отправить сообщение. Попробуйте ещё раз."});
 Object.assign(I18N.ru,{chats:"Чаты",chatGeneral:"Общий чат",chatAllStaff:"Все сотрудники",chatNew:"Новый чат",chatPeople:"Сотрудники",chatSearchPh:"Поиск чата или сотрудника...",chatNoThreads:"Пока нет личных чатов",chatMsgPh:"Написать сообщение…",chatAttach:"Прикрепить фото или видео",chatPhoto:"Фото",chatVideo:"Видео",chatSending:"Отправка…",chatUploadFail:"Не удалось загрузить файл",chatFileTooBig:"Файл слишком большой (фото до 8 МБ, видео до 50 МБ)",chatFileBadType:"Можно отправлять только фото и видео",chatRemove:"Убрать",chatMediaFail:"Не удалось открыть файл",chatEmptyThread:"Пока нет сообщений",chatYou:"Вы",chatDirect:"Личный чат",chatLegacy:"Личные чаты и медиа появятся после обновления сервера"});
 Object.assign(I18N.ru,{updReadonly:"Автообновление недоступно: приложение лежит в защищённой папке. Скачайте {v} и распакуйте в папку, доступную для записи (на Windows — например, C:\\RedBridge)."});
+Object.assign(I18N.ru,{updAdminHint:"Windows запросит права администратора. Это нужно, чтобы заменить файлы в Program Files.",updAdminCancel:"Обновление отменено: без прав администратора нельзя заменить файлы. Запустите обновление снова и подтвердите запрос Windows."});
 Object.assign(I18N.ru,{chatStartChat:"Начать переписку"});
 Object.assign(I18N.ru,{chatEdit:"Изменить",chatDelete:"Удалить",chatDeleteT:"Удалить сообщение?",chatDeleteConfirm:"Сообщение исчезнет у всех. Отменить нельзя.",chatDeleted:"Сообщение удалено",chatEdited:"изменено",chatEditFail:"Не удалось изменить сообщение",chatDeleteFail:"Не удалось удалить сообщение"});
 Object.assign(I18N.en,{chatTitle:"General chat",chatSubtitle:"Messages are visible to everyone",chatPlaceholder:"Write a message…",chatSend:"Send",chatEmpty:"No messages yet. Start the conversation.",chatConnecting:"Connecting…",chatOnline:"Online",chatPolling:"Chat updates",chatFail:"Could not load chat. Check your connection.",chatSendFail:"Could not send the message. Please try again."});
 Object.assign(I18N.en,{chats:"Chats",chatGeneral:"General chat",chatAllStaff:"All staff",chatNew:"New chat",chatPeople:"Staff",chatSearchPh:"Search chats or staff...",chatNoThreads:"No direct chats yet",chatMsgPh:"Write a message…",chatAttach:"Attach a photo or video",chatPhoto:"Photo",chatVideo:"Video",chatSending:"Sending…",chatUploadFail:"Could not upload the file",chatFileTooBig:"File is too large (photos up to 8 MB, videos up to 50 MB)",chatFileBadType:"Only photos and videos can be sent",chatRemove:"Remove",chatMediaFail:"Could not open the file",chatEmptyThread:"No messages yet",chatYou:"You",chatDirect:"Direct chat",chatLegacy:"Direct chats and media will appear after the server update"});
 Object.assign(I18N.en,{updReadonly:"Auto-update is unavailable: the app is in a protected folder. Download {v} and unpack it to a writable folder (on Windows, e.g. C:\\RedBridge)."});
+Object.assign(I18N.en,{updAdminHint:"Windows will ask for administrator permission. This is required to replace files in Program Files.",updAdminCancel:"Update cancelled: files cannot be replaced without administrator permission. Start the update again and confirm the Windows prompt."});
 Object.assign(I18N.en,{chatStartChat:"Start a chat"});
 Object.assign(I18N.en,{chatEdit:"Edit",chatDelete:"Delete",chatDeleteT:"Delete message?",chatDeleteConfirm:"The message disappears for everyone. This cannot be undone.",chatDeleted:"Message deleted",chatEdited:"edited",chatEditFail:"Could not edit the message",chatDeleteFail:"Could not delete the message"});
 Object.assign(I18N.uz,{chatTitle:"Umumiy chat",chatSubtitle:"Xabarlar barcha foydalanuvchilarga ko‘rinadi",chatPlaceholder:"Xabar yozing…",chatSend:"Yuborish",chatEmpty:"Hozircha xabarlar yo‘q. Suhbatni boshlang.",chatConnecting:"Ulanmoqda…",chatOnline:"Onlayn",chatPolling:"Chat yangilanmoqda",chatFail:"Chatni yuklab bo‘lmadi. Internetni tekshiring.",chatSendFail:"Xabar yuborilmadi. Qayta urinib ko‘ring."});
 Object.assign(I18N.uz,{chats:"Chatlar",chatGeneral:"Umumiy chat",chatAllStaff:"Barcha xodimlar",chatNew:"Yangi chat",chatPeople:"Xodimlar",chatSearchPh:"Chat yoki xodimni qidirish...",chatNoThreads:"Hozircha shaxsiy chatlar yo‘q",chatMsgPh:"Xabar yozing…",chatAttach:"Foto yoki video biriktirish",chatPhoto:"Foto",chatVideo:"Video",chatSending:"Yuborilmoqda…",chatUploadFail:"Faylni yuklab bo‘lmadi",chatFileTooBig:"Fayl juda katta (foto 8 MB gacha, video 50 MB gacha)",chatFileBadType:"Faqat foto va video yuborish mumkin",chatRemove:"Olib tashlash",chatMediaFail:"Faylni ochib bo‘lmadi",chatEmptyThread:"Hozircha xabarlar yo‘q",chatYou:"Siz",chatDirect:"Shaxsiy chat",chatLegacy:"Shaxsiy chatlar va media server yangilangandan so‘ng paydo bo‘ladi"});
 Object.assign(I18N.uz,{updReadonly:"Avtomatik yangilanish mavjud emas: ilova himoyalangan papkada. {v} ni yuklab, yozish mumkin bo‘lgan papkaga oching (Windows uchun, masalan, C:\\RedBridge)."});
+Object.assign(I18N.uz,{updAdminHint:"Windows administrator ruxsatini so‘raydi. Bu Program Files ichidagi fayllarni almashtirish uchun kerak.",updAdminCancel:"Yangilanish bekor qilindi: administrator ruxsatisiz fayllarni almashtirib bo‘lmaydi. Yangilanishni qayta boshlab, Windows so‘rovini tasdiqlang."});
 Object.assign(I18N.uz,{chatStartChat:"Suhbatni boshlash"});
 Object.assign(I18N.uz,{chatEdit:"Tahrirlash",chatDelete:"O‘chirish",chatDeleteT:"Xabarni o‘chirish?",chatDeleteConfirm:"Xabar hamma uchun yo‘qoladi. Buni qaytarib bo‘lmaydi.",chatDeleted:"Xabar o‘chirilgan",chatEdited:"tahrirlangan",chatEditFail:"Xabarni tahrirlab bo‘lmadi",chatDeleteFail:"Xabarni o‘chirib bo‘lmadi"});
 // Строки режима производительности — отдельно, чтобы не править гигантские
@@ -2332,7 +2375,7 @@ function resumeSession(login){
     }).catch(()=>{ try{ logout(); }catch(e){} });
   }catch(e){ try{ logout(); }catch(e){} }
 }
-const APP_VER="v5.5.49";
+const APP_VER="v5.5.51";
 var splashDone=false;
 function hideSplash(){ if(splashDone) return; splashDone=true; try{ document.getElementById("splash").classList.add("hide"); }catch(e){} try{ const v=document.getElementById("splashVid"); if(v) v.pause(); }catch(e){} setTimeout(()=>{ try{ document.getElementById("splash").remove(); }catch(e){} },600); }
 function setVer(){ try{ document.getElementById("jsok").textContent=APP_VER; }catch(e){} try{ var _lv=document.getElementById("loginVer"); if(_lv) _lv.textContent=APP_VER; }catch(e){} }
@@ -2530,10 +2573,42 @@ window.addEventListener("error", function(e){
 });
 
 // ---------- roles ----------
+function animReduced(){ try{ return !!(window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches); }catch(e){ return false; } }
+let viewAnimGen=0;
+function switchView(prevRole,nextRole,dir,done){
+  const oldV=document.getElementById("view-"+prevRole);
+  const newV=document.getElementById("view-"+nextRole);
+  if(!oldV||!newV||oldV===newV||animReduced()){
+    document.querySelectorAll(".view").forEach(v=>v.classList.remove("active","view-in","view-out"));
+    if(newV) newV.classList.add("active");
+    try{ done(); }catch(e){}
+    return;
+  }
+  const gen=++viewAnimGen;
+  document.querySelectorAll(".view").forEach(v=>{ if(v!==oldV&&v!==newV) v.classList.remove("active","view-in","view-out"); });
+  const d=(dir<0?-1:1)*8;
+  try{
+    oldV.style.setProperty("--rb-dir",d+"px");
+    oldV.classList.remove("view-in");
+    oldV.classList.add("view-out");
+  }catch(e){}
+  setTimeout(()=>{
+    if(gen!==viewAnimGen) return;
+    try{
+      oldV.classList.remove("active","view-out");
+      newV.classList.add("active");
+      newV.style.setProperty("--rb-dir",(d>0?8:-8)+"px");
+      newV.classList.add("view-in");
+    }catch(e){}
+    try{ done(); }catch(e){}
+    setTimeout(()=>{ if(gen===viewAnimGen){ try{ newV.classList.remove("view-in"); }catch(e){} } },300);
+  },130);
+}
 document.querySelectorAll("#roles button").forEach(x=>{
   x.onclick=()=>{
     if(x.dataset.role===state.role) return;
     try{ const me0=currentUser(); const al=me0?(ROLE_TABS[me0.role]||[]):[]; if(al.indexOf(x.dataset.role)<0) return; }catch(e){ return; }
+    const prevRole=state.role;
     try{ micOff(); }catch(e){}
     document.querySelectorAll("#roles button").forEach(y=>y.classList.remove("active"));
     x.classList.add("active");
@@ -2543,9 +2618,10 @@ document.querySelectorAll("#roles button").forEach(x=>{
     // он раньше оставался включённым и возвращался вместе с вкладкой.
     if(state.role!=="teacher"){ state.seventh=false; seventhFriday=false; }
     syncClassBar();
-    document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
-    const vw0=document.getElementById("view-"+state.role); if(vw0) vw0.classList.add("active");
-    renderAll();
+    const btns=[].slice.call(document.querySelectorAll("#roles button")).filter(b=>b.style.display!=="none");
+    const pi=btns.findIndex(b=>b.dataset.role===prevRole), ni=btns.findIndex(b=>b.dataset.role===state.role);
+    const dir=(pi>=0&&ni>=0&&ni<pi)?-1:1;
+    switchView(prevRole,state.role,dir,()=>renderAll());
   };
 });
 function scrollToClasses(){ document.getElementById("classBar").scrollIntoView({behavior:"smooth"}); }
@@ -2576,6 +2652,7 @@ function renderClassTabs(){
 function switchAnim(fn, dir){
   // transitions.dev / page side-by-side: старый экран уезжает в одну сторону
   // с blur, новый приезжает с другой. dir: 1 — вперёд, -1 — назад.
+  if(animReduced()){ try{ fn(); }catch(e){ try{console.error(e);}catch(_){} } return; }
   const v=document.querySelector(".view.active");
   if(!v){ try{ fn(); }catch(e){ try{console.error(e);}catch(_){} } return; }
   const d=(dir===-1?-1:1)*8;
@@ -6776,7 +6853,7 @@ async function supaReq(path, opts){
 async function supaReqSafe(path, opts){ try{ return await supaReq(path, opts); }catch(e){ return null; } }
 // ---------- чаты: общий + личные переписки ----------
 var chatUserLogin="", chatPollT=null, chatBusy=false, chatRealtime=false;
-var chatRows=[], chatThreads=[], chatThread="general", chatSeen={}, chatSchema=true;
+var chatRows=[], chatThreads=[], chatThread="general", chatSeen={}, chatSchema=true, chatLastShownId=0;
 var chatThreadsBusy=false, chatThreadsAgain=false, chatPicker=false, chatAttach=null, chatSending=false;
 var chatMediaUrls={}, chatMediaLoading={};
 function chatSetStatus(text){ const el=document.getElementById("chatStatus"); if(el) el.textContent=text||""; }
@@ -6915,6 +6992,14 @@ function chatRender(){
       +(acts?("<span class='chat-actions'>"+acts+"</span>"):"")+"</div></article>";
   }).join("");
   if(wasBottom) box.scrollTop=box.scrollHeight;
+  try{
+    const newest=chatRows.length?Number(chatRows[chatRows.length-1].id)||0:0;
+    if(newest&&chatLastShownId&&newest>chatLastShownId&&!animReduced()){
+      const el=box.querySelector(".chat-msg[data-id='"+newest+"']");
+      if(el){ el.classList.add("chat-in"); setTimeout(()=>{ try{ el.classList.remove("chat-in"); }catch(e){} },280); }
+    }
+    chatLastShownId=newest;
+  }catch(e){}
   chatRows.forEach(m=>{ if(!m.deleted_at&&m.media_path&&m.media_type==="image"&&!chatMediaUrls[m.media_path]) chatLoadImage(m.id,m.media_path); });
 }
 async function chatLoadImage(id,path){
@@ -7218,9 +7303,14 @@ async function chatDeleteSubmit(id){
 function chatOpenThread(key){
   if(key!=="general"&&!chatCanDM(currentUser())) return;
   chatThread=String(key||"general");
+  chatLastShownId=0;
   chatSeen[chatThread]=new Date().toISOString(); chatSeenSave();
   chatPicker=false; chatRows=[]; chatAttachClear(true); chatShowError(""); chatNote(t("chatLegacy"),!chatSchema);
   try{ document.getElementById("chatShell").classList.add("chat-open"); }catch(e){}
+  try{
+    const box=document.getElementById("chatMessages");
+    if(box&&!animReduced()){ box.classList.remove("chat-in"); void box.offsetWidth; box.classList.add("chat-in"); setTimeout(()=>{ try{ box.classList.remove("chat-in"); }catch(e){} },280); }
+  }catch(e){}
   chatRenderHead(); chatRenderThreads(); chatRender();
   chatLoad(false);
   try{ const box=document.getElementById("chatMessages"); if(box) box.scrollTop=box.scrollHeight; }catch(e){}
@@ -7228,7 +7318,7 @@ function chatOpenThread(key){
 function chatBack(){ try{ document.getElementById("chatShell").classList.remove("chat-open"); }catch(e){} }
 function chatSetRealtime(on){ chatRealtime=!!on; if(chatUserLogin) chatSetStatus(chatRealtime?t("chatOnline"):t("chatPolling")); }
 function chatStop(){
-  chatUserLogin=""; chatRealtime=false; chatRows=[]; chatThreads=[]; chatBusy=false; chatThreadsBusy=false; chatThreadsAgain=false;
+  chatUserLogin=""; chatRealtime=false; chatRows=[]; chatThreads=[]; chatBusy=false; chatThreadsBusy=false; chatThreadsAgain=false; chatLastShownId=0;
   chatThread="general"; chatPicker=false; chatSending=false;
   try{ if(chatPollT) clearInterval(chatPollT); }catch(e){} chatPollT=null;
   try{ Object.keys(chatMediaUrls).forEach(k=>{ try{ URL.revokeObjectURL(chatMediaUrls[k]); }catch(e){} }); }catch(e){}
@@ -8228,7 +8318,7 @@ function updBanner(){
     const b=document.getElementById("updBanner"); if(!b) return;
     if(!updInfo){ b.style.display="none"; return; }
     updManual=(updInfo.canAuto===false);
-    const ro=(updInfo.writable===false);
+    const ro=(updInfo.writable===false&&!updInfo.canElevate);
     const txt=document.getElementById("updText");
     if(txt) txt.textContent=ro?t("updReadonly",{v:updInfo.version}):(updManual?t("updBannerManual",{v:updInfo.version}):t("updBanner",{v:updInfo.version}));
     const act=document.getElementById("updAct");
@@ -8288,10 +8378,12 @@ function openUpdate(){
   if(!updInfo){ updateCheck(false); return; }
   const notes=updNotesText(updInfo).split("\n").filter(Boolean)
     .map(x=>"<div class='club-sub'>• "+esc(x)+"</div>").join("");
+  const adminHint=(updInfo.writable===false&&updInfo.canElevate)?"<div class='muted' style='margin-bottom:10px'>"+esc(t("updAdminHint"))+"</div>":"";
   openModal({
     title:t("updTitle",{v:updInfo.version}),
     sub:esc(updInfo.date||""),
     fields:"<div class='muted' style='margin-bottom:10px'>"+t("updHint")+"</div>"
+      +adminHint
       +(notes?("<div style='margin-bottom:10px'><b>"+t("updNotes")+"</b>"+notes+"</div>"):"")
       +"<div id='updBar' class='muted'></div>",
     okText:t("updDo"),
@@ -8317,12 +8409,16 @@ async function runUpdate(){
     // 3. Скачивание, проверка подписи и установка — одним вызовом,
     // без промежутка, в котором временный файл мог исчезнуть.
     const inst=await window.rbSecure.updateApply(updInfo.asset);
-    if(!inst||!inst.ok) throw new Error((inst&&inst.error)||"install");
+    if(!inst||!inst.ok){ const err=new Error((inst&&inst.error)||"install"); err.code=(inst&&inst.code)||""; throw err; }
     say(t("updRestart"));
   }catch(e){
     const msg=String((e&&e.message)||e);
-    say(t("updFail",{e:msg}));
-    toast(t("updFail",{e:msg}), true);
+    if((e&&e.code)==="ELEVATION_CANCELED"||msg==="elevation-canceled"){
+      say(t("updAdminCancel")); toast(t("updAdminCancel"),true);
+    }else{
+      say(t("updFail",{e:msg}));
+      toast(t("updFail",{e:msg}), true);
+    }
   }finally{
     updBusy=false;
   }
