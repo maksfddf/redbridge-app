@@ -12,7 +12,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default" />
 <meta name="apple-mobile-web-app-title" content="RedBridge" />
 <meta name="theme-color" content="#C1272D" />
-<meta name="app-version" content="v5.5.43" />
+<meta name="app-version" content="v5.5.44" />
 <!-- Приложение — один инлайновый скрипт, поэтому script-src вынужденно
      допускает 'unsafe-inline'. Зато default-src/connect-src закрывают
      подгрузку чужих скриптов и утечку данных на сторонние хосты:
@@ -1224,7 +1224,7 @@ html.standalone-ios body{overscroll-behavior-y:none}
 .chat-thread-time{margin-left:auto;font-size:11px;color:var(--muted);white-space:nowrap}
 .chat-thread-last{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
 .chat-unread{width:9px;height:9px;border-radius:50%;background:var(--red);flex:0 0 9px}
-.chat-people{padding:4px 8px 12px;border-top:1px solid var(--line-solid)}
+.chat-people{padding:4px 8px 12px;border-top:1px solid var(--line-solid);max-height:45%;overflow:auto}
 .chat-people h4{margin:10px 6px 6px;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
 .chat-person{display:flex;align-items:center;gap:10px;padding:8px;border-radius:10px;cursor:pointer}
 .chat-person:hover{background:rgba(193,39,45,.06)}
@@ -1298,7 +1298,7 @@ html.standalone-ios body{overscroll-behavior-y:none}
       <div class="login-error" id="loginError" data-i18n="loginError">Неверный логин или пароль</div>
       <button type="submit" data-i18n="signIn">Войти</button>
     </form>
-    <div class="muted" id="loginVer" style="text-align:center;margin-top:14px">v5.5.43</div>
+    <div class="muted" id="loginVer" style="text-align:center;margin-top:14px">v5.5.44</div>
   </div>
 </div>
 
@@ -1614,7 +1614,7 @@ html.standalone-ios body{overscroll-behavior-y:none}
           <button class="chat-attach" id="chatAttachBtn" type="button" onclick="chatPickFile()" aria-label="Прикрепить фото или видео" data-i18n-aria="chatAttach" title="Фото или видео">
             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.4 11.6l-9.2 9.2a6 6 0 0 1-8.5-8.5l9.2-9.2a4 4 0 0 1 5.7 5.7l-9.2 9.2a2 2 0 0 1-2.8-2.8l8.5-8.5"/></svg>
           </button>
-          <textarea id="chatInput" rows="1" maxlength="2000" placeholder="Написать сообщение…" data-i18n-ph="chatMsgPh" aria-label="Сообщение"></textarea>
+          <textarea id="chatInput" rows="1" maxlength="2000" placeholder="Написать сообщение…" data-i18n-ph="chatMsgPh" aria-label="Сообщение" onkeydown="chatKey(event)"></textarea>
           <button class="btn btn-go btn-sm" type="submit" data-i18n="chatSend">Отправить</button>
         </form>
         <input type="file" id="chatFile" accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,video/quicktime" style="display:none" onchange="chatFileChosen(this)" />
@@ -2320,7 +2320,7 @@ function resumeSession(login){
     }).catch(()=>{ try{ logout(); }catch(e){} });
   }catch(e){ try{ logout(); }catch(e){} }
 }
-const APP_VER="v5.5.43";
+const APP_VER="v5.5.44";
 var splashDone=false;
 function hideSplash(){ if(splashDone) return; splashDone=true; try{ document.getElementById("splash").classList.add("hide"); }catch(e){} try{ const v=document.getElementById("splashVid"); if(v) v.pause(); }catch(e){} setTimeout(()=>{ try{ document.getElementById("splash").remove(); }catch(e){} },600); }
 function setVer(){ try{ document.getElementById("jsok").textContent=APP_VER; }catch(e){} try{ var _lv=document.getElementById("loginVer"); if(_lv) _lv.textContent=APP_VER; }catch(e){} }
@@ -2455,6 +2455,7 @@ function audit(action, detail){
     supaReq("audit",{method:"POST",body:JSON.stringify([{action:action,detail:detail||{}}])}).catch(()=>{});
   }catch(e){}
 }
+function syncRadioFab(){ try{ const rf=document.getElementById("radioFab"); if(rf) rf.style.display=(currentUser()&&state.role!=="chats")?"":"none"; }catch(e){} }
 function syncClassBar(){
   const me=currentUser(); if(!me){ try{document.getElementById("classBar").style.display="none";}catch(e){} return; }
   const hideFor=["reception","log","med","guest","duty","chats"];
@@ -2486,6 +2487,7 @@ function applyRole(me){
     if(on&&_sub&&b.dataset.role==="teacher"){ b.textContent=t("substitute"); b.removeAttribute("data-i18n"); }
   });
   state.role=allowed.includes(state.role)?state.role:allowed[0];
+  syncRadioFab();
   if(_sub&&state.role==="teacher"){ state.seventh=false; seventhFriday=false; }
   document.querySelectorAll("#roles button").forEach(b=>b.classList.toggle("active",b.dataset.role===state.role));
   if(me.role==="teacher"){ const mc=myClasses(); if(mc.indexOf(state.cls)<0) state.cls=mc[0]||state.cls; }
@@ -2524,6 +2526,7 @@ document.querySelectorAll("#roles button").forEach(x=>{
     document.querySelectorAll("#roles button").forEach(y=>y.classList.remove("active"));
     x.classList.add("active");
     state.role=x.dataset.role;
+    syncRadioFab();
     // «7 урок» — режим внутри экрана класса. При уходе на другую вкладку
     // он раньше оставался включённым и возвращался вместе с вкладкой.
     if(state.role!=="teacher"){ state.seventh=false; seventhFriday=false; }
@@ -6948,6 +6951,13 @@ function chatPickFile(){
   const inp=document.getElementById("chatFile"); if(!inp) return;
   inp.value=""; inp.click();
 }
+function chatKey(e){
+  try{
+    if(!e) return;
+    if(e.isComposing||e.keyCode===229) return;
+    if(e.key==="Enter"&&!e.shiftKey&&!e.ctrlKey&&!e.altKey&&!e.metaKey){ e.preventDefault(); chatSend(); }
+  }catch(_){}
+}
 async function chatCompressImage(file){
   const max=1600;
   const url=URL.createObjectURL(file);
@@ -7063,7 +7073,7 @@ async function chatThreadsLoad(silent){
       if(!cur||String(m.created_at)>String(cur.created_at)||(String(m.created_at)===String(cur.created_at)&&Number(m.id)>Number(cur.id))) byPeer[peer]=m;
     });
     chatThreads=[{key:"general",name:t("chatGeneral"),sub:t("chatAllStaff"),last:(Array.isArray(general)&&general[0])||null,avatar:"#"}];
-    Object.keys(byPeer).sort((a,b)=>chatName(a).localeCompare(chatName(b),"ru")).forEach(peer=>{
+    Object.keys(byPeer).sort((a,b)=>String(byPeer[b].created_at).localeCompare(String(byPeer[a].created_at))).forEach(peer=>{
       const u=chatStaffUser(peer);
       chatThreads.push({key:peer,name:(u&&(u.name||u.login))||peer,sub:u?chatRoleName(u):t("chatDirect"),last:byPeer[peer],avatar:chatInitial((u&&(u.name||u.login))||peer)});
     });
@@ -7162,6 +7172,7 @@ function chatSetUser(me){
 function renderChats(){
   const me=currentUser();
   if(!chatAllowed(me)){ return; }
+  chatSeen[chatThread]=new Date().toISOString(); chatSeenSave();
   chatRenderHead(); chatRenderThreads(); chatRender();
   if(!chatThreads.length&&!chatThreadsBusy) chatThreadsLoad(true);
   if(!chatRows.length&&!chatBusy) chatLoad(true);
