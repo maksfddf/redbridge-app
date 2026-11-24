@@ -12,7 +12,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default" />
 <meta name="apple-mobile-web-app-title" content="RedBridge" />
 <meta name="theme-color" content="#C1272D" />
-<meta name="app-version" content="v5.5.47" />
+<meta name="app-version" content="v5.5.48" />
 <!-- Приложение — один инлайновый скрипт, поэтому script-src вынужденно
      допускает 'unsafe-inline'. Зато default-src/connect-src закрывают
      подгрузку чужих скриптов и утечку данных на сторонние хосты:
@@ -1299,7 +1299,7 @@ html.standalone-ios body{overscroll-behavior-y:none}
       <div class="login-error" id="loginError" data-i18n="loginError">Неверный логин или пароль</div>
       <button type="submit" data-i18n="signIn">Войти</button>
     </form>
-    <div class="muted" id="loginVer" style="text-align:center;margin-top:14px">v5.5.47</div>
+    <div class="muted" id="loginVer" style="text-align:center;margin-top:14px">v5.5.48</div>
   </div>
 </div>
 
@@ -2323,7 +2323,7 @@ function resumeSession(login){
     }).catch(()=>{ try{ logout(); }catch(e){} });
   }catch(e){ try{ logout(); }catch(e){} }
 }
-const APP_VER="v5.5.47";
+const APP_VER="v5.5.48";
 var splashDone=false;
 function hideSplash(){ if(splashDone) return; splashDone=true; try{ document.getElementById("splash").classList.add("hide"); }catch(e){} try{ const v=document.getElementById("splashVid"); if(v) v.pause(); }catch(e){} setTimeout(()=>{ try{ document.getElementById("splash").remove(); }catch(e){} },600); }
 function setVer(){ try{ document.getElementById("jsok").textContent=APP_VER; }catch(e){} try{ var _lv=document.getElementById("loginVer"); if(_lv) _lv.textContent=APP_VER; }catch(e){} }
@@ -6768,7 +6768,7 @@ async function supaReqSafe(path, opts){ try{ return await supaReq(path, opts); }
 // ---------- чаты: общий + личные переписки ----------
 var chatUserLogin="", chatPollT=null, chatBusy=false, chatRealtime=false;
 var chatRows=[], chatThreads=[], chatThread="general", chatSeen={}, chatSchema=true;
-var chatThreadsBusy=false, chatPicker=false, chatAttach=null, chatSending=false;
+var chatThreadsBusy=false, chatThreadsAgain=false, chatPicker=false, chatAttach=null, chatSending=false;
 var chatMediaUrls={}, chatMediaLoading={};
 function chatSetStatus(text){ const el=document.getElementById("chatStatus"); if(el) el.textContent=text||""; }
 function chatShowError(text){ const el=document.getElementById("chatError"); if(!el) return; el.textContent=text||""; el.style.display=text?"":"none"; }
@@ -7050,7 +7050,8 @@ async function chatLoad(silent){
 }
 async function chatThreadsLoad(silent){
   const me=currentUser();
-  if(!chatAllowed(me)||!supaTokenSync()||chatThreadsBusy) return;
+  if(!chatAllowed(me)||!supaTokenSync()) return;
+  if(chatThreadsBusy){ chatThreadsAgain=true; return; }
   chatThreadsBusy=true;
   let retry=false;
   try{
@@ -7103,6 +7104,7 @@ async function chatThreadsLoad(silent){
     }
   }finally{ chatThreadsBusy=false; }
   if(retry) return chatThreadsLoad(silent);
+  if(chatThreadsAgain){ chatThreadsAgain=false; return chatThreadsLoad(silent); }
 }
 async function chatSend(event){
   if(event&&event.preventDefault) event.preventDefault();
@@ -7156,7 +7158,7 @@ function chatOpenThread(key){
 function chatBack(){ try{ document.getElementById("chatShell").classList.remove("chat-open"); }catch(e){} }
 function chatSetRealtime(on){ chatRealtime=!!on; if(chatUserLogin) chatSetStatus(chatRealtime?t("chatOnline"):t("chatPolling")); }
 function chatStop(){
-  chatUserLogin=""; chatRealtime=false; chatRows=[]; chatThreads=[]; chatBusy=false; chatThreadsBusy=false;
+  chatUserLogin=""; chatRealtime=false; chatRows=[]; chatThreads=[]; chatBusy=false; chatThreadsBusy=false; chatThreadsAgain=false;
   chatThread="general"; chatPicker=false; chatSending=false;
   try{ if(chatPollT) clearInterval(chatPollT); }catch(e){} chatPollT=null;
   try{ Object.keys(chatMediaUrls).forEach(k=>{ try{ URL.revokeObjectURL(chatMediaUrls[k]); }catch(e){} }); }catch(e){}
