@@ -12,7 +12,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default" />
 <meta name="apple-mobile-web-app-title" content="RedBridge" />
 <meta name="theme-color" content="#C1272D" />
-<meta name="app-version" content="v5.5.46" />
+<meta name="app-version" content="v5.5.47" />
 <!-- Приложение — один инлайновый скрипт, поэтому script-src вынужденно
      допускает 'unsafe-inline'. Зато default-src/connect-src закрывают
      подгрузку чужих скриптов и утечку данных на сторонние хосты:
@@ -1299,7 +1299,7 @@ html.standalone-ios body{overscroll-behavior-y:none}
       <div class="login-error" id="loginError" data-i18n="loginError">Неверный логин или пароль</div>
       <button type="submit" data-i18n="signIn">Войти</button>
     </form>
-    <div class="muted" id="loginVer" style="text-align:center;margin-top:14px">v5.5.46</div>
+    <div class="muted" id="loginVer" style="text-align:center;margin-top:14px">v5.5.47</div>
   </div>
 </div>
 
@@ -2323,7 +2323,7 @@ function resumeSession(login){
     }).catch(()=>{ try{ logout(); }catch(e){} });
   }catch(e){ try{ logout(); }catch(e){} }
 }
-const APP_VER="v5.5.46";
+const APP_VER="v5.5.47";
 var splashDone=false;
 function hideSplash(){ if(splashDone) return; splashDone=true; try{ document.getElementById("splash").classList.add("hide"); }catch(e){} try{ const v=document.getElementById("splashVid"); if(v) v.pause(); }catch(e){} setTimeout(()=>{ try{ document.getElementById("splash").remove(); }catch(e){} },600); }
 function setVer(){ try{ document.getElementById("jsok").textContent=APP_VER; }catch(e){} try{ var _lv=document.getElementById("loginVer"); if(_lv) _lv.textContent=APP_VER; }catch(e){} }
@@ -7437,6 +7437,25 @@ function supaState(s){
   window.__supaState=s||"";
   if(el) el.textContent=s==="ok"?t("supaOk"):s==="fail"?t("supaFail"):"";
 }
+// Слияние облачного списка пользователей в локальный. Учителю RLS отдаёт
+// все строки role='teacher' плюс свою — это и есть контакт-лист чатов.
+// Раньше не-админ обновлял только свою строку, поэтому новые учителя
+// не появлялись в контактах до полного сброса кеша.
+function mergeUsersCloud(rows){
+  const norm=u=>({login:u.login,name:u.name||"",role:u.role||"teacher",cls:u.cls||"1-А",classes:(Array.isArray(u.classes)&&u.classes.length?u.classes.map(String):[String(u.cls||"1-А")]),subjects:(Array.isArray(u.subjects)?u.subjects.map(String):[])});
+  let merged=false;
+  (Array.isArray(rows)?rows:[]).forEach(r0=>{
+    if(!r0||!r0.login) return;
+    const m=norm(r0);
+    const i=(users||[]).findIndex(x=>String(x.login)===String(m.login));
+    if(i>=0){
+      if(JSON.stringify(users[i])!==JSON.stringify(m)){ users[i]=m; merged=true; }
+    }else{
+      users.push(m); merged=true;
+    }
+  });
+  return merged;
+}
 async function supaPull(){
   if(supaMode()!=="cloud") return;
   try{ if(document.hidden) return; }catch(e){}
@@ -7509,7 +7528,6 @@ async function supaPull(){
     });
     // us загружен выше (Promise.all)
     if(us){
-      // RLS: не-админ видит только свою строку — полный список тянет только админ.
       const me0=currentUser();
       if(me0&&me0.role==="admin"){
         const nu=us.filter(u=>u&&u.login).map(u=>({login:u.login,name:u.name||"",role:u.role||"teacher",cls:u.cls||"1-А",classes:(Array.isArray(u.classes)&&u.classes.length?u.classes.map(String):[String(u.cls||"1-А")]),subjects:(Array.isArray(u.subjects)?u.subjects.map(String):[])}));
@@ -7518,17 +7536,15 @@ async function supaPull(){
           supaUsersSig=sig;
           users=nu;
           const me=currentUser();
-          if(!me){ logout(); } else { applyRole(me); }
+          if(!me){ logout(); } else { applyRole(me); try{ chatThreadsLoad(true); }catch(e){} }
           changed=true;
         }
-      }else if(us.length===1&&us[0]&&us[0].login){
-        // Своя строка: обновить имя/роль/класс, пароли из облака не тянем.
-        const r0=us[0];
-        const i=users.findIndex(x=>x.login===r0.login);
-        const merged={login:r0.login,name:r0.name||"",role:r0.role||"teacher",cls:r0.cls||"1-А",classes:(Array.isArray(r0.classes)&&r0.classes.length?r0.classes.map(String):[String(r0.cls||"1-А")]),subjects:(Array.isArray(r0.subjects)?r0.subjects.map(String):[])};
-        if(i>=0) users[i]=merged; else users.push(merged);
+      }else if(us.length&&mergeUsersCloud(us)){
+        // Учитель видит все строки учителей (RLS) — обновляем контакты
+        // сразу, а не ждём полного сброса локального кеша.
         const me=currentUser();
-        if(!me){ logout(); } else { applyRole(me); }
+        if(!me){ logout(); } else { applyRole(me); try{ chatThreadsLoad(true); }catch(e){} }
+        changed=true;
       }
     }
     // md загружен выше (Promise.all)
