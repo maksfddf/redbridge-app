@@ -2268,7 +2268,7 @@ function seed(){
 
 function saveData(loud){
   try{
-    localStorage.setItem("rb_data_v4", JSON.stringify({v:APP_VER,CLASSES, db, teachers, lessons, calls, logs, board, boards, codeCounter, teams, clubs, medReqs, dispatchCache, subsCache, tablesCache, ttDayCache, users:(users||[]).map(u=>({login:u.login,name:u.name,role:u.role,cls:u.cls,classes:u.classes,subjects:u.subjects}))}));
+    localStorage.setItem("rb_data_v4", JSON.stringify({v:APP_VER,CLASSES, db, teachers, lessons, calls, logs, board, boards, codeCounter, teams, clubs, medReqs, dispatchCache, subsCache, tablesCache, ttDayCache, users:(users||[]).map(u=>({login:u.login,name:u.name,role:u.role,cls:u.cls,classes:u.classes,subjects:u.subjects,roles:u.roles}))}));
     if(loud) toast(t("saved"), true);
     supaPushSoon();
   }catch(e){ if(loud) toast(t("saveError")); }
@@ -2285,7 +2285,7 @@ function loadData(){
     }
     if(!d||d.v!==APP_VER) return false; // кэш чужой сборки — тянем свежее из облака
     CLASSES=[...DEFAULT_CLASSES]; db=d.db||{};
-  try{ dispatchCache=d.dispatchCache||{date:"",active:false,by:""}; subsCache=d.subsCache||{date:"",list:[]}; try{ tablesCache=d.tablesCache||{}; try{ ttDayCache=d.ttDayCache||{date:"",entries:[]}; }catch(e){ ttDayCache={date:"",entries:[]}; } }catch(e){ tablesCache={}; } }catch(e){} teachers=d.teachers||{}; lessons=d.lessons||{}; calls=d.calls||[]; logs=d.logs||[]; board=d.board||""; try{ boards=d.boards||{}; }catch(e){ boards={}; } codeCounter=d.codeCounter||500; teams=d.teams||[]; try{ clubs=Array.isArray(d.clubs)?d.clubs:[]; }catch(e){ clubs=[]; } medReqs=d.medReqs||[]; users=fileUsers(); const seen={}; users.forEach(u=>{ seen[u.login]=u; }); (Array.isArray(d.users)?d.users:[]).forEach(u=>{ if(u&&u.login) seen[u.login]={login:u.login,name:u.name||u.login,role:u.role||"teacher",cls:u.cls||"1-А",classes:(Array.isArray(u.classes)&&u.classes.length?u.classes.map(String):[String(u.cls||"1-А")]),subjects:(Array.isArray(u.subjects)?u.subjects.map(String):[])}; }); const del=getDeleted(); users=Object.values(seen).filter(u=>del.indexOf(u.login)<0); teams.forEach(tm=>{ tm.members=(tm.members||[]).map(m=>(typeof m==="string"?{cls:tm.cls,id:m}:m)); });
+  try{ dispatchCache=d.dispatchCache||{date:"",active:false,by:""}; subsCache=d.subsCache||{date:"",list:[]}; try{ tablesCache=d.tablesCache||{}; try{ ttDayCache=d.ttDayCache||{date:"",entries:[]}; }catch(e){ ttDayCache={date:"",entries:[]}; } }catch(e){ tablesCache={}; } }catch(e){} teachers=d.teachers||{}; lessons=d.lessons||{}; calls=d.calls||[]; logs=d.logs||[]; board=d.board||""; try{ boards=d.boards||{}; }catch(e){ boards={}; } codeCounter=d.codeCounter||500; teams=d.teams||[]; try{ clubs=Array.isArray(d.clubs)?d.clubs:[]; }catch(e){ clubs=[]; } medReqs=d.medReqs||[]; users=fileUsers(); const seen={}; users.forEach(u=>{ seen[u.login]=u; }); (Array.isArray(d.users)?d.users:[]).forEach(u=>{ if(u&&u.login) seen[u.login]={login:u.login,name:u.name||u.login,role:u.role||"teacher",cls:u.cls||"1-А",classes:(Array.isArray(u.classes)&&u.classes.length?u.classes.map(String):[String(u.cls||"1-А")]),subjects:(Array.isArray(u.subjects)?u.subjects.map(String):[]),roles:(Array.isArray(u.roles)?u.roles.map(String):[])}; }); const del=getDeleted(); users=Object.values(seen).filter(u=>del.indexOf(u.login)<0); teams.forEach(tm=>{ tm.members=(tm.members||[]).map(m=>(typeof m==="string"?{cls:tm.cls,id:m}:m)); });
     CLASSES.forEach(c=>{ if(!Array.isArray(db[c])) db[c]=[]; });
     CLASSES.forEach(c=>{ teachers[c]=teachers[c]||TEACHER_PLACEHOLDER; });
     return true;
@@ -2294,8 +2294,19 @@ function loadData(){
 
 // ---------- auth (только Supabase Auth, локальных паролей нет) ----------
 const ROLE_TABS={teacher:["teacher","chats","utils"],reception:["reception","log","chats","utils"],exit:["exit","chats","utils"],med:["med","chats","utils"],ceo:["reception","log","teacher","chats","utils"],guest:["teacher","chats","utils"],duty:["duty","chats","utils"],admin:["teacher","reception","exit","med","utils","chats","log"]};
+// Основная роль задаёт профиль, roles добавляет отдельные права (например
+// teacher + duty: классы остаются учительскими, плюс вкладка «Дежурство»).
+function roleTabs(me){
+  const out=[];
+  const add=r=>{ (ROLE_TABS[r]||[]).forEach(x=>{ if(out.indexOf(x)<0) out.push(x); }); };
+  if(me){ add(me.role); (Array.isArray(me.roles)?me.roles:[]).forEach(add); }
+  return out;
+}
+function hasRole(me, role){
+  return !!me && (String(me.role||"")===String(role) || (Array.isArray(me.roles)&&me.roles.map(String).indexOf(String(role))>=0));
+}
 const WALKIE_ROLES=["teacher","reception","exit","admin","ceo"];
-function fileUsers(){ try{ return (typeof USERS_DB!=="undefined"&&Array.isArray(USERS_DB))?USERS_DB.filter(x=>x&&x.login).map(x=>({login:String(x.login),name:String(x.name||x.login),role:String(x.role||"teacher"),cls:String(x.cls||"1-А"),classes:(Array.isArray(x.classes)&&x.classes.length?x.classes.map(String):[String(x.cls||"1-А")]),subjects:(Array.isArray(x.subjects)?x.subjects.map(String):[])})) : []; }catch(e){ return []; } }
+function fileUsers(){ try{ return (typeof USERS_DB!=="undefined"&&Array.isArray(USERS_DB))?USERS_DB.filter(x=>x&&x.login).map(x=>({login:String(x.login),name:String(x.name||x.login),role:String(x.role||"teacher"),cls:String(x.cls||"1-А"),classes:(Array.isArray(x.classes)&&x.classes.length?x.classes.map(String):[String(x.cls||"1-А")]),subjects:(Array.isArray(x.subjects)?x.subjects.map(String):[]),roles:(Array.isArray(x.roles)?x.roles.map(String):[])})) : []; }catch(e){ return []; } }
 function seedUsers(){ return fileUsers(); }
 function getDeleted(){ try{ const d=JSON.parse(localStorage.getItem("rb_deleted_users")||"[]"); return Array.isArray(d)?d:[]; }catch(e){ return []; } }
 function setDeleted(a){ try{ localStorage.setItem("rb_deleted_users",JSON.stringify(a)); }catch(e){} }
@@ -2369,17 +2380,18 @@ async function logout(){
 // тянем профиль из облака вместо разлогина.
 function resumeSession(login){
   try{
-    supaReq("users?select=login,name,role,cls,classes,subjects&login=eq."+pq(login)+"&limit=1").then(us=>{
+    supaReq("users?select=login,name,role,cls,classes,subjects,roles&login=eq."+pq(login)+"&limit=1")
+      .catch(()=>supaReq("users?select=login,name,role,cls,classes,subjects&login=eq."+pq(login)+"&limit=1")).then(us=>{
       const r2=us&&us[0];
       if(!r2||!r2.login){ logout(); return; }
       users=users.filter(x=>x.login!==r2.login);
-      users.push({login:r2.login,name:r2.name||"",role:r2.role||"teacher",cls:r2.cls||"1-А",classes:(Array.isArray(r2.classes)&&r2.classes.length?r2.classes.map(String):[String(r2.cls||"1-А")]),subjects:(Array.isArray(r2.subjects)?r2.subjects.map(String):[])});
+      users.push({login:r2.login,name:r2.name||"",role:r2.role||"teacher",cls:r2.cls||"1-А",classes:(Array.isArray(r2.classes)&&r2.classes.length?r2.classes.map(String):[String(r2.cls||"1-А")]),subjects:(Array.isArray(r2.subjects)?r2.subjects.map(String):[]),roles:(Array.isArray(r2.roles)?r2.roles.map(String):[])});
       try{ saveData(false); }catch(e){}
       showApp();
     }).catch(()=>{ try{ logout(); }catch(e){} });
   }catch(e){ try{ logout(); }catch(e){} }
 }
-const APP_VER="v5.5.61";
+const APP_VER="v5.5.62";
 var splashDone=false;
 function hideSplash(){ if(splashDone) return; splashDone=true; try{ document.getElementById("splash").classList.add("hide"); }catch(e){} try{ const v=document.getElementById("splashVid"); if(v) v.pause(); }catch(e){} setTimeout(()=>{ try{ document.getElementById("splash").remove(); }catch(e){} },600); }
 function setVer(){ try{ document.getElementById("jsok").textContent=APP_VER; }catch(e){} try{ var _lv=document.getElementById("loginVer"); if(_lv) _lv.textContent=APP_VER; }catch(e){} }
@@ -2469,12 +2481,13 @@ document.getElementById("loginForm").addEventListener("submit", e=>{
     // Тихая миграция старых файлов (зашифрованных под пароль) на ключ устройства.
     try{ migratePasswordFiles(u,p).catch(()=>{}); }catch(e){}
     try{ p=""; }catch(e){}
-    const profQ=q=>supaReq("users?select=login,name,role,cls,classes,subjects&login=eq."+pq(q)+"&limit=1");
+    const profQ=q=>supaReq("users?select=login,name,role,cls,classes,subjects,roles&login=eq."+pq(q)+"&limit=1")
+      .catch(()=>supaReq("users?select=login,name,role,cls,classes,subjects&login=eq."+pq(q)+"&limit=1"));
     profQ(rawU).then(us=>((us&&us[0])?us:profQ(u))).then(us=>{
       const r2=us&&us[0];
       if(!r2||!r2.login){ userStoreSet(null); try{supaSignOut();}catch(_){} loginFail(err,u,"PROFILE"); return; }
       users=users.filter(x=>x.login!==r2.login);
-      users.push({login:r2.login,name:r2.name||"",role:r2.role||"teacher",cls:r2.cls||"1-А",classes:(Array.isArray(r2.classes)&&r2.classes.length?r2.classes.map(String):[String(r2.cls||"1-А")]),subjects:(Array.isArray(r2.subjects)?r2.subjects.map(String):[])});
+      users.push({login:r2.login,name:r2.name||"",role:r2.role||"teacher",cls:r2.cls||"1-А",classes:(Array.isArray(r2.classes)&&r2.classes.length?r2.classes.map(String):[String(r2.cls||"1-А")]),subjects:(Array.isArray(r2.subjects)?r2.subjects.map(String):[]),roles:(Array.isArray(r2.roles)?r2.roles.map(String):[])});
       saveData(false);
       try{ document.getElementById("loginPass").value=""; }catch(e){}
       enterAs(r2.login);
@@ -2535,7 +2548,7 @@ function applyRole(me){
       Sentry.setUser(me&&me.login?{id:String(me.login)}:null);
     }
   }catch(e){}
-  const allowed=(me&&ROLE_TABS[me.role])||[];
+  const allowed=roleTabs(me);
   if(!me||!allowed.length){ logout(); return; }
   // guest — это подменяющий учитель: ему нужен тот же экран класса,
   // что и учителю (класс, урок, присутствие). Подписываем вкладку «Замена».
@@ -2611,7 +2624,7 @@ function switchView(prevRole,nextRole,dir,done){
 document.querySelectorAll("#roles button").forEach(x=>{
   x.onclick=()=>{
     if(x.dataset.role===state.role) return;
-    try{ const me0=currentUser(); const al=me0?(ROLE_TABS[me0.role]||[]):[]; if(al.indexOf(x.dataset.role)<0) return; }catch(e){ return; }
+    try{ const me0=currentUser(); const al=roleTabs(me0); if(al.indexOf(x.dataset.role)<0) return; }catch(e){ return; }
     const prevRole=state.role;
     try{ micOff(); }catch(e){}
     document.querySelectorAll("#roles button").forEach(y=>y.classList.remove("active"));
@@ -3749,14 +3762,14 @@ try{
 async function pullStaffList(){
   try{
     const me=currentUser(); if(!me) return false;
-    const rows=await supaReqSafe("users?select=login,name,role,cls,classes,subjects&order=login&limit=200");
+    const rows=await supaReqSafe("users?select=login,name,role,cls,classes,subjects,roles&order=login&limit=200");
     if(!Array.isArray(rows)||!rows.length) return false;
     let changed=false;
     rows.forEach(u=>{
       if(!u||!u.login) return;
       const merged={login:u.login,name:u.name||"",role:u.role||"teacher",cls:u.cls||"1-А",
         classes:(Array.isArray(u.classes)&&u.classes.length?u.classes.map(String):[String(u.cls||"1-А")]),
-        subjects:(Array.isArray(u.subjects)?u.subjects.map(String):[])};
+        subjects:(Array.isArray(u.subjects)?u.subjects.map(String):[]),roles:(Array.isArray(u.roles)?u.roles.map(String):[])};
       const i=users.findIndex(x=>x.login===merged.login);
       if(i>=0){ if(JSON.stringify(users[i])!==JSON.stringify(merged)){ users[i]=merged; changed=true; } }
       else { users.push(merged); changed=true; }
@@ -6533,7 +6546,7 @@ function hubHandle(ev){
   }else if(ev.kind==="users-changed"&&Array.isArray(ev.users)){
     setDeleted(Array.isArray(ev.deleted)?ev.deleted:[]);
     const delH=getDeleted();
-    users=ev.users.filter(u=>u&&u.login&&delH.indexOf(u.login)<0).map(u=>({login:u.login,name:u.name||u.login,role:u.role||"teacher",cls:u.cls||"1-А",classes:(Array.isArray(u.classes)&&u.classes.length?u.classes.map(String):[String(u.cls||"1-А")]),subjects:(Array.isArray(u.subjects)?u.subjects.map(String):[])}));
+    users=ev.users.filter(u=>u&&u.login&&delH.indexOf(u.login)<0).map(u=>({login:u.login,name:u.name||u.login,role:u.role||"teacher",cls:u.cls||"1-А",classes:(Array.isArray(u.classes)&&u.classes.length?u.classes.map(String):[String(u.cls||"1-А")]),subjects:(Array.isArray(u.subjects)?u.subjects.map(String):[]),roles:(Array.isArray(u.roles)?u.roles.map(String):[])}));
     saveData(false);
     const me=currentUser();
     if(!me){ logout(); }
@@ -6855,8 +6868,23 @@ async function supaReq(path, opts){
   }catch(e){ return null; }
 }
 async function supaReqSafe(path, opts){ try{ return await supaReq(path, opts); }catch(e){ return null; } }
+async function supaPullClubTombstones(){
+  const through=new Date().toISOString();
+  const rows=[];
+  let offset=0;
+  while(true){
+    // gte deliberately replays rows sharing the previous marker timestamp;
+    // advancing only by timestamp must never skip ties at a page boundary.
+    const page=await supaReqSafe("club_tombstones?select=id,deleted_at&deleted_at=gte."+pq(supaMark.club_tombstones)+"&deleted_at=lte."+pq(through)+"&order=deleted_at.asc,id.asc&limit=200&offset="+offset);
+    if(!Array.isArray(page)) return null;
+    rows.push(...page);
+    if(page.length<200) break;
+    offset+=200;
+  }
+  return {rows:rows,through:through};
+}
 // ---------- чаты: общий + личные переписки ----------
-var chatUserLogin="", chatPollT=null, chatBusy=false, chatRealtime=false;
+var chatUserLogin="", chatPollT=null, chatBusy=false, chatRealtime=false, chatPollLast=0, chatWakeBound=false;
 var chatRows=[], chatThreads=[], chatThread="general", chatSeen={}, chatSchema=true, chatLastShownId=0;
 var chatThreadsBusy=false, chatThreadsAgain=false, chatPicker=false, chatAttach=null, chatSending=false;
 var chatMediaUrls={}, chatMediaLoading={};
@@ -7253,6 +7281,7 @@ async function chatSend(event){
     if(Array.isArray(rows)&&rows.length){
       chatRows=chatMerge(chatRows.concat([rows[0]]));
       input.value=""; chatAttachClear(false); chatRenderPreview(); chatRender();
+      chatPollLast=Date.now();
       chatShowError(""); chatSetStatus(chatRealtime?t("chatOnline"):t("chatPolling"));
       chatSeen[chatThread]=new Date().toISOString(); chatSeenSave();
       chatThreadsLoad(true);
@@ -7367,9 +7396,22 @@ function chatSetUser(me){
   chatPollT=setInterval(()=>{
     if(!chatAllowed(currentUser())){ chatStop(); return; }
     if(!chatSchema){ chatSchemaProbe().then(ok=>{ if(ok){ chatThreadsLoad(true); chatLoad(true); } }); return; }
+    // Открытый чат опрашиваем каждые 5с (задержка «чужого» сообщения без
+    // realtime — не больше 5с), фон — раз в 30с, чтобы не грузить базу.
+    let active=false;
+    try{ active=document.visibilityState==="visible"&&document.getElementById("view-chats").classList.contains("active"); }catch(e){}
+    const now=Date.now();
+    if(!active&&now-chatPollLast<28000) return;
+    chatPollLast=now;
     chatThreadsLoad(true);
     chatLoad(true);
-  },30000);
+  },5000);
+  if(!chatWakeBound){
+    chatWakeBound=true;
+    const wake=()=>{ try{ if(document.visibilityState!=="visible") return; if(!document.getElementById("view-chats").classList.contains("active")) return; if(Date.now()-chatPollLast<2000) return; chatPollLast=Date.now(); chatThreadsLoad(true); chatLoad(true); }catch(e){} };
+    try{ document.addEventListener("visibilitychange",wake); }catch(e){}
+    try{ window.addEventListener("focus",wake); }catch(e){}
+  }
 }
 function renderChats(){
   const me=currentUser();
@@ -7377,7 +7419,8 @@ function renderChats(){
   chatSeen[chatThread]=new Date().toISOString(); chatSeenSave();
   chatRenderHead(); chatRenderThreads(); chatRender();
   if(!chatThreads.length&&!chatThreadsBusy) chatThreadsLoad(true);
-  if(!chatRows.length&&!chatBusy) chatLoad(true);
+  if(!chatRows.length&&!chatBusy){ chatPollLast=Date.now(); chatLoad(true); }
+  else if(!chatBusy&&Date.now()-chatPollLast>5000){ chatPollLast=Date.now(); chatThreadsLoad(true); chatLoad(true); }
 }
 
 // Storage (голосовые): тот же refresh-цикл, что и у REST, но без JSON-заголовка.
@@ -7625,7 +7668,7 @@ function supaState(s){
 // Раньше не-админ обновлял только свою строку, поэтому новые учителя
 // не появлялись в контактах до полного сброса кеша.
 function mergeUsersCloud(rows){
-  const norm=u=>({login:u.login,name:u.name||"",role:u.role||"teacher",cls:u.cls||"1-А",classes:(Array.isArray(u.classes)&&u.classes.length?u.classes.map(String):[String(u.cls||"1-А")]),subjects:(Array.isArray(u.subjects)?u.subjects.map(String):[])});
+  const norm=u=>({login:u.login,name:u.name||"",role:u.role||"teacher",cls:u.cls||"1-А",classes:(Array.isArray(u.classes)&&u.classes.length?u.classes.map(String):[String(u.cls||"1-А")]),subjects:(Array.isArray(u.subjects)?u.subjects.map(String):[]),roles:(Array.isArray(u.roles)?u.roles.map(String):[])});
   let merged=false;
   (Array.isArray(rows)?rows:[]).forEach(r0=>{
     if(!r0||!r0.login) return;
@@ -7655,14 +7698,14 @@ async function supaPull(){
       // Все таблицы — через Safe: одна упавшая (сеть/RLS) не должна ронять
       // весь опрос и замораживать остальные метки.
       supaReqSafe("students?select="+ST_COLS+"&updated_at=gt."+pq(supaMark.students)+"&order=updated_at&limit=2000"),
-      fullCycle?supaReqSafe("users?select=login,name,role,cls,classes,subjects&order=login&limit=200"):Promise.resolve(null),
+      fullCycle?supaReqSafe("users?select=login,name,role,cls,classes,subjects,roles&order=login&limit=200"):Promise.resolve(null),
       supaReqSafe("med?select=id,cls,sid,name,time,reason,status,updated_at&updated_at=gt."+pq(supaMark.med)+"&order=updated_at&limit=200"),
       supaReqSafe("lessons?select=*&updated_at=gt."+pq(supaMark.lessons)+"&order=updated_at&limit=100"),
       supaReqSafe("teams?select=*&updated_at=gt."+pq(supaMark.teams)+"&order=updated_at&limit=100"),
       supaReqSafe("clubs?select=*&updated_at=gt."+pq(supaMark.clubs)+"&order=updated_at&limit=100"),
       supaReqSafe("meta?select=key,value&key=like.board*&limit=60"),
       supaReqSafe("seventh_groups?select=group_key,members,updated_at&updated_at=gt."+pq(supaMark.seventh_groups)+"&order=updated_at&limit=20"),
-      supaReqSafe("club_tombstones?select=id,deleted_at&deleted_at=gt."+pq(supaMark.club_tombstones)+"&order=deleted_at&limit=200")
+      supaPullClubTombstones()
     ]);
     restoreClubPending();
     if(sg){
@@ -7713,7 +7756,7 @@ async function supaPull(){
     if(us){
       const me0=currentUser();
       if(me0&&me0.role==="admin"){
-        const nu=us.filter(u=>u&&u.login).map(u=>({login:u.login,name:u.name||"",role:u.role||"teacher",cls:u.cls||"1-А",classes:(Array.isArray(u.classes)&&u.classes.length?u.classes.map(String):[String(u.cls||"1-А")]),subjects:(Array.isArray(u.subjects)?u.subjects.map(String):[])}));
+        const nu=us.filter(u=>u&&u.login).map(u=>({login:u.login,name:u.name||"",role:u.role||"teacher",cls:u.cls||"1-А",classes:(Array.isArray(u.classes)&&u.classes.length?u.classes.map(String):[String(u.cls||"1-А")]),subjects:(Array.isArray(u.subjects)?u.subjects.map(String):[]),roles:(Array.isArray(u.roles)?u.roles.map(String):[])}));
         const sig=JSON.stringify(nu);
         if(sig!==supaUsersSig){
           supaUsersSig=sig;
@@ -7758,15 +7801,15 @@ async function supaPull(){
     });
     // tcl загружен выше (Promise.all). ВАЖНО: отдельный цикл, а не вложенный
     // в teams — иначе кружки не тянулись бы, пока не изменится хоть одна команда.
-    (ct||[]).forEach(r=>{
+    (ct&&ct.rows||[]).forEach(r=>{
       if(!r||!r.id) return;
       clubTombstones[String(r.id)]=1;
       if(clubTombstonePending[String(r.id)]){ delete clubTombstonePending[String(r.id)]; persistClubPending(); }
       clubs=clubs.filter(x=>String(x.id)!==String(r.id));
-      if(r.deleted_at&&r.deleted_at>supaMark.club_tombstones) supaMark.club_tombstones=r.deleted_at;
       changed=true;
     });
-    (tcl||[]).forEach(r=>{
+    if(ct) supaMark.club_tombstones=ct.through;
+    (ct?(tcl||[]):[]).forEach(r=>{
       if(clubTombstones[String(r.id)]){ if(r.updated_at&&r.updated_at>supaMark.clubs) supaMark.clubs=r.updated_at; return; }
       const ci=clubs.findIndex(x=>x.id===r.id);
       const co={id:r.id,owner:r.owner_login||"",name:r.name||"",members:r.members||[],marks:r.present||{},date:r.present_date||""};
@@ -9519,7 +9562,7 @@ function assistCanWalkie(){ try{ const me=currentUser(); return !!me&&WALKIE_ROL
 // Кто может вызывать ученика. Раньше проверялась вкладка «Охрана» — из-за этого
 // медпункт получал отказ, хотя в базе вызовы ему разрешены (RLS calls append).
 const CALL_ROLES=["reception","exit","med","duty","admin","ceo"];
-function assistCanCall(){ try{ const me=currentUser(); return !!me&&CALL_ROLES.indexOf(String(me.role||"admin"))>=0; }catch(e){ return false; } }
+function assistCanCall(){ try{ const me=currentUser(); return !!me&&CALL_ROLES.some(r=>hasRole(me,r)); }catch(e){ return false; } }
 function astMatchStaff(q){
   const res=[];
   try{
