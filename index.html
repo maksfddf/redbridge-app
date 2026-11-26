@@ -2440,7 +2440,7 @@ function resumeSession(login){
     }).catch(()=>{ try{ logout(); }catch(e){} });
   }catch(e){ try{ logout(); }catch(e){} }
 }
-const APP_VER="v5.5.70";
+const APP_VER="v5.5.71";
 var splashDone=false;
 function hideSplash(){ if(splashDone) return; splashDone=true; try{ document.getElementById("splash").classList.add("hide"); }catch(e){} try{ const v=document.getElementById("splashVid"); if(v) v.pause(); }catch(e){} setTimeout(()=>{ try{ document.getElementById("splash").remove(); }catch(e){} },600); }
 function setVer(){ try{ document.getElementById("jsok").textContent=APP_VER; }catch(e){} try{ var _lv=document.getElementById("loginVer"); if(_lv) _lv.textContent=APP_VER; }catch(e){} }
@@ -9204,7 +9204,7 @@ ru:{name:"Рита",sub:"личный помощник",
  actCallStudent:"Вызвать {name} ({cls})?",actCallStudents:"Вызвать учеников ({n}): {list}?",actDoneStudents:"Готово: вызваны — {list}.",actNotFoundStudent:"Не нашла ученика «{name}». Уточните класс или фамилию.",actCallClass:"Вызвать весь класс {cls}?",actCallTeacher:"Позвать {name} по рации?",
  actMsgTeacher:"Отправить сообщение {name}: «{text}»?",actMsgClass:"Написать учителю {name} ({cls}): «{text}»?",
  actDoneCall:"Готово: {name} вызван(а).",actDoneClass:"Готово: класс {cls} вызван.",actDoneMsg:"Готово: сообщение отправлено — {name}.",actDoneCallTeacher:"Готово: вызов отправлен — {name}.",
- actDeny:"У вас нет прав на это действие.",actDenyCall:"Вызывать учеников может охрана, дежурный по столовой или администратор.",
+ actDeny:"У вас нет прав на это действие.",actDenyCall:"Вызывать учеников может охрана, дежурный по столовой или администратор.",actChatTitle:"Сообщение в чат",actChatTo:"Отправить {name}: «{text}»",actDoneChat:"Отправлено в чат: {name}",
  actNeedTarget:"Уточните, кого вызвать: ученика, класс или учителя.",actNeedStudent:"Уточните ученика и класс.",actNeedRecipient:"Уточните получателя: учитель или класс.",
  actNeedText:"Напишите текст после двоеточия: «напиши Петрову: добрый день».",
  actNoHolder:"У класса {cls} сейчас нет учителя — сообщение отправить некуда.",actNotFound:"Не нашла такого сотрудника.",
@@ -9268,7 +9268,7 @@ en:{name:"Rita",sub:"personal assistant",
  actCallStudent:"Call {name} ({cls})?",actCallStudents:"Call students ({n}): {list}?",actDoneStudents:"Done: called — {list}.",actNotFoundStudent:"No student “{name}” found. Please specify the class or surname.",actCallClass:"Call the whole class {cls}?",actCallTeacher:"Call {name} by walkie-talkie?",
  actMsgTeacher:"Send a message to {name}: “{text}”?",actMsgClass:"Message the teacher of {cls} ({name}): “{text}”?",
  actDoneCall:"Done: {name} has been called.",actDoneClass:"Done: class {cls} has been called.",actDoneMsg:"Done: message sent to {name}.",actDoneCallTeacher:"Done: call sent to {name}.",
- actDeny:"You do not have permission for this action.",actDenyCall:"Only security, cafeteria duty or an administrator can call students.",
+ actDeny:"You do not have permission for this action.",actDenyCall:"Only security, cafeteria duty or an administrator can call students.",actChatTitle:"Chat message",actChatTo:"Send {name}: “{text}”",actDoneChat:"Sent to chat: {name}",
  actNeedTarget:"Specify whom to call: a student, a class or a teacher.",actNeedStudent:"Specify the student and class.",actNeedRecipient:"Specify the recipient: a teacher or a class.",
  actNeedText:"Write the text after a colon: “message Petrov: good afternoon”.",
  actNoHolder:"Class {cls} has no teacher right now, so there is nowhere to send the message.",actNotFound:"No such staff member found.",
@@ -9332,7 +9332,7 @@ uz:{name:"Rita",sub:"shaxsiy yordamchi",
  actCallStudent:"{name} ({cls}) chaqirilsinmi?",actCallStudents:"O'quvchilar chaqirilsinmi ({n}): {list}?",actDoneStudents:"Bajarildi: chaqirildi — {list}.",actNotFoundStudent:"«{name}» o'quvchisi topilmadi. Sinf yoki familiyani aniqlashtiring.",actCallClass:"Butun {cls} sinfi chaqirilsinmi?",actCallTeacher:"{name} ratsiya orqali chaqirilsinmi?",
  actMsgTeacher:"{name} ga xabar yuborilsinmi: «{text}»?",actMsgClass:"{cls} o'qituvchisiga ({name}) xabar yuborilsinmi: «{text}»?",
  actDoneCall:"Bajarildi: {name} chaqirildi.",actDoneClass:"Bajarildi: {cls} sinfi chaqirildi.",actDoneMsg:"Bajarildi: {name} ga xabar yuborildi.",actDoneCallTeacher:"Bajarildi: {name} ga chaqiruv yuborildi.",
- actDeny:"Sizda bu amal uchun ruxsat yo'q.",actDenyCall:"O'quvchilarni xavfsizlik, oshxona navbatchisi yoki administrator chaqira oladi.",
+ actDeny:"Sizda bu amal uchun ruxsat yo'q.",actDenyCall:"O'quvchilarni xavfsizlik, oshxona navbatchisi yoki administrator chaqira oladi.",actChatTitle:"Chatga xabar",actChatTo:"{name} ga yuborish: «{text}»",actDoneChat:"Chatga yuborildi: {name}",
  actNeedTarget:"Kimni chaqirishni aniqlashtiring: o'quvchi, sinf yoki o'qituvchi.",actNeedStudent:"O'quvchi va sinfni aniqlashtiring.",actNeedRecipient:"Kimga yuborishni aniqlashtiring: o'qituvchi yoki sinf.",
  actNeedText:"Matnni ikki nuqtadan keyin yozing: «Petrovga yoz: xayrli kun».",
  actNoHolder:"{cls} sinfida hozir o'qituvchi yo'q — xabar yuborish joyi yo'q.",actNotFound:"Bunday xodim topilmadi.",
@@ -9992,6 +9992,15 @@ function assistDoCallTeacher(u){
     });
   });
 }
+function assistDoChatMessage(u,text){
+  const nm=dn(u.name||u.login);
+  return assistConfirmAction("actChatTitle","<div class='muted'>"+esc(astText("actChatTo",{name:nm,text:text}))+"</div>",function(){
+    const to=String(u.login||"").toLowerCase();
+    chatReq("teacher_chat",{method:"POST",headers:{Prefer:"return=minimal"},body:JSON.stringify({recipient_login:to,body:text})})
+      .then(()=>{ assistPush("bot",astText("actDoneChat",{name:nm})); try{ if(chatThread===to) chatLoad(true); }catch(e){} })
+      .catch(()=>assistPush("bot",astText("actError")));
+  });
+}
 function assistDoMsgTeacher(u,text){
   const nm=dn(u.name||u.login);
   return assistConfirmAction("actMsgTitle","<div class='muted'>"+esc(astText("actMsgTeacher",{name:nm,text:text}))+"</div>",function(){
@@ -10292,6 +10301,12 @@ function assistRunAICommand(a){
       if(!text) return astText("actNeedText");
       const r=assistAIStaff(a.target); if(r.err) return r.err;
       return assistDoMsgTeacher(r.hit.u,text);
+    }
+    if(type==="chat_message"){
+      if(!chatAllowed(currentUser())) return astText("actDeny");
+      if(!text) return astText("actNeedText");
+      const r=assistAIStaff(a.target); if(r.err) return r.err;
+      return assistDoChatMessage(r.hit.u,text);
     }
     if(type==="mark_present"||type==="mark_absent"){
       const val=type==="mark_present"||a.present===true;
