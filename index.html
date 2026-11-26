@@ -2438,7 +2438,7 @@ function resumeSession(login){
     }).catch(()=>{ try{ logout(); }catch(e){} });
   }catch(e){ try{ logout(); }catch(e){} }
 }
-const APP_VER="v5.5.72";
+const APP_VER="v5.5.73";
 var splashDone=false;
 function hideSplash(){ if(splashDone) return; splashDone=true; try{ document.getElementById("splash").classList.add("hide"); }catch(e){} try{ const v=document.getElementById("splashVid"); if(v) v.pause(); }catch(e){} setTimeout(()=>{ try{ document.getElementById("splash").remove(); }catch(e){} },600); }
 function setVer(){ try{ document.getElementById("jsok").textContent=APP_VER; }catch(e){} try{ var _lv=document.getElementById("loginVer"); if(_lv) _lv.textContent=APP_VER; }catch(e){} }
@@ -2603,9 +2603,28 @@ function renderKundalik(){
     const me=currentUser(); if(!me) return;
     const host=document.getElementById("kundalikHost");
     const fb=document.getElementById("kundalikFallback");
-    if(!window.rbSecure){ if(host) host.style.display="none"; if(fb) fb.style.display=""; return; }
     if(fb) fb.style.display="none";
     if(!host) return;
+    if(!window.rbSecure){
+      // Веб/Android: тот же iframe, но через same-origin shell-страницу,
+      // которая снимает X-Frame-Options через прокси.
+      host.style.display="";
+      const key="rb_kundalik_s_"+String(me.login||"user");
+      let token=""; try{ token=localStorage.getItem(key)||""; }catch(e){}
+      if(!token){ try{ token=crypto.randomUUID(); localStorage.setItem(key,token); }catch(e){ token=String(Date.now()); } }
+      let ifr=host.querySelector("iframe");
+      if(ifr&&ifr.getAttribute("data-login")!==String(me.login||"")){ try{ ifr.remove(); }catch(e){} ifr=null; }
+      if(!ifr){
+        ifr=document.createElement("iframe");
+        ifr.setAttribute("data-login",String(me.login||""));
+        ifr.setAttribute("allow","clipboard-read; clipboard-write");
+        ifr.style.cssText="width:100%;height:calc(100vh - 220px);min-height:420px;border:0;border-radius:12px;background:#fff";
+        host.appendChild(ifr);
+      }
+      const src="kundalik-frame.html?s="+encodeURIComponent(token)+"&u="+encodeURIComponent(KUNDALIK_URL);
+      if(ifr.getAttribute("src")!==src) ifr.setAttribute("src",src);
+      return;
+    }
     host.style.display="";
     const part="persist:kundalik-"+String(me.login||"user").replace(/[^a-z0-9_-]/gi,"");
     let wv=host.querySelector("webview");
@@ -2623,21 +2642,16 @@ function renderKundalik(){
 function openKundalik(){
   try{
     const me=currentUser(); if(!me) return;
-    if(window.rbSecure){
-      if(state.role!=="kundalik"){ state.role="kundalik"; applyRole(me); }
-      renderKundalik(); return;
-    }
-    try{
-      const B=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.Browser;
-      if(B&&B.open){ B.open({url:KUNDALIK_URL,presentationStyle:"fullscreen"}); return; }
-    }catch(e){}
-    try{ window.open(KUNDALIK_URL,"_blank","noopener"); }catch(e){}
+    if(state.role!=="kundalik"){ state.role="kundalik"; applyRole(me); }
+    renderKundalik();
   }catch(e){}
 }
 function kundalikReload(){
   try{
     const wv=document.querySelector("#kundalikHost webview");
     if(wv&&wv.reload){ wv.reload(); return; }
+    const ifr=document.querySelector("#kundalikHost iframe");
+    if(ifr){ const cur=ifr.getAttribute("src")||""; ifr.setAttribute("src","about:blank"); setTimeout(()=>{ try{ ifr.setAttribute("src",cur); }catch(e){} },40); return; }
     openKundalik();
   }catch(e){}
 }

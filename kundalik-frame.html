@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Kundalik</title>
+<style>
+  html,body{margin:0;height:100%;background:#fff;font:15px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#1f2630}
+  #rbLoad{display:grid;place-items:center;height:100%;gap:10px;color:#6b7280}
+  .err{display:grid;place-items:center;height:100%;gap:12px;padding:20px;text-align:center}
+  .err button{padding:10px 16px;border:0;border-radius:10px;background:#c1272d;color:#fff;font:inherit;cursor:pointer}
+</style>
+</head>
+<body>
+<div id="rbLoad">Загрузка Kundalik…</div>
+<script>
+(function(){
+  const P = new URLSearchParams(location.search);
+  const S = P.get('s') || '';
+  const U = P.get('u') || 'https://login.emaktab.uz/?ReturnUrl=https%3A%2F%2Femaktab.uz%2F';
+  const PROXY = 'https://yklswxbzkpyjjlvknumk.supabase.co/functions/v1/kundalik-proxy';
+  const proxyFor = (t) => PROXY + '?s=' + encodeURIComponent(S) + '&u=' + encodeURIComponent(t);
+
+  // Скрипт, который переезжает вместе с HTML и перехватывает формы/ссылки.
+  // Без него нативная отправка формы уходила в Storage (text/plain).
+  function injector(){
+    return '<scr'+'ipt>(function(){' +
+      'var S=' + JSON.stringify(S) + ',U=' + JSON.stringify(U) + ',PROXY=' + JSON.stringify(PROXY) + ';' +
+      'function p(t){return PROXY+"?s="+encodeURIComponent(S)+"&u="+encodeURIComponent(t);}' +
+      'async function go(t,o){try{var r=await fetch(t,Object.assign({credentials:"omit"},o||{}));if(!r.ok)throw 0;' +
+        'var h=await r.text();var el=document.getElementById("rbinj");var inj=el?("<script id=\\"rbinj\\">"+el.textContent+"<\\/script>"):"";' +
+        'if(inj) h=h.replace(/<\\/body>/i,inj+"</body>");document.open();document.write(h);document.close();}' +
+        'catch(e){document.body.innerHTML="<div class=\\"err\\"><div>Не удалось открыть Kundalik.</div><button onclick=\\"location.reload()\\">Повторить</button></div>";}}' +
+      'window.__rbGo=go;' +
+      // Перехват на capture: сработает даже если обработчик eMaktab остановит всплытие.
+      'document.addEventListener("submit",function(e){var f=e.target;if(!f||f.tagName!=="FORM")return;e.preventDefault();go(f.action||p(U),{method:(f.method||"POST").toUpperCase(),body:new FormData(f)});},true);' +
+      // form.submit() не вызывает событие submit — перекрываем и его.
+      'try{HTMLFormElement.prototype.submit=function(){go(this.action||p(U),{method:(this.method||"POST").toUpperCase(),body:new FormData(this)});};}catch(_){}' +
+      'document.querySelectorAll("form").forEach(function(f){f.addEventListener("submit",function(e){e.preventDefault();go(f.action||p(U),{method:(f.method||"POST").toUpperCase(),body:new FormData(f)});});});' +
+      'document.querySelectorAll("a[href]").forEach(function(a){a.addEventListener("click",function(e){var h=a.getAttribute("href");' +
+        'if(!h||h.charAt(0)==="#"||/^javascript:/i.test(h))return;var t;try{t=new URL(h,document.baseURI).href;}catch(_){return;}' +
+        'if(t.indexOf(PROXY)!==0)return;e.preventDefault();go(t);});});' +
+    '})();</scr'+'ipt>';
+  }
+
+  async function go(target){
+    try{
+      const r = await fetch(target, { credentials: 'omit' });
+      if (!r.ok) throw 0;
+      let html = await r.text();
+      // Вставляем сам скрипт-перехватчик в документ.
+      const inj = '<script id="rbinj">' + injector().replace(/^<script>|<\/script>$/g, '') + '<\/script>';
+      html = html.replace(/<\/body>/i, inj + '</body>');
+      document.open(); document.write(html); document.close();
+    }catch(e){
+      document.body.innerHTML = "<div class='err'><div>Не удалось открыть Kundalik.</div><button onclick='location.reload()'>Повторить</button></div>";
+    }
+  }
+  go(proxyFor(U));
+})();
+</script>
+</body>
+</html>
