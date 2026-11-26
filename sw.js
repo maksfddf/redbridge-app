@@ -11,18 +11,34 @@ self.addEventListener('push', (event) => {
     try { d = { body: event.data ? event.data.text() : '' }; } catch (_) { d = {}; }
   }
   const title = d.title || 'RedBridge';
+  const ua = (self.navigator && self.navigator.userAgent) || '';
+  const isIOS = /iPhone|iPad|iPod/i.test(ua);
   const opts = {
     body: d.body || '',
     icon: 'icon-192.png',
     badge: 'icon-192.png',
-    tag: d.tag || 'redbridge',
-    renotify: true,
-    requireInteraction: !!d.require,
-    silent: false,
+    // Уникальный tag на каждое уведомление: iOS не должен схлопывать
+    // второе сообщение в первое. Если tag не пришёл — тоже уникальный.
+    tag: d.tag || ('redbridge-' + Date.now()),
     data: { url: d.url || './index.html' },
-    vibrate: [220, 100, 220, 100, 220]
+    silent: false
   };
-  event.waitUntil(self.registration.showNotification(title, opts));
+  // iOS игнорирует (а иногда и отвергает) vibrate/renotify/requireInteraction.
+  // На iPhone оставляем только базовые поля — звук остаётся системным.
+  if (!isIOS) {
+    opts.renotify = true;
+    opts.requireInteraction = !!d.require;
+    opts.vibrate = [220, 100, 220, 100, 220];
+  }
+  event.waitUntil(
+    self.registration.showNotification(title, opts).catch(() => {
+      // Страховка: если прошивка отвергла необязательное поле, показываем
+      // уведомление без него. Лучше без вибрации, чем совсем без сообщения.
+      return self.registration.showNotification(title, {
+        body: opts.body, icon: opts.icon, data: opts.data, silent: false
+      }).catch(() => {});
+    })
+  );
 });
 
 self.addEventListener('notificationclick', (event) => {
