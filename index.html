@@ -2401,7 +2401,7 @@ function resumeSession(login){
     }).catch(()=>{ try{ logout(); }catch(e){} });
   }catch(e){ try{ logout(); }catch(e){} }
 }
-const APP_VER="v5.5.64";
+const APP_VER="v5.5.65";
 var splashDone=false;
 function hideSplash(){ if(splashDone) return; splashDone=true; try{ document.getElementById("splash").classList.add("hide"); }catch(e){} try{ const v=document.getElementById("splashVid"); if(v) v.pause(); }catch(e){} setTimeout(()=>{ try{ document.getElementById("splash").remove(); }catch(e){} },600); }
 function setVer(){ try{ document.getElementById("jsok").textContent=APP_VER; }catch(e){} try{ var _lv=document.getElementById("loginVer"); if(_lv) _lv.textContent=APP_VER; }catch(e){} }
@@ -6686,7 +6686,8 @@ function rtOnMsg(m){
   try{ rtCounts[tb]=(rtCounts[tb]||0)+1; }catch(e){}
   if(tb==="teacher_chat"){ try{ chatLoad(true); }catch(e){} try{ chatThreadsLoad(true); }catch(e){} try{ rtLastMsg=Date.now(); }catch(e){} return; }
   try{ supaHeat(60000); }catch(e){}
-  if(tb==="calls"||tb==="journal"||tb==="notices"){ try{ supaPullCalls(); }catch(e){} }
+  if(tb==="calls"||tb==="journal"){ try{ supaPullCalls(); }catch(e){} }
+  else if(tb==="notices"){ try{ supaPullNotices(); }catch(e){} }
   else { try{ supaPullNow(); }catch(e){} }
   try{ rtLastMsg=Date.now(); }catch(e){}
 }
@@ -7905,7 +7906,9 @@ async function supaPullNotices(){
   try{ const _nt=Date.now(); if(supaNBusy||_nt-supaNLast<1500) return false; supaNBusy=true; supaNLast=_nt; }catch(e){}
   try{
     let changed=false;
-    const rows=await supaReqSafe("notices?select=*&order=id.desc&limit="+(supaAdopted?"15":"50"));
+    // 50, а не 15: за одну минуту до урока сервер создаёт до 26 warn5
+    // (по одному на класс). С limit=15 часть учителей не видела свой класс.
+    const rows=await supaReqSafe("notices?select=*&order=id.desc&limit=50");
     if(rows){
       const list=rows.slice().reverse();
       const cv=r=>({id:r.id,kind:r.kind||"message",toRole:r.to_role||"exit",toLogin:r.to_login||"",from:r.from_login||"",student:r.student||"",cls:r.cls||"",subject:r.subject||"",text:r.text||"",audioPath:r.audio_path||"",audioMs:r.audio_ms||0,status:r.status||"new",t:r.created_at||""});
