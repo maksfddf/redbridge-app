@@ -2876,7 +2876,7 @@ async function startLessonGo(subj, meta){
   // это недосланные остатки прошлых сессий, а не свежие вызовы.
   try{
     const _exp=Date.now()-15*60*1000;
-    CLASSES.forEach(_cc=>{ try{ (db[_cc]||[]).forEach(s=>{ if(s.called&&(s.calledAt||0)<_exp){ s.called=false; s.calledBy=""; s.calledAt=0; } }); }catch(e){} });
+    CLASSES.forEach(_cc=>{ try{ (db[_cc]||[]).forEach(s=>{ if(s.called&&(s.calledAt||0)<_exp){ s.called=false; s.calledBy=""; s.calledAt=0; stuTouch(s); } }); }catch(e){} });
   }catch(e){}
   const present={};
   db[cls].forEach(s=>{ if(s.status!=="out") present[s.id]=true; });
@@ -2898,7 +2898,7 @@ function finishLesson(){
   if(L.by&&me&&me.role!=="admin"&&L.by!==me.login){ toast(t("notYourLesson")); return; }
   const pr=(L&&L.present)||{};
   const n=Object.values(pr).filter(Boolean).length;
-  try{ (db[state.cls]||[]).forEach(s=>{ if(s.called){ s.called=false; s.calledBy=""; s.calledAt=0; try{ touchStu(s.id); }catch(e){} } }); }catch(e){}
+  try{ (db[state.cls]||[]).forEach(s=>{ if(s.called){ s.called=false; s.calledBy=""; s.calledAt=0; stuTouch(s); try{ touchStu(s.id); }catch(e){} } }); }catch(e){}
   lessons[state.cls]={active:false, startedAt:L.startedAt||now(), present:pr, subject:L.subject||"", by:L.by||"", subBy:L.subBy||"", coverFor:L.coverFor||""};
   logAdd("lessonLogEnd", {c:state.cls,n:n,subj:subjFrag(L.subject)});
   try{ cancelWheelSpin(); }catch(e){}
@@ -4790,7 +4790,7 @@ function dutyCall(){ try{
   let n=0;
   cl.forEach(c=>{ const list=(db[c]||[]).filter(s=>s.status==="in"||s.status==="wait");
     if(!list.length) return;
-    list.forEach(s=>{ s.called=true; s.calledAt=Date.now(); s.calledBy=dest; n++; });
+    list.forEach(s=>{ s.called=true; s.calledAt=Date.now(); s.calledBy=dest; stuTouch(s); n++; });
     calls.push({t:now(), cls:c, nkey:"wholeClass", np:{n:list.length,dest:dest}, byKey:"duty", kind:""});
     hubPush("call-class",{cls:c,dest:dest,n:list.length,byKey:"duty"});
     const ap={c:c,dest:destName(dest)}; logAdd("logCalledAll", ap); notify("logCalledAll",ap,c); });
@@ -4802,7 +4802,7 @@ function dutyCallOne(c,id){ try{
   const s=(db[c]||[]).find(x=>x.id===id); if(!s||s.status==="out"){ toast(t("alreadyGone")); return; }
   if(s.called&&Date.now()-(s.calledAt||0)<2000){ toast(t("alreadyCalled")); return; }
   const dest=dutyDestVal();
-  s.called=true; s.calledAt=Date.now(); s.calledBy=dest;
+  s.called=true; s.calledAt=Date.now(); s.calledBy=dest; stuTouch(s);
   calls.push({t:now(), cls:c, name:s.name, byKey:"duty", kind:"", clubId:clubIdForStudent(c,id), np:{dest:dest,sid:id}});
   hubPush("call",{sid:id,name:s.name,cls:c,kindValue:"",byKey:"duty",dest:dest});
   const cp={name:esc(dn(s.name)),c:c,kind:""}; logAdd("logCalled", cp); notify("logCalled",cp,c);
@@ -4811,7 +4811,7 @@ function dutyCallOne(c,id){ try{
 }catch(e){} }
 function dutyCaf(c,id){ try{
   const s=(db[c]||[]).find(x=>x.id===id); if(!s||s.status==="out"){ toast(t("alreadyGone")); return; }
-  s.called=true; s.calledAt=Date.now(); s.calledBy="cafeteria";
+  s.called=true; s.calledAt=Date.now(); s.calledBy="cafeteria"; stuTouch(s);
   calls.push({t:now(), cls:c, name:s.name, byKey:"duty", kind:"", clubId:clubIdForStudent(c,id), np:{dest:"cafeteria",sid:id}});
   hubPush("call",{sid:id,name:s.name,cls:c,kindValue:"",byKey:"duty",dest:"cafeteria"});
   const cp={name:esc(dn(s.name)),c:c,kind:""}; logAdd("logCalled", cp); notify("logCalled",cp,c);
@@ -4936,7 +4936,7 @@ function callStudent(c,id,destOverride){
   try{ assistSetFocus(id); }catch(e){}
   const kind="";
   const dest=destOverride||callDestVal();
-  s.called=true; s.calledAt=Date.now(); s.calledBy=dest;
+  s.called=true; s.calledAt=Date.now(); s.calledBy=dest; stuTouch(s);
   calls.push({t:now(), cls:c, name:s.name, byKey:"exit", kind, clubId:clubIdForStudent(c,id), np:{dest:dest,sid:id}});
   hubPush("call",{sid:id,name:s.name,cls:c,kindValue:kind,byKey:"exit",dest:dest});
   const cp={name:esc(dn(s.name)),c:c,kind:kind};
@@ -4955,7 +4955,7 @@ function callClass(destOverride, clsOverride){
   const cls=clsOverride||state.cls;
   const list=(db[cls]||[]).filter(s=>s.status==="in"||s.status==="wait");
   if(!list.length){ toast(t("noOneInClass")); return; }
-  list.forEach(s=>{ s.called=true; s.calledAt=Date.now(); s.calledBy=dest; });
+  list.forEach(s=>{ s.called=true; s.calledAt=Date.now(); s.calledBy=dest; stuTouch(s); });
   const _clb0=clubIdForStudent(cls,list[0].id);
   calls.push({t:now(), cls:cls, nkey:"wholeClass", np:{n:list.length,dest:dest}, byKey:"exit", kind:"", clubId:_clb0});
   hubPush("call-class",{cls:cls,dest:dest,n:list.length,byKey:"exit",clubId:_clb0});
@@ -4970,7 +4970,7 @@ function markLate(c,id){
   if(!needLateRole()) return;
   if(!needLesson(c)) return;
   const s=db[c].find(x=>x.id===id); if(!s||s.status==="out"){ toast(t("alreadyGone")); return; }
-  s.late=true;
+  s.late=true; stuTouch(s);
   s.time=now();try{ pushNow(); }catch(e){}
   logs.push({t:s.time, key:"logLate", d:logDayISO(new Date()), p:{name:esc(dn(s.name)),c:c}});
   saveData(false); renderAll(); toast(t("lateToast",{name:dn(s.name)}));
@@ -6268,7 +6268,7 @@ function markLaterModal(c,id){
     onOk:()=>{
       const who=(document.getElementById("fWho").value||"").trim();
       const rel=document.getElementById("fRel").value;
-      s.pickedBy=who?who+" ("+rel.toLowerCase()+")":""; s.time=now(); s.status="wait"; s.called=false; s.calledBy=""; s.calledAt=0;
+      s.pickedBy=who?who+" ("+rel.toLowerCase()+")":""; s.time=now(); s.status="wait"; s.called=false; s.calledBy=""; s.calledAt=0; stuTouch(s);
       const mp={name:esc(dn(s.name)),c:c,who:who?esc(who):"("+esc(rel.toLowerCase())+")"};
       logs.push({t:s.time, key:"logLater", d:logDayISO(new Date()), p:mp});
       notify("logLater",mp,c);
@@ -6290,7 +6290,7 @@ function sendMedModal(c,id){
     onOk:()=>{
       if(!needLesson(c)) return;
       const reason=(document.getElementById("mReason").value||"").trim();
-      s.status="away"; s.called=false; s.calledBy=""; s.calledAt=0;
+      s.status="away"; s.called=false; s.calledBy=""; s.calledAt=0; stuTouch(s);
       const _mr={id:"m"+Date.now()+"-"+Math.floor(Math.random()*1e6), cls:c, sid:id, name:s.name, time:now(), reason:reason, status:"wait"};
       medReqs.unshift(_mr); try{ touchStu(id); touchMed(_mr.id); }catch(e){}
       hubPush("med-new",{req:_mr});
@@ -6319,7 +6319,7 @@ function medDone(mid){
   r.status="done";
   const s=(db[r.cls]||[]).find(x=>x.id===r.sid);
   if(s&&(s.status==="med"||s.status==="away")){ s.status="in"; s.time=""; s.pickedBy=""; }
-  if(s){ s.called=false; s.calledBy=""; s.calledAt=0; }
+  if(s){ s.called=false; s.calledBy=""; s.calledAt=0; stuTouch(s); }
   const bp={name:esc(dn(r.name)),c:r.cls};
   logAdd("logMedBack", bp);
   notify("logMedBack",bp,r.cls);
@@ -7504,6 +7504,10 @@ var cidCounter=0;
 var supaKnownStudents={}; // id учеников, точно существующих на сервере (видели в pull / создали сами)
 var touchedStu={}, touchedMed={}; // id, тронутые локальными действиями вне своих классов (учитель)
 function touchStu(id){ try{ if(id!=null) touchedStu[String(id)]=1; }catch(e){} }
+// Локальное время последнего действия с учеником. Нужно при слиянии с
+// сервером: если серверная строка новее — выиграл другой телефон (вызов/
+// возврат), если локальное действие новее — оставляем его и отправим.
+function stuTouch(s){ try{ if(s) s.localChangedAt=Date.now(); }catch(e){} }
 function touchMed(id){ try{ if(id!=null) touchedMed[String(id)]=1; }catch(e){} }
 var supaPatchFail={}; // счётчик PATCH-отказов по id (RLS): после 3 хороним как unpushable
 var supaUnpushable={}; // id, которые сервер отверг на upsert (фантомы кэша): не шлём, пока pull их не увидит
@@ -7787,19 +7791,46 @@ async function supaPull(){
       let dirty=false;
       const np={status:r.status,pickedBy:r.picked_by||"",time:r.time||"",late:!!r.late,called:!!r.called,calledBy:r.called_by||"",calledAt:r.called_at||0,grade:r.grade||"",name:(r.name||(tgt?tgt.name:"?"))};
       if(tgt){
-        // FIX: грязная локальная строка больше не блокирует вызовы.
-        // Вызовные поля применяем всегда, остальные — только если строка чистая.
+        // Грязная строка = локальное действие ещё не ушло в облако.
+        // Раньше в этом случае применялись только called-поля: возврат
+        // в класс (status="in") не доезжал, а старый вызов возвращался.
+        // Теперь сравниваем время последнего серверного updated_at с
+        // временем локального действия: кто новее, тот и прав.
         try{
           const lh=hashStr(tgt.id+"|"+(found.c)+"|"+tgt.name+"|"+tgt.status+"|"+tgt.pickedBy+"|"+tgt.time+"|"+(tgt.late?1:0)+"|"+(tgt.called?1:0)+"|"+tgt.calledBy+"|"+(tgt.calledAt||0)+"|"+tgt.grade);
           if(supaSentStudents[tgt.id]!==undefined&&supaSentStudents[tgt.id]!==lh){ dirty=true; }
         }catch(e){}
         if(dirty){
-          ["called","calledBy","calledAt"].forEach(k=>{ if(tgt[k]!==np[k]){ tgt[k]=np[k]; changed=true; } });
-          if(tgt.name!==np.name&&np.name&&np.name!=="?"){ tgt.name=np.name; changed=true; }
+          let srvNewer=false;
+          try{
+            const srvTs=Date.parse(r.updated_at||0)||0;
+            const locTs=Number(tgt.localChangedAt||0)||Number(tgt.calledAt||0)||0;
+            srvNewer=srvTs>locTs;
+          }catch(e){}
+          if(srvNewer){
+            for(const k in np){ if(tgt[k]!==np[k]){ tgt[k]=np[k]; changed=true; } }
+            try{ tgt.updatedAt=r.updated_at; }catch(e){}
+            // Сервер перекрыл локальную грязь — запоминаем отпечаток,
+            // иначе push отправит старое действие обратно.
+            try{
+              const cc=(found&&found.c)||r.class||"";
+              supaSentStudents[tgt.id]=hashStr(tgt.id+"|"+cc+"|"+tgt.name+"|"+tgt.status+"|"+(tgt.pickedBy||"")+"|"+(tgt.time||"")+"|"+(tgt.late?1:0)+"|"+(tgt.called?1:0)+"|"+(tgt.calledBy||"")+"|"+(tgt.calledAt||0)+"|"+(tgt.grade||""));
+            }catch(e){}
+          } else {
+            // Локальное действие новее сервера: не затираем его,
+            // только подтягиваем имя, если оно появилось.
+            if(tgt.name!==np.name&&np.name&&np.name!=="?"){ tgt.name=np.name; changed=true; }
+          }
         }
-        else{ for(const k in np){ if(tgt[k]!==np[k]){ tgt[k]=np[k]; changed=true; } } }
+        else{
+          for(const k in np){ if(tgt[k]!==np[k]){ tgt[k]=np[k]; changed=true; } }
+          try{ tgt.updatedAt=r.updated_at; }catch(e){}
+        }
       }
-      else if(r.class&&r.id){ tgt=Object.assign({id:r.id},np); (db[r.class]=db[r.class]||[]).push(tgt); changed=true; }
+      else if(r.class&&r.id){
+        tgt=Object.assign({id:r.id,updatedAt:r.updated_at},np);
+        (db[r.class]=db[r.class]||[]).push(tgt); changed=true;
+      }
       // Сервер — источник истины: после слияния запоминаем отпечаток строки.
       // Без этого supaSentStudents пуст и первый supaPushAll считает все ~508
       // учеников изменёнными: 508 PATCH с updated_at=now() и затирание чужих правок.
@@ -8594,7 +8625,7 @@ function needLesson(c){
 function backToSchool(c,id){
   if(!needLesson(c)) return;
   const s=db[c].find(x=>x.id===id); if(!s)return; try{ touchStu(id); }catch(e){}
-  s.status="in"; s.pickedBy=""; s.time=""; s.late=false; s.called=false; s.calledBy=""; s.calledAt=0;
+  s.status="in"; s.pickedBy=""; s.time=""; s.late=false; s.called=false; s.calledBy=""; s.calledAt=0; stuTouch(s);
   resolveMedRequests(c,id);
   logAdd("logBack", {name:esc(dn(s.name)),c:c});
   try{hubPush("back",{sid:id,cls:c,name:s.name});}catch(e){}
@@ -8603,7 +8634,7 @@ function backToSchool(c,id){
 function sendHome(c,id){
   const s=(db[c]||[]).find(x=>x.id===id); if(!s||s.status==="out") return;
   openModal({ title:t("sendHome"), sub:esc(dn(s.name))+", "+esc(clsName(c)), fields:"",
-    onOk:()=>{ s.status="out"; s.pickedBy=t("sendHome"); s.time=now(); s.late=false; s.called=false; s.calledBy=""; s.calledAt=0;
+    onOk:()=>{ s.status="out"; s.pickedBy=t("sendHome"); s.time=now(); s.late=false; s.called=false; s.calledBy=""; s.calledAt=0; stuTouch(s);
       try{ touchStu(s.id); }catch(e){} resolveMedRequests(c,id);
       logAdd("logSentHome",{name:esc(dn(s.name)),c:c});
       try{ hubPush("release",{sid:s.id,cls:c,name:s.name}); }catch(e){}
@@ -8620,7 +8651,7 @@ function releaseModal(c,id){
       if(!needLesson(c)) return;
       const who=(document.getElementById("fWho").value||"").trim();
       const rel=document.getElementById("fRel").value;
-      s.pickedBy=who?who+" ("+rel.toLowerCase()+")":""; s.time=now(); s.status="out"; s.called=false; s.calledBy=""; s.calledAt=0;
+      s.pickedBy=who?who+" ("+rel.toLowerCase()+")":""; s.time=now(); s.status="out"; s.called=false; s.calledBy=""; s.calledAt=0; stuTouch(s);
       resolveMedRequests(c,id);
       const lmsg={name:esc(dn(s.name)),c:c,who:who?esc(who):"("+esc(rel.toLowerCase())+")"};
       logs.push({t:s.time, key:"logLeft", d:logDayISO(new Date()), p:lmsg});
@@ -9735,7 +9766,7 @@ function assistMedSend(hit){
   if(!assistLessonOK(c)) return astText("actNoLesson");
   return assistConfirmAction("actMedTitle","<div class='muted'>"+esc(astText("actMed",{name:dn(s.name),cls:clsName(c)}))+"</div>",function(){
     try{
-      s.status="away"; s.called=false; s.calledBy=""; s.calledAt=0;
+      s.status="away"; s.called=false; s.calledBy=""; s.calledAt=0; stuTouch(s);
       const _mr={id:"m"+Date.now()+"-"+Math.floor(Math.random()*1e6), cls:c, sid:s.id, name:s.name, time:now(), reason:"", status:"wait"};
       medReqs.unshift(_mr); try{ touchStu(s.id); touchMed(_mr.id); }catch(e){}
       hubPush("med-new",{req:_mr});
