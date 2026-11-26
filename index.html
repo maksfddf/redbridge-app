@@ -1258,8 +1258,7 @@ html.standalone-ios body{overscroll-behavior-y:none}
 .chat-attach.rec{background:var(--red);color:#fff;border-color:var(--red);animation:rbRecPulse 1s ease-in-out infinite}
 .chat-audio audio{max-width:260px;height:38px}
 .chat-once{display:inline-flex;align-items:center;gap:6px;font-size:13px;margin:0 8px;cursor:pointer}
-#rbWatermark{position:fixed;inset:0;z-index:9000;pointer-events:none;display:none;overflow:hidden}
-#rbWatermark span{position:absolute;font-size:13px;font-weight:700;color:var(--ink);opacity:.07;white-space:nowrap;transform:rotate(-24deg);letter-spacing:.5px}
+#rbWatermark{display:none!important}
 .chat-circle{width:160px;height:160px;border-radius:50%;overflow:hidden;padding:0;border:0;background:#111;display:block;cursor:pointer}
 .chat-circle video{width:100%;height:100%;object-fit:cover;pointer-events:none}
 .chat-circle-preview{width:96px;height:96px;border-radius:50%;object-fit:cover}
@@ -1338,7 +1337,6 @@ html.standalone-ios body{overscroll-behavior-y:none}
 </style>
 </head>
 <body>
-<div id="rbWatermark" aria-hidden="true"></div>
 
 <div class="splash" id="splash" onclick="hideSplash()">
   <video id="splashVid" src="splash.mp4" autoplay muted playsinline></video>
@@ -2440,7 +2438,7 @@ function resumeSession(login){
     }).catch(()=>{ try{ logout(); }catch(e){} });
   }catch(e){ try{ logout(); }catch(e){} }
 }
-const APP_VER="v5.5.71";
+const APP_VER="v5.5.72";
 var splashDone=false;
 function hideSplash(){ if(splashDone) return; splashDone=true; try{ document.getElementById("splash").classList.add("hide"); }catch(e){} try{ const v=document.getElementById("splashVid"); if(v) v.pause(); }catch(e){} setTimeout(()=>{ try{ document.getElementById("splash").remove(); }catch(e){} },600); }
 function setVer(){ try{ document.getElementById("jsok").textContent=APP_VER; }catch(e){} try{ var _lv=document.getElementById("loginVer"); if(_lv) _lv.textContent=APP_VER; }catch(e){} }
