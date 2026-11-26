@@ -2401,7 +2401,7 @@ function resumeSession(login){
     }).catch(()=>{ try{ logout(); }catch(e){} });
   }catch(e){ try{ logout(); }catch(e){} }
 }
-const APP_VER="v5.5.65";
+const APP_VER="v5.5.66";
 var splashDone=false;
 function hideSplash(){ if(splashDone) return; splashDone=true; try{ document.getElementById("splash").classList.add("hide"); }catch(e){} try{ const v=document.getElementById("splashVid"); if(v) v.pause(); }catch(e){} setTimeout(()=>{ try{ document.getElementById("splash").remove(); }catch(e){} },600); }
 function setVer(){ try{ document.getElementById("jsok").textContent=APP_VER; }catch(e){} try{ var _lv=document.getElementById("loginVer"); if(_lv) _lv.textContent=APP_VER; }catch(e){} }
@@ -4775,8 +4775,15 @@ function renderDuty(){ try{
     const list=(db[c]||[]).filter(s=>!q||s.name.toLowerCase().includes(q)).sort(bySurname);
     if(q&&!list.length) return;
     const _de=dutyCanExit();
-    const rows=list.map(s=>"<div class='roster-row'><b>"+esc(dn(s.name))+"</b>"+studBadge(s,"d")
-      +((s.status!=="out")?"<span class='spacer'></span>"+(_de?"<button class='btn btn-back btn-sm' onclick=\"dutyCallOne('"+c+"','"+s.id+"')\">"+t("call")+"</button>":"")+"<button class='btn btn-back btn-sm' onclick=\"dutyCaf('"+c+"','"+s.id+"')\">"+t("toCaf")+"</button>":"")+"</div>").join("");
+    const rows=list.map(s=>{
+      const _canCall=s.status==="in"||s.status==="wait";
+      const _caf=_canCall&&s.called&&s.calledBy==="cafeteria";
+      const _btn=_caf
+        ? "<button class='btn btn-back btn-sm' onclick=\"dutyBack('"+c+"','"+s.id+"')\">"+t("back")+"</button>"
+        : "<button class='btn btn-back btn-sm' onclick=\"dutyCaf('"+c+"','"+s.id+"')\">"+t("toCaf")+"</button>";
+      return "<div class='roster-row'><b>"+esc(dn(s.name))+"</b>"+studBadge(s,"d")
+        +(_canCall?"<span class='spacer'></span>"+(_de?"<button class='btn btn-back btn-sm' onclick=\"dutyCallOne('"+c+"','"+s.id+"')\">"+t("call")+"</button>":"")+_btn:"")+"</div>";
+    }).join("");
     const card=document.createElement("div"); card.className="card roster-class";
     card.innerHTML="<div class='roster-head'>"+esc(clsName(c))+" <span class='muted'>"+t("studentsN",{n:list.length})+"</span></div>"+rows;
     rb.appendChild(card);
@@ -4810,13 +4817,24 @@ function dutyCallOne(c,id){ try{
   toast(t("calledToast",{name:dn(s.name),kind:destName(dest)}), true);
 }catch(e){} }
 function dutyCaf(c,id){ try{
-  const s=(db[c]||[]).find(x=>x.id===id); if(!s||s.status==="out"){ toast(t("alreadyGone")); return; }
+  const s=(db[c]||[]).find(x=>x.id===id); if(!s||s.status==="out"||s.status==="med"||s.status==="away"){ toast(t("alreadyGone")); return; }
   s.called=true; s.calledAt=Date.now(); s.calledBy="cafeteria"; stuTouch(s);
   calls.push({t:now(), cls:c, name:s.name, byKey:"duty", kind:"", clubId:clubIdForStudent(c,id), np:{dest:"cafeteria",sid:id}});
   hubPush("call",{sid:id,name:s.name,cls:c,kindValue:"",byKey:"duty",dest:"cafeteria"});
   const cp={name:esc(dn(s.name)),c:c,kind:""}; logAdd("logCalled", cp); notify("logCalled",cp,c);
   saveData(false); pushNow(); renderDuty(); renderLog();
   toast(t("calledToast",{name:dn(s.name),kind:destName("cafeteria")}), true);
+}catch(e){} }
+// Возврат из столовой в класс. Не требует активного урока (дежурный
+// возвращает ученика после обеда), но только если его туда вызвали.
+function dutyBack(c,id){ try{
+  const s=(db[c]||[]).find(x=>x.id===id); if(!s||s.status==="out"||s.status==="med"||s.status==="away"){ toast(t("alreadyGone")); return; }
+  if(!(s.called&&s.calledBy==="cafeteria")){ toast(t("deny"),true); return; }
+  s.status="in"; s.pickedBy=""; s.time=""; s.late=false; s.called=false; s.calledBy=""; s.calledAt=0; stuTouch(s);
+  try{ touchStu(id); }catch(e){}
+  logAdd("logBack",{name:esc(dn(s.name)),c:c});
+  try{ hubPush("back",{sid:id,cls:c,name:s.name}); }catch(e){}
+  saveData(false); pushNow(); renderDuty(); renderLog();
 }catch(e){} }
 function distClubModal(){ try{ const me=currentUser(); if(!(me&&(me.role==="ceo"||me.role==="admin"))){ toast(t("deny"),true); return; } }catch(e){ return; }
   const copts=CLASSES.map(c=>"<option value='"+c+"'>"+esc(clsName(c))+"</option>").join("");
